@@ -30,8 +30,17 @@ check_var "TG_BOT_TOKEN"
 check_var "DATABASE_URL"
 check_var "REDIS_URL"
 check_var "SECRET_KEY"
-check_var "YOOKASSA_SHOP_ID"
-check_var "YOOKASSA_SECRET_KEY"
+check_var_optional() {
+    val=$(grep "^$1=" .env | cut -d'=' -f2)
+    if [ -z "$val" ]; then
+        log_warn "Переменная $1 не задана в .env (необязательная)"
+    else
+        log_ok "$1 задана"
+    fi
+}
+
+check_var_optional "YOOKASSA_SHOP_ID"
+check_var_optional "YOOKASSA_SECRET_KEY"
 check_var "S3_ACCESS_KEY_ID"
 check_var "S3_SECRET_ACCESS_KEY"
 check_var "OPENAI_API_KEY"
@@ -53,17 +62,17 @@ fi
 # ── 3. Сборка Docker образов ─────────────────────────────────────────
 echo ""
 echo "Сборка Docker образов..."
-docker-compose -f infra/docker-compose.prod.yml build --no-cache
+docker compose -f infra/docker-compose.prod.yml build --no-cache
 log_ok "Образы собраны"
 
 # ── 4. Запуск инфраструктуры (БД, Redis) ─────────────────────────────
 echo ""
 echo "Запуск инфраструктуры..."
-docker-compose -f infra/docker-compose.prod.yml up -d db redis
+docker compose -f infra/docker-compose.prod.yml up -d db redis
 
 echo "Ожидание готовности PostgreSQL..."
 for i in {1..30}; do
-    if docker-compose -f infra/docker-compose.prod.yml exec -T db \
+    if docker compose -f infra/docker-compose.prod.yml exec -T db \
        pg_isready -U bookmaster > /dev/null 2>&1; then
         log_ok "PostgreSQL готов"
         break
@@ -75,21 +84,25 @@ done
 # ── 5. Миграции ──────────────────────────────────────────────────────
 echo ""
 echo "Применение миграций БД..."
-docker-compose -f infra/docker-compose.prod.yml run --rm api \
+docker compose -f infra/docker-compose.prod.yml run --rm api \
     sh -c "cd /app && alembic upgrade head"
 log_ok "Миграции применены"
 
 # ── 6. Seed данных ───────────────────────────────────────────────────
 echo ""
 echo "Инициализация системных данных..."
-docker-compose -f infra/docker-compose.prod.yml run --rm api \
-    python infra/scripts/seed.py
-log_ok "Seed выполнен"
+if [ -f "infra/scripts/seed.py" ]; then
+    docker compose -f infra/docker-compose.prod.yml run --rm api \
+        python infra/scripts/seed.py
+    log_ok "Seed выполнен"
+else
+    log_warn "seed.py не найден — пропускаем seed"
+fi
 
 # ── 7. Запуск всех сервисов ──────────────────────────────────────────
 echo ""
 echo "Запуск всех сервисов..."
-docker-compose -f infra/docker-compose.prod.yml up -d
+docker compose -f infra/docker-compose.prod.yml up -d
 log_ok "Все сервисы запущены"
 
 # ── 8. Smoke tests ───────────────────────────────────────────────────
@@ -149,13 +162,13 @@ echo ""
 echo "=============================="
 echo -e "${GREEN}Деплой завершён успешно!${NC}"
 echo ""
-echo "API:          https://api.bookmaster.pro"
-echo "Маркетплейс:  https://bookmaster.pro"
-echo "Mini-App:     ${APP_URL}"
-echo "Telegram Bot: @BookMasterProBot"
+API_URL_VAL=$(grep "^API_URL=" .env | cut -d'=' -f2)
+APP_URL_VAL=$(grep "^APP_URL=" .env | cut -d'=' -f2)
+echo "API:          ${API_URL_VAL}"
+echo "Mini-App:     ${APP_URL_VAL}"
 echo ""
 echo "Для просмотра логов:"
-echo "  docker-compose -f infra/docker-compose.prod.yml logs -f [service]"
+echo "  docker compose -f infra/docker-compose.prod.yml logs -f [service]"
 echo ""
 echo "Для перезапуска сервиса:"
-echo "  docker-compose -f infra/docker-compose.prod.yml restart [service]"
+echo "  docker compose -f infra/docker-compose.prod.yml restart [service]"
