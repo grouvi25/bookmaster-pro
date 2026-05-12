@@ -68,6 +68,8 @@ services:
       dockerfile: apps/bot-tg/Dockerfile
     depends_on:
       api: { condition: service_healthy }
+    ports:
+      - "127.0.0.1:8081:8081"
     networks: [bookmaster]
 
   mini-app:
