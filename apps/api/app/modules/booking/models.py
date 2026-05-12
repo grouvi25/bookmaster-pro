@@ -5,7 +5,7 @@ Booking models — расписание, записи, блокировки.
 import enum
 from sqlalchemy import (
     Column, Integer, String, Text, Boolean, Date,
-    Time, DateTime, ForeignKey, Enum,
+    Time, DateTime, ForeignKey,
 )
 from sqlalchemy.orm import relationship
 

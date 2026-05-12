@@ -4,7 +4,7 @@ AI providers — абстракция LLM и embedding провайдеров.
 """
 
 import logging
-from typing import List, Optional, AsyncIterator
+from typing import List, AsyncIterator
 from abc import ABC, abstractmethod
 
 from app.core.config import settings

@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisco
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.core.auth import get_current_master, get_current_client
+from app.core.auth import get_current_master
 from app.core.feature_flags import require_feature
 from app.modules.ai.service import AIService, CONTENT_TEMPLATES
 from app.modules.ai.indexer import AIIndexer

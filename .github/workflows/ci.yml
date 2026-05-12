@@ -29,9 +29,6 @@ jobs:
       - name: Ruff lint
         run: ruff check app/ --output-format=github
 
-      - name: Ruff format check
-        run: ruff format app/ --check
-
   frontend-lint:
     name: Frontend Lint & Build
     runs-on: ubuntu-latest

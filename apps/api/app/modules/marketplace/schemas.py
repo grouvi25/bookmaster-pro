@@ -1,8 +1,7 @@
 """Marketplace schemas."""
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from typing import Optional, List
-from datetime import date
 
 
 class MarketplaceSearchRequest(BaseModel):

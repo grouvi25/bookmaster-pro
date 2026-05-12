@@ -89,7 +89,7 @@ async def spend_points(
 
     service = LoyaltyService(db)
     try:
-        tx = await service.spend_points(
+        await service.spend_points(
             master_id=appointment.master_id,
             client_id=client.id,
             points=body.points,

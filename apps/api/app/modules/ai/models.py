@@ -3,8 +3,7 @@ AI models — RAG knowledge, conversations, voice sessions.
 """
 
 from sqlalchemy import (
-    Column, Integer, String, Text, DateTime,
-    ForeignKey, JSON,
+    Column, Integer, String, Text, ForeignKey, JSON,
 )
 from pgvector.sqlalchemy import Vector
 
