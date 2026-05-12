@@ -1,10 +1,13 @@
 """
 Feature flag checker — проверяет доступ мастера к модулю по тарифу.
+Использование: Depends(require_feature("ai_advisor"))
 """
 
-from fastapi import HTTPException, status
+from fastapi import Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.database import get_db
 
 
 async def check_feature(
@@ -35,3 +38,20 @@ async def check_feature(
             detail=f"Feature '{feature_name}' is not available on your plan",
         )
     return True
+
+
+def require_feature(feature_name: str):
+    """
+    FastAPI Depends factory — проверяет фичу и возвращает Master.
+    Использование: master: Master = Depends(require_feature("ai_advisor"))
+    """
+    from app.core.auth import get_current_master
+
+    async def _checker(
+        master=Depends(get_current_master),
+        db: AsyncSession = Depends(get_db),
+    ):
+        await check_feature(db, master.id, feature_name)
+        return master
+
+    return _checker
