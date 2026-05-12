@@ -12,9 +12,11 @@ from app.core.config import settings
 
 # Import all models so Base.metadata knows about them
 from app.modules.auth.models import Identity  # noqa
-from app.modules.core.models import FeatureFlags  # noqa
-from app.modules.masters.models import Master, MasterLocation  # noqa
-from app.modules.clients.models import Client, ClientMasterLink  # noqa
+from app.modules.core.models import FeatureFlags, SystemSetting  # noqa
+from app.modules.masters.models import Master, MasterLocation, MasterPage  # noqa
+from app.modules.clients.models import (  # noqa
+    Client, ClientMasterLink, ClientProfile, ClientTag, ClientNote, ClientMasterScore,
+)
 from app.modules.services.models import Service  # noqa
 from app.modules.booking.models import ScheduleTemplate, BlockedSlot, Appointment  # noqa
 from app.modules.booking.noshow_models import ClientNoShowLog  # noqa
