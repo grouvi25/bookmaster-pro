@@ -22,10 +22,30 @@ from app.modules.ai.schemas import (
     AIClientMessageResponse,
     AITokensInfoResponse,
     AITemplateInfo,
+    AIAskRequest,
+    AIAskResponse,
 )
 from app.modules.masters.models import Master
 
 router = APIRouter()
+
+
+@router.post("/ask", response_model=AIAskResponse)
+async def ai_ask(
+    req: AIAskRequest,
+    master: Master = Depends(require_feature("ai_advisor")),
+    db: AsyncSession = Depends(get_db),
+):
+    """Синхронный POST-чат с AI-советником."""
+    service = AIService(db)
+    session_id = req.session_id or str(uuid.uuid4())
+    result = await service.chat(
+        master_id=master.id,
+        session_id=session_id,
+        user_message=req.message,
+    )
+    await db.commit()
+    return result
 
 
 @router.websocket("/chat")

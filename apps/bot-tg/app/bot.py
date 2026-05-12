@@ -112,6 +112,21 @@ async def cmd_start(message: Message):
     )
 
 
+# ─── /sa — суперадминка ───────────────────────────────────────────────
+@dp.message(Command("sa"))
+async def cmd_superadmin(message: Message):
+    """
+    /sa → открывает Mini-App на странице суперадмина.
+    Если user_id не в SUPERADMIN_IDS — команда игнорируется.
+    """
+    if not message.from_user or message.from_user.id not in settings.superadmin_list:
+        return  # молча игнорируем
+    await message.answer(
+        "\U0001f6e0 Панель суперадмина",
+        reply_markup=mini_app_keyboard("\U0001f6e0 Суперадминка", "superadmin"),
+    )
+
+
 # ─── Голосовые сообщения клиентов ────────────────────────────────────
 @dp.message(F.voice)
 async def handle_voice(message: Message):

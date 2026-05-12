@@ -69,3 +69,15 @@ class AITemplateInfo(BaseModel):
     key: str
     name: str
     required_params: List[str]
+
+
+class AIAskRequest(BaseModel):
+    message: str = Field(..., max_length=4000)
+    context: Optional[List[Dict[str, str]]] = None
+    session_id: Optional[str] = None
+
+
+class AIAskResponse(BaseModel):
+    response: str
+    session_id: str
+    tokens_used: int
