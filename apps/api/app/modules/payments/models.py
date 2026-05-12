@@ -3,8 +3,7 @@ Payments — транзакции, подписки мастеров, абоне
 """
 
 from sqlalchemy import (
-    Column, Integer, String, Numeric, Date, Text,
-    ForeignKey,
+    Column, Integer, String, Numeric, Date, ForeignKey,
 )
 
 from app.core.base_model import BaseModel

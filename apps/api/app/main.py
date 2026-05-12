@@ -100,6 +100,9 @@ app.include_router(marketplace_router, prefix="/api/v1/marketplace", tags=["mark
 from app.modules.superadmin.router import router as superadmin_router
 app.include_router(superadmin_router, prefix="/api/v1/superadmin", tags=["superadmin"])
 
+from app.modules.consultations.router import router as consultations_router
+app.include_router(consultations_router, prefix="/api/v1/consultations", tags=["consultations"])
+
 
 # ── APScheduler ──────────────────────────────────────────────
 from apscheduler.schedulers.asyncio import AsyncIOScheduler

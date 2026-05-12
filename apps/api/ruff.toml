@@ -1,0 +1,8 @@
+line-length = 120
+
+[lint]
+select = ["E", "F", "W"]
+
+[lint.per-file-ignores]
+"app/main.py" = ["E402"]
+"app/migrations/**" = ["E402", "F401", "E501", "W291"]

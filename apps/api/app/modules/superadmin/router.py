@@ -3,7 +3,7 @@ Superadmin router — /api/v1/superadmin
 Платформенный дашборд, управление мастерами, health checks, настройки.
 """
 
-from typing import Optional, List
+from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession

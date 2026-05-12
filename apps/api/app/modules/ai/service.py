@@ -9,7 +9,6 @@ AIService — основной сервис AI-ассистента.
 """
 
 import json
-import uuid
 import logging
 from typing import List, Optional, AsyncIterator, Dict, Any
 from datetime import datetime, timedelta, timezone
@@ -17,14 +16,13 @@ from datetime import datetime, timedelta, timezone
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_, func
 
-from app.modules.ai.providers import get_ai_provider, get_embed_provider
+from app.modules.ai.providers import get_ai_provider
 from app.modules.ai.indexer import AIIndexer
 from app.modules.ai.models import AIConversation, VoiceSession
 from app.modules.masters.models import Master
 from app.modules.services.models import Service
 from app.modules.booking.models import Appointment, AppointmentStatus
 from app.modules.core.models import FeatureFlags
-from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 

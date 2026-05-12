@@ -3,7 +3,7 @@ Admin audit log.
 """
 
 from sqlalchemy import (
-    Column, Integer, String, Text, JSON,
+    Column, Integer, String, JSON,
 )
 
 from app.core.base_model import BaseModel

@@ -3,6 +3,8 @@ import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { mastersApi, analyticsApi, supportApi, servicesApi } from '@/api/endpoints';
 import Loading from '@/components/common/Loading';
+import { BarChart3, ClipboardList, User, MessageCircle, Link2, CreditCard, ChevronLeft, ChevronRight, Star } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 
 type SettingsTab = 'main' | 'analytics' | 'services' | 'profile' | 'support';
 
@@ -30,11 +32,11 @@ export default function Settings() {
 
 function SettingsMain({ onNavigate }: { onNavigate: (tab: SettingsTab) => void }) {
   const navigate = useNavigate();
-  const menuItems = [
-    { key: 'analytics' as const, icon: '\ud83d\udcca', label: 'Аналитика', desc: 'Статистика и отчёты' },
-    { key: 'services' as const, icon: '\ud83d\udcdd', label: 'Мои услуги', desc: 'Управление услугами' },
-    { key: 'profile' as const, icon: '\ud83d\udc64', label: 'Профиль', desc: 'Настройки профиля' },
-    { key: 'support' as const, icon: '\ud83d\udce9', label: 'Поддержка', desc: 'Помощь и обратная связь' },
+  const menuItems: { key: SettingsTab; Icon: LucideIcon; label: string; desc: string }[] = [
+    { key: 'analytics', Icon: BarChart3, label: 'Аналитика', desc: 'Статистика и отчёты' },
+    { key: 'services', Icon: ClipboardList, label: 'Мои услуги', desc: 'Управление услугами' },
+    { key: 'profile', Icon: User, label: 'Профиль', desc: 'Настройки профиля' },
+    { key: 'support', Icon: MessageCircle, label: 'Поддержка', desc: 'Помощь и обратная связь' },
   ];
 
   return (
@@ -45,38 +47,45 @@ function SettingsMain({ onNavigate }: { onNavigate: (tab: SettingsTab) => void }
           onClick={() => onNavigate(item.key)}
           className="flex items-center gap-3 p-4 bg-tg-secondary rounded-xl text-left active:scale-[0.98] transition-transform"
         >
-          <span className="text-2xl">{item.icon}</span>
-          <div>
+          <div className="w-10 h-10 bg-brand-50 rounded-xl flex items-center justify-center">
+            <item.Icon className="w-5 h-5 text-brand-500" strokeWidth={1.8} />
+          </div>
+          <div className="flex-1">
             <div className="font-medium text-sm">{item.label}</div>
             <div className="text-xs text-tg-hint">{item.desc}</div>
           </div>
+          <ChevronRight className="w-4 h-4 text-tg-hint" />
         </button>
       ))}
 
-      {/* Линк на публичную страницу */}
       <button
         onClick={() => navigate('/link-page/edit')}
         className="flex items-center gap-3 p-4 bg-brand-50 rounded-xl text-left"
       >
-        <span className="text-2xl">{'\ud83d\udd17'}</span>
-        <div>
+        <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center">
+          <Link2 className="w-5 h-5 text-brand-500" strokeWidth={1.8} />
+        </div>
+        <div className="flex-1">
           <div className="font-medium text-sm text-brand-700">
             Моя страница-визитка
           </div>
           <div className="text-xs text-brand-600">TapLink-аналог</div>
         </div>
+        <ChevronRight className="w-4 h-4 text-brand-400" />
       </button>
 
-      {/* Тарифы */}
       <button
         onClick={() => navigate('/billing')}
         className="flex items-center gap-3 p-4 bg-tg-secondary rounded-xl text-left"
       >
-        <span className="text-2xl">{'\ud83d\udcb3'}</span>
-        <div>
+        <div className="w-10 h-10 bg-brand-50 rounded-xl flex items-center justify-center">
+          <CreditCard className="w-5 h-5 text-brand-500" strokeWidth={1.8} />
+        </div>
+        <div className="flex-1">
           <div className="font-medium text-sm">Тарифы и подписка</div>
           <div className="text-xs text-tg-hint">Управление подпиской</div>
         </div>
+        <ChevronRight className="w-4 h-4 text-tg-hint" />
       </button>
     </div>
   );
@@ -92,8 +101,8 @@ function AnalyticsSection({ onBack }: { onBack: () => void }) {
 
   return (
     <div className="animate-slide-up">
-      <button onClick={onBack} className="text-tg-link text-sm mb-3">
-        &larr; Назад
+      <button onClick={onBack} className="flex items-center gap-0.5 text-tg-link text-sm mb-3">
+        <ChevronLeft className="w-4 h-4" /> Назад
       </button>
       <h2 className="font-bold text-lg mb-3">Аналитика за 30 дней</h2>
 
@@ -126,8 +135,8 @@ function ServicesSection({ onBack }: { onBack: () => void }) {
 
   return (
     <div className="animate-slide-up">
-      <button onClick={onBack} className="text-tg-link text-sm mb-3">
-        &larr; Назад
+      <button onClick={onBack} className="flex items-center gap-0.5 text-tg-link text-sm mb-3">
+        <ChevronLeft className="w-4 h-4" /> Назад
       </button>
       <h2 className="font-bold text-lg mb-3">Мои услуги</h2>
 
@@ -163,14 +172,14 @@ function ProfileSection({ onBack }: { onBack: () => void }) {
 
   return (
     <div className="animate-slide-up">
-      <button onClick={onBack} className="text-tg-link text-sm mb-3">
-        &larr; Назад
+      <button onClick={onBack} className="flex items-center gap-0.5 text-tg-link text-sm mb-3">
+        <ChevronLeft className="w-4 h-4" /> Назад
       </button>
       <h2 className="font-bold text-lg mb-3">Профиль</h2>
 
       <div className="bg-tg-secondary rounded-xl p-4">
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-16 h-16 bg-brand-50 rounded-full flex items-center justify-center text-3xl">
+          <div className="w-16 h-16 bg-brand-50 rounded-full flex items-center justify-center overflow-hidden">
             {profile?.avatar_url ? (
               <img
                 src={profile.avatar_url}
@@ -178,7 +187,7 @@ function ProfileSection({ onBack }: { onBack: () => void }) {
                 className="w-full h-full rounded-full object-cover"
               />
             ) : (
-              '\ud83d\udc64'
+              <User className="w-8 h-8 text-brand-400" strokeWidth={1.5} />
             )}
           </div>
           <div>
@@ -198,8 +207,9 @@ function ProfileSection({ onBack }: { onBack: () => void }) {
           </div>
           <div className="flex justify-between">
             <span className="text-tg-hint">Рейтинг</span>
-            <span>
-              {'\u2605'} {profile?.rating_avg?.toFixed(1) || '—'} ({profile?.rating_count || 0})
+            <span className="flex items-center gap-1">
+              <Star className="w-3.5 h-3.5 text-yellow-400 fill-yellow-400" />
+              {profile?.rating_avg?.toFixed(1) || '\u2014'} ({profile?.rating_count || 0})
             </span>
           </div>
         </div>
@@ -232,8 +242,8 @@ function SupportSection({ onBack }: { onBack: () => void }) {
 
   return (
     <div className="animate-slide-up">
-      <button onClick={onBack} className="text-tg-link text-sm mb-3">
-        &larr; Назад
+      <button onClick={onBack} className="flex items-center gap-0.5 text-tg-link text-sm mb-3">
+        <ChevronLeft className="w-4 h-4" /> Назад
       </button>
       <h2 className="font-bold text-lg mb-3">Поддержка</h2>
 

@@ -7,10 +7,9 @@ Scheduler — фоновые задачи.
 """
 
 import logging
-from datetime import datetime, timedelta, timezone, date
+from datetime import datetime, timedelta, timezone
 
-from sqlalchemy import select, and_, func
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, func
 
 from app.core.database import async_session_factory
 from app.modules.booking.models import Appointment, AppointmentStatus
@@ -298,7 +297,7 @@ async def billing_reminder():
         subs = result.scalars().all()
 
         for sub in subs:
-            master = await db.get(Master, sub.master_id)
+            await db.get(Master, sub.master_id)
             # TODO: отправить напоминание через бота
             logger.info(
                 f"Billing reminder: master {sub.master_id}, "
