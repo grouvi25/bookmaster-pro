@@ -1,13 +1,16 @@
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { servicesApi } from '@/api/endpoints';
 import { useBookingStore } from '@/stores/booking';
 import BackButton from '@/components/common/BackButton';
 import Loading from '@/components/common/Loading';
+import { Clock, ChevronRight } from 'lucide-react';
 
 export default function SelectService() {
   const navigate = useNavigate();
   const { masterId, setService } = useBookingStore();
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
   const { data: services, isLoading } = useQuery({
     queryKey: ['services', masterId],
@@ -27,33 +30,66 @@ export default function SelectService() {
     navigate('/book/date');
   };
 
+  const categories: string[] = Array.from(new Set(
+    (services || []).map((s: Record<string, unknown>) => String((s.category as string) || 'Основные'))
+  ));
+  const filteredServices = activeCategory
+    ? (services || []).filter((s: Record<string, unknown>) => ((s.category as string) || 'Основные') === activeCategory)
+    : services || [];
+
   return (
-    <div className="p-4 animate-slide-up">
+    <div className="p-4 pb-20 animate-slide-up">
       <BackButton />
       <h1 className="text-xl font-bold mb-1">Выберите услугу</h1>
       <p className="text-tg-hint text-sm mb-4">Шаг 1 из 5</p>
 
+      {categories.length > 1 && (
+        <div className="flex gap-2 mb-4 overflow-x-auto pb-1">
+          <button
+            onClick={() => setActiveCategory(null)}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
+              !activeCategory ? 'bg-tg-button text-tg-button-text' : 'bg-tg-secondary text-tg-text'
+            }`}
+          >
+            Все
+          </button>
+          {categories.map((cat: string) => (
+            <button
+              key={cat}
+              onClick={() => setActiveCategory(cat)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
+                activeCategory === cat ? 'bg-tg-button text-tg-button-text' : 'bg-tg-secondary text-tg-text'
+              }`}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
+      )}
+
       <div className="flex flex-col gap-2">
-        {services?.map((svc: Record<string, unknown>) => (
+        {filteredServices.map((svc: Record<string, unknown>) => (
           <button
             key={svc.id as number}
             onClick={() => handleSelect(svc)}
-            className="flex justify-between items-center p-4 bg-tg-secondary rounded-xl text-left active:scale-[0.98] transition-transform"
+            className="flex items-center p-4 bg-tg-secondary rounded-xl text-left active:scale-[0.98] transition-transform"
           >
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               <div className="font-medium text-tg-text">{String(svc.name)}</div>
-              <div className="text-xs text-tg-hint mt-0.5">
+              <div className="text-xs text-tg-hint mt-0.5 flex items-center gap-1">
+                <Clock className="w-3 h-3" />
                 {Number(svc.duration_min)} мин
                 {svc.description ? ` \u00b7 ${String(svc.description)}` : null}
               </div>
             </div>
-            <div className="font-bold text-brand-600 ml-3">
+            <div className="font-bold text-brand-600 ml-3 text-sm whitespace-nowrap">
               {svc.price
                 ? `${Number(svc.price).toLocaleString('ru')} \u20bd`
                 : svc.price_from
                   ? `от ${Number(svc.price_from).toLocaleString('ru')} \u20bd`
                   : 'Дог.'}
             </div>
+            <ChevronRight className="w-4 h-4 text-tg-hint ml-2 flex-shrink-0" />
           </button>
         ))}
       </div>

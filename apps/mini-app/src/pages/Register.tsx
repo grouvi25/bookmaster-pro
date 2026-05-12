@@ -3,103 +3,238 @@ import { useNavigate } from 'react-router-dom';
 import { authApi } from '@/api/endpoints';
 import { useAuthStore } from '@/stores/auth';
 import { PlatformAdapter } from '@/platform/platform-adapter';
-import { Scissors, UserCircle } from 'lucide-react';
+import { Scissors, UserCircle, ChevronLeft } from 'lucide-react';
+import Button from '@/shared/ui/Button';
+import { toast } from '@/shared/ui/Toast';
+
+type Step = 'role' | 'master-form' | 'client-form';
+
+const SPECIALIZATIONS = [
+  'Маникюр/педикюр', 'Брови и ресницы', 'Массаж',
+  'Косметология', 'Парикмахер', 'Фотограф',
+  'Репетитор', 'Фитнес-тренер', 'Другое',
+];
 
 export default function Register() {
   const navigate = useNavigate();
   const { setAuth } = useAuthStore();
-  const [selectedRole, setSelectedRole] = useState<'master' | 'client' | null>(null);
-  const [specialization, setSpecialization] = useState('');
+  const [step, setStep] = useState<Step>('role');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
 
-  const handleRegister = async () => {
-    if (!selectedRole) return;
+  const [name, setName] = useState('');
+  const [specialization, setSpecialization] = useState('');
+  const [city, setCity] = useState('');
+  const [phone, setPhone] = useState('');
+
+  const handleRegisterMaster = async () => {
+    if (!name.trim() || !specialization || !city.trim()) {
+      toast.error('Заполните все обязательные поля');
+      return;
+    }
     setLoading(true);
-    setError('');
-
     try {
       const initData = PlatformAdapter.getInitData();
       const resp = await authApi.register({
         init_data: initData || '',
-        role: selectedRole,
-        ...(selectedRole === 'master' && specialization ? { specialization } : {}),
+        role: 'master',
+        name: name.trim(),
+        specialization,
+        city: city.trim(),
       });
       const data = resp.data;
       setAuth(data.access_token, data.role, data.master_id);
-      navigate(data.role === 'master' ? '/master' : '/', { replace: true });
+      toast.success('Добро пожаловать!');
+      navigate('/master', { replace: true });
     } catch {
-      setError('Ошибка регистрации. Попробуйте ещё раз.');
+      toast.error('Ошибка регистрации. Попробуйте снова.');
     } finally {
       setLoading(false);
     }
   };
 
+  const handleRegisterClient = async () => {
+    if (!name.trim()) {
+      toast.error('Введите имя');
+      return;
+    }
+    setLoading(true);
+    try {
+      const initData = PlatformAdapter.getInitData();
+      const resp = await authApi.register({
+        init_data: initData || '',
+        role: 'client',
+        name: name.trim(),
+        ...(phone ? { phone } : {}),
+      });
+      const data = resp.data;
+      setAuth(data.access_token, data.role, data.master_id);
+      toast.success('Добро пожаловать!');
+      navigate('/', { replace: true });
+    } catch {
+      toast.error('Ошибка регистрации.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (step === 'role') {
+    return (
+      <div className="flex flex-col min-h-screen px-5 pt-16 pb-8 gap-6 animate-fade-in">
+        <div className="text-center">
+          <div className="w-16 h-16 bg-brand-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <Scissors className="w-8 h-8 text-brand-500" strokeWidth={1.8} />
+          </div>
+          <h1 className="text-2xl font-bold mb-2">BookMaster Pro</h1>
+          <p className="text-tg-hint">Онлайн-запись к мастерам</p>
+        </div>
+
+        <div className="flex-1" />
+
+        <div className="flex flex-col gap-3">
+          <p className="text-center text-sm text-tg-hint mb-2">Кто вы?</p>
+
+          <button
+            onClick={() => setStep('master-form')}
+            className="bg-tg-secondary p-5 rounded-2xl text-left active:scale-[0.98] transition-transform"
+          >
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-brand-100 flex items-center justify-center">
+                <Scissors className="w-6 h-6 text-brand-500" strokeWidth={1.8} />
+              </div>
+              <div className="flex-1">
+                <div className="font-semibold text-base">Я — мастер</div>
+                <div className="text-sm text-tg-hint">Принимаю клиентов</div>
+              </div>
+              <div className="text-tg-hint">
+                <ChevronLeft className="w-4 h-4 rotate-180" />
+              </div>
+            </div>
+          </button>
+
+          <button
+            onClick={() => setStep('client-form')}
+            className="bg-tg-secondary p-5 rounded-2xl text-left active:scale-[0.98] transition-transform"
+          >
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-green-100 flex items-center justify-center">
+                <UserCircle className="w-6 h-6 text-green-600" strokeWidth={1.8} />
+              </div>
+              <div className="flex-1">
+                <div className="font-semibold text-base">Я — клиент</div>
+                <div className="text-sm text-tg-hint">Записываюсь к мастерам</div>
+              </div>
+              <div className="text-tg-hint">
+                <ChevronLeft className="w-4 h-4 rotate-180" />
+              </div>
+            </div>
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (step === 'master-form') {
+    return (
+      <div className="flex flex-col min-h-screen px-5 pt-6 pb-8 gap-5 animate-fade-in">
+        <button
+          onClick={() => setStep('role')}
+          className="text-tg-link self-start flex items-center gap-1 text-sm"
+        >
+          <ChevronLeft className="w-4 h-4" />
+          Назад
+        </button>
+
+        <h2 className="text-2xl font-bold">Расскажите о себе</h2>
+
+        <div className="flex flex-col gap-4">
+          <div>
+            <label className="text-sm text-tg-hint mb-1 block">Ваше имя *</label>
+            <input
+              value={name}
+              onChange={e => setName(e.target.value)}
+              placeholder="Анна Иванова"
+              className="w-full p-4 rounded-2xl text-base outline-none bg-tg-secondary border border-transparent focus:border-brand-500"
+            />
+          </div>
+
+          <div>
+            <label className="text-sm text-tg-hint mb-1 block">Специализация *</label>
+            <div className="flex flex-wrap gap-2">
+              {SPECIALIZATIONS.map(s => (
+                <button
+                  key={s}
+                  onClick={() => setSpecialization(s)}
+                  className={`px-3 py-2 rounded-xl text-sm font-medium transition-colors ${
+                    specialization === s
+                      ? 'bg-brand-500 text-white'
+                      : 'bg-tg-secondary text-tg-text'
+                  }`}
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="text-sm text-tg-hint mb-1 block">Город *</label>
+            <input
+              value={city}
+              onChange={e => setCity(e.target.value)}
+              placeholder="Москва"
+              className="w-full p-4 rounded-2xl text-base outline-none bg-tg-secondary border border-transparent focus:border-brand-500"
+            />
+          </div>
+        </div>
+
+        <div className="flex-1" />
+
+        <Button onClick={handleRegisterMaster} loading={loading} fullWidth size="lg">
+          Начать работу
+        </Button>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-tg-bg text-tg-text p-6 animate-fade-in">
-      <div className="w-16 h-16 bg-brand-50 rounded-2xl flex items-center justify-center mb-4">
-        <Scissors className="w-8 h-8 text-brand-500" strokeWidth={1.8} />
-      </div>
-      <h1 className="text-2xl font-bold mb-2">Добро пожаловать!</h1>
-      <p className="text-tg-hint text-center text-sm mb-8">
-        Выберите, как вы хотите использовать BookMaster Pro
-      </p>
+    <div className="flex flex-col min-h-screen px-5 pt-6 pb-8 gap-5 animate-fade-in">
+      <button
+        onClick={() => setStep('role')}
+        className="text-tg-link self-start flex items-center gap-1 text-sm"
+      >
+        <ChevronLeft className="w-4 h-4" />
+        Назад
+      </button>
 
-      <div className="w-full max-w-sm space-y-3">
-        <button
-          onClick={() => setSelectedRole('master')}
-          className={`w-full p-4 rounded-2xl border-2 text-left transition-all ${
-            selectedRole === 'master'
-              ? 'border-tg-button bg-tg-button/10'
-              : 'border-gray-200 bg-tg-secondary'
-          }`}
-        >
-          <Scissors className="w-6 h-6 text-brand-500 mb-1" strokeWidth={1.8} />
-          <div className="font-semibold">Я мастер</div>
-          <div className="text-tg-hint text-xs mt-1">
-            Принимайте записи, управляйте расписанием, используйте AI-помощника
-          </div>
-        </button>
+      <h2 className="text-2xl font-bold">Как вас зовут?</h2>
 
-        <button
-          onClick={() => setSelectedRole('client')}
-          className={`w-full p-4 rounded-2xl border-2 text-left transition-all ${
-            selectedRole === 'client'
-              ? 'border-tg-button bg-tg-button/10'
-              : 'border-gray-200 bg-tg-secondary'
-          }`}
-        >
-          <UserCircle className="w-6 h-6 text-brand-500 mb-1" strokeWidth={1.8} />
-          <div className="font-semibold">Я клиент</div>
-          <div className="text-tg-hint text-xs mt-1">
-            Записывайтесь к мастерам, копите баллы, получайте напоминания
-          </div>
-        </button>
-      </div>
-
-      {selectedRole === 'master' && (
-        <div className="w-full max-w-sm mt-4">
+      <div className="flex flex-col gap-4">
+        <div>
+          <label className="text-sm text-tg-hint mb-1 block">Имя *</label>
           <input
-            type="text"
-            value={specialization}
-            onChange={(e) => setSpecialization(e.target.value)}
-            placeholder="Ваша специализация (напр. маникюр, барбер...)"
-            className="w-full px-4 py-3 bg-tg-secondary rounded-xl text-sm outline-none"
+            value={name}
+            onChange={e => setName(e.target.value)}
+            placeholder="Мария"
+            className="w-full p-4 rounded-2xl text-base outline-none bg-tg-secondary border border-transparent focus:border-brand-500"
           />
         </div>
-      )}
+        <div>
+          <label className="text-sm text-tg-hint mb-1 block">Телефон (необязательно)</label>
+          <input
+            value={phone}
+            onChange={e => setPhone(e.target.value)}
+            placeholder="+7 (999) 000-00-00"
+            type="tel"
+            className="w-full p-4 rounded-2xl text-base outline-none bg-tg-secondary border border-transparent focus:border-brand-500"
+          />
+        </div>
+      </div>
 
-      {error && (
-        <p className="text-red-500 text-sm mt-3">{error}</p>
-      )}
+      <div className="flex-1" />
 
-      <button
-        onClick={handleRegister}
-        disabled={!selectedRole || loading}
-        className="w-full max-w-sm mt-6 py-3 bg-tg-button text-tg-button-text rounded-xl font-medium text-sm disabled:opacity-50"
-      >
-        {loading ? 'Регистрация...' : 'Продолжить'}
-      </button>
+      <Button onClick={handleRegisterClient} loading={loading} fullWidth size="lg">
+        Продолжить
+      </Button>
     </div>
   );
 }

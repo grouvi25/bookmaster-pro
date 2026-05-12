@@ -4,7 +4,7 @@ import api from './client';
 export const authApi = {
   identify: (initData: string) =>
     api.post('/auth/identify', { init_data: initData }),
-  register: (data: { init_data: string; role: string }) =>
+  register: (data: { init_data: string; role: string; name?: string; specialization?: string; city?: string; phone?: string }) =>
     api.post('/auth/register', data),
 };
 
@@ -18,6 +18,7 @@ export const mastersApi = {
     api.get('/masters/me/schedule', { params }),
   updateSchedule: (data: Record<string, unknown>) =>
     api.put('/masters/me/schedule', data),
+  getStats: () => api.get('/masters/me/stats'),
 };
 
 // ── Services ──
