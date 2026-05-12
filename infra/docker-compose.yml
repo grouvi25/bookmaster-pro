@@ -1,0 +1,42 @@
+version: '3.9'
+
+services:
+  # ── БАЗА ДАННЫХ ─────────────────────────────────────────
+  db:
+    image: postgis/postgis:16-3.4-alpine
+    container_name: bookmaster_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: bookmaster
+      POSTGRES_USER: bookmaster
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-devpassword}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./scripts/init_extensions.sql:/docker-entrypoint-initdb.d/01_extensions.sql
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bookmaster"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ── REDIS ───────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: bookmaster_redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redisdata:/data
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata:
+  redisdata:
