@@ -29,6 +29,7 @@ import LinkPage from '@/pages/LinkPage';
 import SuperadminPanel from '@/pages/superadmin/SuperadminPanel';
 
 import Loading from '@/components/common/Loading';
+import Register from '@/pages/Register';
 
 
 function RequireAuth({ children, allowedRoles }: { children: ReactNode; allowedRoles: string[] }) {
@@ -56,6 +57,8 @@ function AppRouter() {
   const { role, setUser, setAuth } = useAuthStore();
   useBookingStore.getState();
   const [initializing, setInitializing] = useState(true);
+  const [isNewUser, setIsNewUser] = useState(false);
+  const [hasTelegramContext, setHasTelegramContext] = useState(false);
 
   useEffect(() => {
     const init = async () => {
@@ -67,12 +70,15 @@ function AppRouter() {
 
       const initData = PlatformAdapter.getInitData();
       if (initData) {
+        setHasTelegramContext(true);
         try {
           const resp = await authApi.identify(initData);
           const data = resp.data;
           if (data.access_token) {
             setAuth(data.access_token, data.role, data.master_id);
             authRole = data.role;
+          } else if (data.role === 'new') {
+            setIsNewUser(true);
           }
         } catch {
           // не авторизован
@@ -112,14 +118,21 @@ function AppRouter() {
   return (
     <>
       <Routes>
+        {/* Регистрация для новых пользователей */}
+        <Route path="/register" element={<Register />} />
+
         {/* Главная */}
         <Route
           path="/"
           element={
-            role === 'superadmin' ? (
+            isNewUser ? (
+              <Navigate to="/register" replace />
+            ) : role === 'superadmin' ? (
               <Navigate to="/superadmin" replace />
             ) : isMaster ? (
               <Navigate to="/master" replace />
+            ) : hasTelegramContext && !role ? (
+              <Navigate to="/register" replace />
             ) : (
               <HomePage />
             )
