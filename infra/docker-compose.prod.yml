@@ -1,0 +1,127 @@
+version: '3.9'
+
+x-restart: &restart
+  restart: unless-stopped
+
+x-env: &env
+  env_file: ../.env
+
+services:
+  # ── БАЗА ДАННЫХ ─────────────────────────────────────────────────────
+  db:
+    <<: *restart
+    image: postgis/postgis:16-3.4-alpine
+    environment:
+      POSTGRES_DB: bookmaster
+      POSTGRES_USER: bookmaster
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./scripts/init_extensions.sql:/docker-entrypoint-initdb.d/01_ext.sql
+    networks: [internal]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bookmaster"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── REDIS ────────────────────────────────────────────────────────────
+  redis:
+    <<: *restart
+    image: redis:7-alpine
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+    volumes: [redisdata:/data]
+    networks: [internal]
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+
+  # ── API ──────────────────────────────────────────────────────────────
+  api:
+    <<: [*restart, *env]
+    build:
+      context: ..
+      dockerfile: apps/api/Dockerfile
+    command: >
+      sh -c "
+        alembic upgrade head &&
+        python infra/scripts/seed.py &&
+        uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 2
+      "
+    depends_on:
+      db: { condition: service_healthy }
+      redis: { condition: service_healthy }
+    networks: [internal, external]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ── SCHEDULER ────────────────────────────────────────────────────────
+  scheduler:
+    <<: [*restart, *env]
+    build:
+      context: ..
+      dockerfile: apps/api/Dockerfile
+    command: python -m app.scheduler.runner
+    depends_on:
+      db: { condition: service_healthy }
+      redis: { condition: service_healthy }
+    networks: [internal]
+
+  # ── TELEGRAM BOT ─────────────────────────────────────────────────────
+  bot-tg:
+    <<: [*restart, *env]
+    build:
+      context: ..
+      dockerfile: apps/bot-tg/Dockerfile
+    depends_on: [api]
+    networks: [internal, external]
+
+  # ── MAX BOT ───────────────────────────────────────────────────────────
+  bot-max:
+    <<: [*restart, *env]
+    build:
+      context: ..
+      dockerfile: apps/bot-max/Dockerfile
+    depends_on: [api]
+    networks: [internal, external]
+    ports: ["8082:8082"]
+
+  # ── MARKETPLACE ───────────────────────────────────────────────────────
+  marketplace:
+    <<: [*restart, *env]
+    build:
+      context: ..
+      dockerfile: apps/marketplace/Dockerfile
+    environment:
+      API_URL: http://api:8000/api/v1
+      APP_URL: ${APP_URL}
+    networks: [internal, external]
+    ports: ["3000:3000"]
+
+  # ── NGINX ─────────────────────────────────────────────────────────────
+  nginx:
+    <<: *restart
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.prod.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - ./nginx/certbot:/var/www/certbot:ro
+    depends_on: [api, marketplace, bot-tg, bot-max]
+    networks: [internal, external]
+
+volumes:
+  pgdata:
+  redisdata:
+
+networks:
+  internal:
+    driver: bridge
+    internal: true
+  external:
+    driver: bridge

@@ -37,6 +37,32 @@ services:
       timeout: 5s
       retries: 5
 
+  # ── TELEGRAM BOT ─────────────────────────────────────────
+  bot-tg:
+    build:
+      context: ..
+      dockerfile: apps/bot-tg/Dockerfile
+    container_name: bookmaster_bot_tg
+    restart: unless-stopped
+    env_file: ../.env
+    depends_on:
+      - db
+      - redis
+
+  # ── MAX BOT ─────────────────────────────────────────────
+  bot-max:
+    build:
+      context: ..
+      dockerfile: apps/bot-max/Dockerfile
+    container_name: bookmaster_bot_max
+    restart: unless-stopped
+    env_file: ../.env
+    ports:
+      - "8082:8082"
+    depends_on:
+      - db
+      - redis
+
 volumes:
   pgdata:
   redisdata:
