@@ -15,6 +15,8 @@ class ServiceCreate(BaseModel):
     description: Optional[str] = None
     category: Optional[str] = None
     is_online: bool = False
+    is_consultation: bool = False
+    consultation_url: Optional[str] = None
     sort_order: int = 0
 
 
@@ -27,6 +29,8 @@ class ServiceUpdate(BaseModel):
     category: Optional[str] = None
     is_active: Optional[bool] = None
     is_online: Optional[bool] = None
+    is_consultation: Optional[bool] = None
+    consultation_url: Optional[str] = None
     sort_order: Optional[int] = None
 
 
@@ -41,6 +45,8 @@ class ServiceOut(BaseModel):
     category: Optional[str] = None
     is_active: bool = True
     is_online: bool = False
+    is_consultation: bool = False
+    consultation_url: Optional[str] = None
     sort_order: int = 0
 
     model_config = {"from_attributes": True}

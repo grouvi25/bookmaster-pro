@@ -22,6 +22,7 @@ import Clients from '@/pages/master/Clients';
 import Tools from '@/pages/master/Tools';
 import AIAssistant from '@/pages/master/AI';
 import Settings from '@/pages/master/Settings';
+import Consultations from '@/pages/master/Consultations';
 import TabBar from '@/components/common/TabBar';
 
 // Специальные страницы
@@ -156,6 +157,7 @@ function AppRouter() {
         <Route path="/master/tools" element={<RequireAuth allowedRoles={['master', 'superadmin']}><Tools /></RequireAuth>} />
         <Route path="/master/ai" element={<RequireAuth allowedRoles={['master', 'superadmin']}><AIAssistant /></RequireAuth>} />
         <Route path="/master/settings" element={<RequireAuth allowedRoles={['master', 'superadmin']}><Settings /></RequireAuth>} />
+        <Route path="/master/consultations" element={<RequireAuth allowedRoles={['master', 'superadmin']}><Consultations /></RequireAuth>} />
 
         {/* Публичная страница-линк (TapLink) */}
         <Route path="/p/:slug" element={<LinkPage />} />
