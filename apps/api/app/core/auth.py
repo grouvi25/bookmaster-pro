@@ -13,6 +13,7 @@ from urllib.parse import parse_qs, unquote
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError, jwt
+from sqlalchemy import select as sa_select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
@@ -102,3 +103,43 @@ async def get_current_user(
             detail="Not authenticated",
         )
     return decode_token(credentials.credentials)
+
+
+async def get_current_master(
+    user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Возвращает объект Master для текущего пользователя."""
+    from app.modules.masters.models import Master
+
+    identity_id = user.get("identity_id")
+    if not identity_id:
+        raise HTTPException(status_code=403, detail="Not a master")
+
+    result = await db.execute(
+        sa_select(Master).where(Master.identity_id == identity_id)
+    )
+    master = result.scalar_one_or_none()
+    if not master:
+        raise HTTPException(status_code=403, detail="Master profile not found")
+    return master
+
+
+async def get_current_client(
+    user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Возвращает объект Client для текущего пользователя."""
+    from app.modules.clients.models import Client
+
+    identity_id = user.get("identity_id")
+    if not identity_id:
+        raise HTTPException(status_code=403, detail="Not a client")
+
+    result = await db.execute(
+        sa_select(Client).where(Client.identity_id == identity_id)
+    )
+    client = result.scalar_one_or_none()
+    if not client:
+        raise HTTPException(status_code=403, detail="Client profile not found")
+    return client
