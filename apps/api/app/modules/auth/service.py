@@ -45,6 +45,7 @@ class AuthService:
                     "token": token,
                     "user_id": identity.id,
                     "display_name": "SuperAdmin",
+                    "master_id": None,
                 }
             # Автоматически создаём identity для суперадмина
             identity = Identity(
@@ -60,22 +61,33 @@ class AuthService:
                 "token": token,
                 "user_id": identity.id,
                 "display_name": "SuperAdmin",
+                "master_id": None,
             }
 
         # Ищем существующего пользователя
         identity = await self._get_identity(platform, platform_id)
         if not identity:
-            return {"role": "new", "token": None, "user_id": None, "display_name": None}
+            return {"role": "new", "token": None, "user_id": None, "display_name": None, "master_id": None}
 
         # Получаем display_name
         display_name = await self._get_display_name(identity)
         token = self._create_token(identity, identity.role)
+
+        master_id = None
+        if identity.role == "master":
+            result = await self.db.execute(
+                select(Master).where(Master.identity_id == identity.id)
+            )
+            master = result.scalar_one_or_none()
+            if master:
+                master_id = master.id
 
         return {
             "role": identity.role,
             "token": token,
             "user_id": identity.id,
             "display_name": display_name,
+            "master_id": master_id,
         }
 
     async def register(
@@ -168,6 +180,7 @@ class AuthService:
         return create_access_token(
             data={
                 "sub": str(identity.id),
+                "identity_id": identity.id,
                 "platform": identity.platform,
                 "platform_id": identity.platform_id,
                 "role": role,
