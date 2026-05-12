@@ -1,16 +1,24 @@
+import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { bookingApi } from '@/api/endpoints';
 import { useBookingStore } from '@/stores/booking';
 import BackButton from '@/components/common/BackButton';
 import Loading from '@/components/common/Loading';
-import { format, addDays, parseISO } from 'date-fns';
+import {
+  format, parseISO, startOfMonth, endOfMonth, eachDayOfInterval,
+  getDay, addMonths, subMonths, isSameDay, isBefore, startOfDay,
+} from 'date-fns';
 import { ru } from 'date-fns/locale';
 import clsx from 'clsx';
+import { ChevronLeft, ChevronRight, CalendarDays } from 'lucide-react';
+
+const WEEKDAYS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
 
 export default function SelectDate() {
   const navigate = useNavigate();
   const { masterId, serviceId, selectedDate, setDate } = useBookingStore();
+  const [viewMonth, setViewMonth] = useState(new Date());
 
   const { data: availableDates, isLoading } = useQuery({
     queryKey: ['available-dates', masterId, serviceId],
@@ -19,18 +27,25 @@ export default function SelectDate() {
     enabled: !!masterId && !!serviceId,
   });
 
-  if (isLoading) return <Loading />;
-
-  const dates: Date[] = [];
-  for (let i = 0; i < 30; i++) {
-    dates.push(addDays(new Date(), i));
-  }
-
-  const availableSet = new Set(
-    (availableDates?.dates || []).map((d: string) =>
-      format(parseISO(d), 'yyyy-MM-dd')
-    )
+  const availableSet = useMemo(
+    () =>
+      new Set(
+        (availableDates?.dates || []).map((d: string) =>
+          format(parseISO(d), 'yyyy-MM-dd')
+        )
+      ),
+    [availableDates]
   );
+
+  const calendarDays = useMemo(() => {
+    const start = startOfMonth(viewMonth);
+    const end = endOfMonth(viewMonth);
+    const days = eachDayOfInterval({ start, end });
+    const startPad = (getDay(start) + 6) % 7;
+    return { days, startPad };
+  }, [viewMonth]);
+
+  if (isLoading) return <Loading />;
 
   const handleSelectDate = (date: Date) => {
     const formatted = format(date, 'yyyy-MM-dd');
@@ -39,47 +54,77 @@ export default function SelectDate() {
     navigate('/book/time');
   };
 
+  const today = startOfDay(new Date());
+
   return (
-    <div className="p-4 animate-slide-up">
+    <div className="p-4 pb-20 animate-slide-up">
       <BackButton to="/book/service" />
       <h1 className="text-xl font-bold mb-1">Выберите дату</h1>
       <p className="text-tg-hint text-sm mb-4">Шаг 2 из 5</p>
 
-      {/* Горизонтальный календарь */}
-      <div className="flex overflow-x-auto gap-2 pb-2 -mx-4 px-4 scrollbar-hide">
-        {dates.map((date) => {
+      {/* Month navigation */}
+      <div className="flex items-center justify-between mb-4">
+        <button
+          onClick={() => setViewMonth(subMonths(viewMonth, 1))}
+          className="p-2 rounded-lg active:bg-tg-secondary"
+        >
+          <ChevronLeft className="w-5 h-5 text-tg-hint" />
+        </button>
+        <h2 className="text-base font-semibold capitalize">
+          {format(viewMonth, 'LLLL yyyy', { locale: ru })}
+        </h2>
+        <button
+          onClick={() => setViewMonth(addMonths(viewMonth, 1))}
+          className="p-2 rounded-lg active:bg-tg-secondary"
+        >
+          <ChevronRight className="w-5 h-5 text-tg-hint" />
+        </button>
+      </div>
+
+      {/* Weekday headers */}
+      <div className="grid grid-cols-7 mb-1">
+        {WEEKDAYS.map((d) => (
+          <div key={d} className="text-center text-xs text-tg-hint font-medium py-1">
+            {d}
+          </div>
+        ))}
+      </div>
+
+      {/* Calendar grid */}
+      <div className="grid grid-cols-7 gap-y-1">
+        {Array.from({ length: calendarDays.startPad }).map((_, i) => (
+          <div key={`pad-${i}`} />
+        ))}
+        {calendarDays.days.map((date) => {
           const key = format(date, 'yyyy-MM-dd');
           const available = availableSet.has(key);
           const selected = selectedDate === key;
+          const past = isBefore(date, today) && !isSameDay(date, today);
+
           return (
             <button
               key={key}
               onClick={() => handleSelectDate(date)}
-              disabled={!available}
+              disabled={!available || past}
               className={clsx(
-                'flex flex-col items-center min-w-[56px] py-3 px-2 rounded-xl transition-all',
+                'aspect-square flex items-center justify-center rounded-xl text-sm font-medium transition-all',
                 selected
-                  ? 'bg-tg-button text-tg-button-text'
-                  : available
-                    ? 'bg-tg-secondary text-tg-text active:scale-95'
-                    : 'bg-gray-100 text-gray-300'
+                  ? 'bg-tg-button text-tg-button-text shadow-sm'
+                  : available && !past
+                    ? 'text-tg-text active:scale-90 hover:bg-tg-secondary'
+                    : 'text-gray-300'
               )}
             >
-              <span className="text-xs uppercase">
-                {format(date, 'EEE', { locale: ru })}
-              </span>
-              <span className="text-lg font-bold">{format(date, 'd')}</span>
-              <span className="text-xs">
-                {format(date, 'MMM', { locale: ru })}
-              </span>
+              {format(date, 'd')}
             </button>
           );
         })}
       </div>
 
       {!availableDates?.dates?.length && (
-        <div className="text-center py-8">
-          <p className="text-tg-hint">Нет доступных дат</p>
+        <div className="text-center py-8 mt-4">
+          <CalendarDays className="w-10 h-10 text-tg-hint mx-auto mb-3" strokeWidth={1.5} />
+          <p className="text-tg-hint text-sm">Нет доступных дат</p>
           <button
             onClick={() => navigate('/book/waitlist')}
             className="mt-3 text-tg-link text-sm"
