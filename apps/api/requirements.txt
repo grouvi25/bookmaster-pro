@@ -1,0 +1,58 @@
+# === WEB FRAMEWORK ===
+fastapi==0.111.0
+uvicorn[standard]==0.30.1
+python-multipart==0.0.9
+
+# === DATABASE ===
+sqlalchemy[asyncio]==2.0.31
+asyncpg==0.29.0
+alembic==1.13.2
+psycopg2-binary==2.9.9
+pgvector==0.3.2
+
+# === VALIDATION ===
+pydantic==2.8.2
+pydantic-settings==2.4.0
+
+# === AUTH / SECURITY ===
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+
+# === CACHE / QUEUE ===
+redis==5.0.8
+apscheduler==3.10.4
+
+# === AI ===
+openai==1.40.0
+langchain==0.2.12
+langchain-openai==0.1.20
+langchain-community==0.2.11
+langchain-postgres==0.0.9
+tiktoken==0.7.0
+
+# === PAYMENTS ===
+yookassa==3.4.0
+
+# === STORAGE (S3) ===
+aioboto3==13.1.1
+boto3==1.35.0
+
+# === TELEGRAM BOT ===
+aiogram==3.13.0
+
+# === HTTP ===
+httpx==0.27.2
+aiofiles==24.1.0
+
+# === UTILS ===
+python-dateutil==2.9.0
+pytz==2024.1
+pillow==10.4.0
+qrcode[pil]==7.4.2
+pydub==0.25.1
+
+# === MONITORING ===
+sentry-sdk[fastapi]==2.13.0
+
+# === GEOSPATIAL ===
+geoalchemy2==0.15.2
