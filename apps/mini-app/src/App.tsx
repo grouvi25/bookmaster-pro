@@ -47,7 +47,10 @@ function AppRouter() {
         try {
           const resp = await authApi.identify(initData);
           const data = resp.data;
-          setAuth(data.access_token, data.role, data.master_id);
+          if (data.access_token) {
+            setAuth(data.access_token, data.role, data.master_id);
+          }
+          // role='new' without token — user needs to register
         } catch {
           // не авторизован — покажем лендинг
         }
