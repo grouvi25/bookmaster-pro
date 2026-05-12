@@ -82,33 +82,50 @@ app.include_router(waitlist_router, prefix="/api/v1/waitlist", tags=["waitlist"]
 from app.modules.clients.router import router as clients_router
 app.include_router(clients_router, prefix="/api/v1/clients", tags=["clients"])
 
-# from app.modules.ai.router import router as ai_router
-# app.include_router(ai_router, prefix="/api/v1/ai", tags=["ai"])
+from app.modules.ai.router import router as ai_router
+app.include_router(ai_router, prefix="/api/v1/ai", tags=["ai"])
 
-# from app.modules.analytics.router import router as analytics_router
-# app.include_router(analytics_router, prefix="/api/v1/analytics", tags=["analytics"])
+from app.modules.analytics.router import router as analytics_router
+app.include_router(analytics_router, prefix="/api/v1/analytics", tags=["analytics"])
 
-# from app.modules.support.router import router as support_router
-# app.include_router(support_router, prefix="/api/v1/support", tags=["support"])
+from app.modules.portfolio.router import router as portfolio_router
+app.include_router(portfolio_router, prefix="/api/v1/portfolio", tags=["portfolio"])
 
-# from app.modules.marketplace.router import router as marketplace_router
-# app.include_router(marketplace_router, prefix="/api/v1/marketplace", tags=["marketplace"])
+from app.modules.support.router import router as support_router
+app.include_router(support_router, prefix="/api/v1/support", tags=["support"])
 
-# from app.modules.superadmin.router import router as superadmin_router
-# app.include_router(superadmin_router, prefix="/api/v1/superadmin", tags=["superadmin"])
+from app.modules.marketplace.router import router as marketplace_router
+app.include_router(marketplace_router, prefix="/api/v1/marketplace", tags=["marketplace"])
+
+from app.modules.superadmin.router import router as superadmin_router
+app.include_router(superadmin_router, prefix="/api/v1/superadmin", tags=["superadmin"])
 
 
 # ── APScheduler ──────────────────────────────────────────────
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from app.modules.booking.scheduler import remind_24h, remind_2h, cleanup_pending
+from app.modules.booking.scheduler import (
+    remind_24h, remind_2h, cleanup_pending,
+    admin_daily, birthday_promo, reactivation,
+    post_visit_review, billing_reminder, ai_reindex,
+)
 
 scheduler = AsyncIOScheduler()
 
 
 @app.on_event("startup")
 async def startup():
+    # Фаза 1: напоминания и очистка
     scheduler.add_job(remind_24h, "interval", hours=1, id="remind_24h")
     scheduler.add_job(remind_2h, "interval", minutes=30, id="remind_2h")
     scheduler.add_job(cleanup_pending, "interval", minutes=10, id="cleanup_pending")
+
+    # Фаза 3: расширенные задачи
+    scheduler.add_job(admin_daily, "cron", hour=9, minute=0, id="admin_daily")
+    scheduler.add_job(birthday_promo, "cron", hour=8, minute=0, id="birthday_promo")
+    scheduler.add_job(reactivation, "cron", hour=11, minute=0, id="reactivation")
+    scheduler.add_job(post_visit_review, "interval", hours=1, id="post_visit_review")
+    scheduler.add_job(billing_reminder, "cron", hour=10, minute=0, id="billing_reminder")
+    scheduler.add_job(ai_reindex, "cron", hour=3, minute=0, id="ai_reindex")
+
     scheduler.start()
-    logger.info("APScheduler started with 3 jobs")
+    logger.info("APScheduler started with 9 jobs")
