@@ -8,8 +8,8 @@ from pydantic import BaseModel
 
 
 class IdentifyRequest(BaseModel):
-    platform: str  # 'telegram' | 'max'
-    platform_id: str
+    platform: Optional[str] = None  # 'telegram' | 'max' — derived from init_data if omitted
+    platform_id: Optional[str] = None  # derived from init_data if omitted
     init_data: Optional[str] = None  # Telegram initData для валидации
     first_name: Optional[str] = None
     last_name: Optional[str] = None
@@ -18,10 +18,11 @@ class IdentifyRequest(BaseModel):
 
 
 class RegisterRequest(BaseModel):
-    platform: str
-    platform_id: str
+    platform: Optional[str] = None
+    platform_id: Optional[str] = None
+    init_data: Optional[str] = None  # Telegram initData — used to derive platform/platform_id
     role: str  # 'master' | 'client'
-    display_name: str
+    display_name: Optional[str] = None
     specialization: Optional[str] = None  # только для мастера
     phone: Optional[str] = None
     city: Optional[str] = None
@@ -30,8 +31,10 @@ class RegisterRequest(BaseModel):
 class IdentifyResponse(BaseModel):
     role: str  # 'master' | 'client' | 'superadmin' | 'moderator' | 'new'
     token: Optional[str] = None
+    access_token: Optional[str] = None
     user_id: Optional[int] = None
     display_name: Optional[str] = None
+    master_id: Optional[int] = None
 
 
 class TokenResponse(BaseModel):
