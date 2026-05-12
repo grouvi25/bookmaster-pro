@@ -5,6 +5,7 @@ import { useAuthStore } from '@/stores/auth';
 import { useBookingStore } from '@/stores/booking';
 import { authApi } from '@/api/endpoints';
 import { ShieldAlert, CalendarDays } from 'lucide-react';
+import { ToastContainer } from '@/shared/ui/Toast';
 
 // Клиентские экраны
 import MasterProfile from '@/pages/client/MasterProfile';
@@ -199,6 +200,7 @@ function HomePage() {
 export default function App() {
   return (
     <BrowserRouter>
+      <ToastContainer />
       <AppRouter />
     </BrowserRouter>
   );

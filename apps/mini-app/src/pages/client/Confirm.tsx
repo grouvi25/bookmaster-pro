@@ -3,8 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { bookingApi, paymentsApi } from '@/api/endpoints';
 import { useBookingStore } from '@/stores/booking';
 import BackButton from '@/components/common/BackButton';
+import Button from '@/shared/ui/Button';
+import Card from '@/shared/ui/Card';
+import { toast } from '@/shared/ui/Toast';
 import { format, parseISO } from 'date-fns';
 import { ru } from 'date-fns/locale';
+import { User, Scissors, CalendarDays, Clock, CreditCard, Wallet, Banknote } from 'lucide-react';
 
 export default function Confirm() {
   const navigate = useNavigate();
@@ -48,9 +52,10 @@ export default function Confirm() {
         }
       }
 
+      toast.success('Запись подтверждена!');
       navigate('/book/success');
-    } catch (e) {
-      console.error('Booking error:', e);
+    } catch {
+      toast.error('Ошибка при оформлении записи');
     } finally {
       setLoading(false);
     }
@@ -61,68 +66,70 @@ export default function Confirm() {
     : '';
 
   return (
-    <div className="p-4 animate-slide-up">
+    <div className="p-4 pb-20 animate-slide-up">
       <BackButton to="/book/promo" />
       <h1 className="text-xl font-bold mb-1">Подтверждение</h1>
       <p className="text-tg-hint text-sm mb-4">Шаг 5 из 5</p>
 
-      {/* Итог */}
-      <div className="bg-tg-secondary rounded-2xl p-4 mb-4">
-        <div className="flex flex-col gap-2 text-sm">
-          <div className="flex justify-between">
+      <Card className="mb-4">
+        <div className="flex flex-col gap-3 text-sm">
+          <div className="flex items-center gap-3">
+            <User className="w-4 h-4 text-tg-hint flex-shrink-0" />
             <span className="text-tg-hint">Мастер</span>
-            <span className="font-medium">{store.masterName}</span>
+            <span className="ml-auto font-medium">{store.masterName}</span>
           </div>
-          <div className="flex justify-between">
+          <div className="flex items-center gap-3">
+            <Scissors className="w-4 h-4 text-tg-hint flex-shrink-0" />
             <span className="text-tg-hint">Услуга</span>
-            <span className="font-medium">{store.serviceName}</span>
+            <span className="ml-auto font-medium">{store.serviceName}</span>
           </div>
-          <div className="flex justify-between">
+          <div className="flex items-center gap-3">
+            <CalendarDays className="w-4 h-4 text-tg-hint flex-shrink-0" />
             <span className="text-tg-hint">Дата</span>
-            <span className="font-medium">{dateStr}</span>
+            <span className="ml-auto font-medium capitalize">{dateStr}</span>
           </div>
-          <div className="flex justify-between">
+          <div className="flex items-center gap-3">
+            <Clock className="w-4 h-4 text-tg-hint flex-shrink-0" />
             <span className="text-tg-hint">Время</span>
-            <span className="font-medium">{store.selectedTime}</span>
+            <span className="ml-auto font-medium">{store.selectedTime} &middot; {store.serviceDuration} мин</span>
           </div>
-          <div className="flex justify-between">
-            <span className="text-tg-hint">Длительность</span>
-            <span className="font-medium">{store.serviceDuration} мин</span>
-          </div>
+
           {store.promoCode && (
-            <div className="flex justify-between text-green-600">
+            <div className="flex items-center gap-3 text-green-600">
+              <span className="w-4 h-4" />
               <span>Промокод {store.promoCode}</span>
-              <span>-{store.discount}{store.discount < 100 ? '%' : ' \u20bd'}</span>
+              <span className="ml-auto">-{store.discount}{store.discount < 100 ? '%' : ' \u20bd'}</span>
             </div>
           )}
-          <div className="border-t border-gray-200 pt-2 flex justify-between">
+
+          <div className="border-t border-gray-200 pt-3 flex justify-between">
             <span className="font-bold">Итого</span>
             <span className="font-bold text-brand-600">
               {finalPrice.toLocaleString('ru')} \u20bd
             </span>
           </div>
         </div>
-      </div>
+      </Card>
 
-      {/* Способ оплаты */}
       {finalPrice > 0 && (
         <div className="mb-4">
-          <h3 className="font-medium text-sm mb-2">Оплата</h3>
+          <h3 className="font-medium text-sm mb-2">Способ оплаты</h3>
           <div className="flex flex-col gap-2">
-            {[
-              { type: 'full' as const, label: `Полная оплата ${finalPrice.toLocaleString('ru')} \u20bd` },
-              { type: 'prepay' as const, label: `Предоплата 20% — ${Math.round(finalPrice * 0.2).toLocaleString('ru')} \u20bd` },
-              { type: 'none' as const, label: 'Без предоплаты' },
-            ].map(({ type, label }) => (
+            {([
+              { type: 'full' as const, label: `Полная оплата ${finalPrice.toLocaleString('ru')} \u20bd`, Icon: CreditCard },
+              { type: 'prepay' as const, label: `Предоплата 20% \u2014 ${Math.round(finalPrice * 0.2).toLocaleString('ru')} \u20bd`, Icon: Banknote },
+              { type: 'none' as const, label: 'Оплата на месте', Icon: Wallet },
+            ]).map(({ type, label, Icon }) => (
               <button
                 key={type}
                 onClick={() => setPaymentType(type)}
-                className={`p-3 rounded-xl text-sm text-left transition-all ${
+                className={`flex items-center gap-3 p-3.5 rounded-xl text-sm text-left transition-all ${
                   paymentType === type
                     ? 'bg-brand-50 border-2 border-brand-500 text-brand-700'
                     : 'bg-tg-secondary border-2 border-transparent text-tg-text'
                 }`}
               >
+                <Icon className="w-4 h-4 flex-shrink-0" />
                 {label}
               </button>
             ))}
@@ -130,13 +137,14 @@ export default function Confirm() {
         </div>
       )}
 
-      <button
+      <Button
         onClick={handleConfirm}
-        disabled={loading}
-        className="w-full bg-tg-button text-tg-button-text py-3.5 rounded-xl font-bold text-base disabled:opacity-50"
+        loading={loading}
+        fullWidth
+        size="lg"
       >
-        {loading ? 'Оформление...' : 'Подтвердить запись'}
-      </button>
+        Подтвердить запись
+      </Button>
     </div>
   );
 }
