@@ -3,7 +3,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class MaxSettings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_file="../../.env", case_sensitive=False
+        env_file="../../.env", case_sensitive=False, extra="ignore"
     )
 
     MAX_BOT_TOKEN: str = ""
