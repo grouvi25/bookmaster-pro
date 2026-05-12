@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { promoApi, loyaltyApi } from '@/api/endpoints';
 import Loading from '@/components/common/Loading';
+import { Ticket, Star, Plus, Tag } from 'lucide-react';
 
 export default function Tools() {
   const [tab, setTab] = useState<'promo' | 'loyalty'>('promo');
@@ -10,21 +11,21 @@ export default function Tools() {
     <div className="p-4 pb-20 animate-fade-in">
       <h1 className="text-xl font-bold mb-3">Инструменты</h1>
 
-      {/* Tabs */}
       <div className="flex gap-2 mb-4">
         {[
-          { key: 'promo' as const, label: '\ud83c\udf81 Промокоды' },
-          { key: 'loyalty' as const, label: '\u2b50 Лояльность' },
-        ].map(({ key, label }) => (
+          { key: 'promo' as const, label: 'Промокоды', Icon: Ticket },
+          { key: 'loyalty' as const, label: 'Лояльность', Icon: Star },
+        ].map(({ key, label, Icon }) => (
           <button
             key={key}
             onClick={() => setTab(key)}
-            className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
               tab === key
                 ? 'bg-tg-button text-tg-button-text'
                 : 'bg-tg-secondary text-tg-text'
             }`}
           >
+            <Icon className="w-4 h-4" />
             {label}
           </button>
         ))}
@@ -66,9 +67,9 @@ function PromoSection() {
         <h2 className="font-medium">Активные промокоды</h2>
         <button
           onClick={() => setShowForm(!showForm)}
-          className="text-tg-link text-sm"
+          className="flex items-center gap-1 text-tg-link text-sm"
         >
-          {showForm ? 'Отмена' : '+ Создать'}
+          {showForm ? 'Отмена' : <><Plus className="w-4 h-4" /> Создать</>}
         </button>
       </div>
 
@@ -107,9 +108,10 @@ function PromoSection() {
       )}
 
       {promos.length === 0 ? (
-        <p className="text-tg-hint text-sm text-center py-4">
-          Нет активных промокодов
-        </p>
+        <div className="text-center py-6">
+          <Tag className="w-8 h-8 text-tg-hint mx-auto mb-2" strokeWidth={1.5} />
+          <p className="text-tg-hint text-sm">Нет активных промокодов</p>
+        </div>
       ) : (
         <div className="flex flex-col gap-2">
           {promos.map((p: Record<string, unknown>) => (
@@ -157,9 +159,10 @@ function LoyaltySection() {
       </div>
 
       {history.length === 0 ? (
-        <p className="text-tg-hint text-sm text-center py-4">
-          История начислений пуста
-        </p>
+        <div className="text-center py-6">
+          <Star className="w-8 h-8 text-tg-hint mx-auto mb-2" strokeWidth={1.5} />
+          <p className="text-tg-hint text-sm">История начислений пуста</p>
+        </div>
       ) : (
         <div className="flex flex-col gap-2">
           {history.map((h: Record<string, unknown>, i: number) => (

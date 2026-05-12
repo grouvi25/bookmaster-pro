@@ -4,6 +4,7 @@ import { PlatformAdapter } from '@/platform/platform-adapter';
 import { useAuthStore } from '@/stores/auth';
 import { useBookingStore } from '@/stores/booking';
 import { authApi } from '@/api/endpoints';
+import { ShieldAlert, CalendarDays } from 'lucide-react';
 
 // Клиентские экраны
 import MasterProfile from '@/pages/client/MasterProfile';
@@ -38,7 +39,7 @@ function RequireAuth({ children, allowedRoles }: { children: ReactNode; allowedR
   if (!token || !role) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-tg-bg text-tg-text p-6">
-        <div className="text-5xl mb-4">{'\ud83d\udd12'}</div>
+        <ShieldAlert className="w-12 h-12 text-tg-hint mb-4" strokeWidth={1.5} />
         <h2 className="text-xl font-bold mb-2">Доступ запрещён</h2>
         <p className="text-tg-hint text-center text-sm">
           Откройте приложение через Telegram для авторизации
@@ -183,7 +184,7 @@ function MasterProfileRoute() {
 function HomePage() {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-tg-bg text-tg-text p-6 animate-fade-in">
-      <div className="text-5xl mb-4">{'\ud83d\udcc5'}</div>
+      <CalendarDays className="w-12 h-12 text-brand-500 mb-4" strokeWidth={1.5} />
       <h1 className="text-2xl font-bold mb-2">BookMaster Pro</h1>
       <p className="text-tg-hint text-center mb-6">
         Платформа онлайн-записи к мастерам

@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useBookingStore } from '@/stores/booking';
 import { format, parseISO } from 'date-fns';
 import { ru } from 'date-fns/locale';
+import { CircleCheck } from 'lucide-react';
 
 export default function BookingSuccess() {
   const navigate = useNavigate();
@@ -18,7 +19,9 @@ export default function BookingSuccess() {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-6 animate-bounce-in">
-      <div className="text-6xl mb-4">{'\u2705'}</div>
+      <div className="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mb-4">
+        <CircleCheck className="w-8 h-8 text-green-500" strokeWidth={1.8} />
+      </div>
       <h1 className="text-2xl font-bold mb-2 text-tg-text">Вы записаны!</h1>
       <p className="text-tg-hint text-center mb-6">
         Напоминание придёт автоматически

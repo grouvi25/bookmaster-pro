@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useParams } from 'react-router-dom';
 import { mastersApi, servicesApi, reviewsApi, portfolioApi } from '@/api/endpoints';
 import Loading from '@/components/common/Loading';
+import { User, Star, ExternalLink } from 'lucide-react';
 
 export default function LinkPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -39,13 +40,13 @@ export default function LinkPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-brand-50 to-white">
-      {/* Шапка */}
+      {/* Header */}
       <div className="pt-10 pb-6 px-6 text-center">
-        <div className="w-28 h-28 rounded-full bg-white shadow-lg mx-auto mb-4 flex items-center justify-center text-5xl overflow-hidden">
+        <div className="w-28 h-28 rounded-full bg-white shadow-lg mx-auto mb-4 flex items-center justify-center overflow-hidden">
           {master.avatar_url ? (
             <img src={master.avatar_url} alt={master.name} className="w-full h-full object-cover" />
           ) : (
-            '\ud83d\udc64'
+            <User className="w-12 h-12 text-brand-300" strokeWidth={1.5} />
           )}
         </div>
         <h1 className="text-2xl font-bold text-gray-900">{master.name}</h1>
@@ -57,14 +58,14 @@ export default function LinkPage() {
         )}
         {master.rating_count > 0 && (
           <div className="flex items-center justify-center gap-1 mt-3">
-            <span className="text-yellow-400 text-lg">{'\u2605'}</span>
+            <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
             <span className="font-bold">{master.rating_avg?.toFixed(1)}</span>
             <span className="text-gray-400 text-sm">({master.rating_count} отзывов)</span>
           </div>
         )}
       </div>
 
-      {/* Соцсети */}
+      {/* Social links */}
       {master.social_links?.length > 0 && (
         <div className="flex justify-center gap-3 px-4 mb-6">
           {master.social_links.map((link: { url: string; icon?: string }, i: number) => (
@@ -73,15 +74,15 @@ export default function LinkPage() {
               href={link.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-10 h-10 bg-white shadow rounded-full flex items-center justify-center text-lg hover:scale-110 transition-transform"
+              className="w-10 h-10 bg-white shadow rounded-full flex items-center justify-center hover:scale-110 transition-transform"
             >
-              {link.icon || '\ud83d\udd17'}
+              <ExternalLink className="w-4 h-4 text-gray-500" />
             </a>
           ))}
         </div>
       )}
 
-      {/* Услуги */}
+      {/* Services */}
       {services?.length > 0 && (
         <div className="px-4 mb-6">
           <h2 className="font-bold text-lg mb-3 text-center">Мои услуги</h2>
@@ -106,7 +107,7 @@ export default function LinkPage() {
         </div>
       )}
 
-      {/* Портфолио */}
+      {/* Portfolio */}
       {portfolio?.items?.length > 0 && (
         <div className="px-4 mb-6">
           <h2 className="font-bold text-lg mb-3 text-center">Портфолио</h2>
@@ -123,7 +124,7 @@ export default function LinkPage() {
         </div>
       )}
 
-      {/* Отзывы */}
+      {/* Reviews */}
       {reviews?.reviews?.length > 0 && (
         <div className="px-4 mb-6">
           <h2 className="font-bold text-lg mb-3 text-center">Отзывы</h2>
@@ -132,9 +133,11 @@ export default function LinkPage() {
               <div key={r.id as number} className="bg-white rounded-xl shadow-sm p-3">
                 <div className="flex justify-between mb-1">
                   <span className="text-sm font-medium">{r.client_name as string}</span>
-                  <span className="text-yellow-400 text-sm">
-                    {'\u2605'.repeat(r.rating as number)}
-                  </span>
+                  <div className="flex gap-0.5">
+                    {Array.from({ length: r.rating as number }).map((_, i) => (
+                      <Star key={i} className="w-3 h-3 text-yellow-400 fill-yellow-400" />
+                    ))}
+                  </div>
                 </div>
                 {r.text ? (
                   <p className="text-xs text-gray-500">{String(r.text)}</p>
