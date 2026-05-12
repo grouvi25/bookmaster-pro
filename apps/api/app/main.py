@@ -50,18 +50,18 @@ async def health():
     return {"status": "ok", "version": "1.0.0"}
 
 
-# ── Роутеры модулей (подключаются по мере реализации) ────────
-# from app.modules.auth.router import router as auth_router
-# app.include_router(auth_router, prefix="/api/v1/auth", tags=["auth"])
+# ── Роутеры модулей ───────────────────────────────────────────
+from app.modules.auth.router import router as auth_router
+app.include_router(auth_router, prefix="/api/v1/auth", tags=["auth"])
 
-# from app.modules.masters.router import router as masters_router
-# app.include_router(masters_router, prefix="/api/v1/masters", tags=["masters"])
+from app.modules.masters.router import router as masters_router
+app.include_router(masters_router, prefix="/api/v1/masters", tags=["masters"])
 
-# from app.modules.services.router import router as services_router
-# app.include_router(services_router, prefix="/api/v1/services", tags=["services"])
+from app.modules.services.router import router as services_router
+app.include_router(services_router, prefix="/api/v1/services", tags=["services"])
 
-# from app.modules.booking.router import router as booking_router
-# app.include_router(booking_router, prefix="/api/v1/booking", tags=["booking"])
+from app.modules.booking.router import router as booking_router
+app.include_router(booking_router, prefix="/api/v1/booking", tags=["booking"])
 
 # from app.modules.payments.router import router as payments_router
 # app.include_router(payments_router, prefix="/api/v1/payments", tags=["payments"])
@@ -95,3 +95,19 @@ async def health():
 
 # from app.modules.webhooks.router import router as webhooks_router
 # app.include_router(webhooks_router, prefix="/webhook", tags=["webhooks"])
+
+
+# ── APScheduler ──────────────────────────────────────────────
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from app.modules.booking.scheduler import remind_24h, remind_2h, cleanup_pending
+
+scheduler = AsyncIOScheduler()
+
+
+@app.on_event("startup")
+async def startup():
+    scheduler.add_job(remind_24h, "interval", hours=1, id="remind_24h")
+    scheduler.add_job(remind_2h, "interval", minutes=30, id="remind_2h")
+    scheduler.add_job(cleanup_pending, "interval", minutes=10, id="cleanup_pending")
+    scheduler.start()
+    logger.info("APScheduler started with 3 jobs")
