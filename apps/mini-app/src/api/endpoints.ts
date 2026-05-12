@@ -1,0 +1,138 @@
+import api from './client';
+
+// ── Auth ──
+export const authApi = {
+  identify: (initData: string) =>
+    api.post('/auth/identify', { init_data: initData }),
+  register: (data: { init_data: string; role: string }) =>
+    api.post('/auth/register', data),
+};
+
+// ── Masters ──
+export const mastersApi = {
+  getPublic: (slug: string) => api.get(`/masters/${slug}/public`),
+  getProfile: () => api.get('/masters/me'),
+  updateProfile: (data: Record<string, unknown>) =>
+    api.put('/masters/me', data),
+  getSchedule: (params?: Record<string, string>) =>
+    api.get('/masters/me/schedule', { params }),
+  updateSchedule: (data: Record<string, unknown>) =>
+    api.put('/masters/me/schedule', data),
+};
+
+// ── Services ──
+export const servicesApi = {
+  list: (masterId?: number) =>
+    api.get('/services', { params: masterId ? { master_id: masterId } : {} }),
+  create: (data: Record<string, unknown>) => api.post('/services', data),
+  update: (id: number, data: Record<string, unknown>) =>
+    api.put(`/services/${id}`, data),
+  delete: (id: number) => api.delete(`/services/${id}`),
+};
+
+// ── Booking ──
+export const bookingApi = {
+  getSlots: (masterId: number, date: string) =>
+    api.get('/booking/slots', { params: { master_id: masterId, date } }),
+  getAvailableDates: (masterId: number, serviceId: number) =>
+    api.get('/booking/available-dates', {
+      params: { master_id: masterId, service_id: serviceId },
+    }),
+  create: (data: Record<string, unknown>) => api.post('/booking', data),
+  cancel: (id: number) => api.post(`/booking/${id}/cancel`),
+  myBookings: (params?: Record<string, string>) =>
+    api.get('/booking/my', { params }),
+  masterBookings: (params?: Record<string, string>) =>
+    api.get('/booking/master', { params }),
+  complete: (id: number) => api.post(`/booking/${id}/complete`),
+};
+
+// ── Payments ──
+export const paymentsApi = {
+  create: (data: Record<string, unknown>) => api.post('/payments/create', data),
+};
+
+// ── Promo ──
+export const promoApi = {
+  validate: (code: string, masterId: number) =>
+    api.post('/promo/validate', { code, master_id: masterId }),
+  list: () => api.get('/promo'),
+  create: (data: Record<string, unknown>) => api.post('/promo', data),
+};
+
+// ── Loyalty ──
+export const loyaltyApi = {
+  getBalance: () => api.get('/loyalty/balance'),
+  getHistory: () => api.get('/loyalty/history'),
+};
+
+// ── Reviews ──
+export const reviewsApi = {
+  getByMaster: (masterId: number, params?: Record<string, string>) =>
+    api.get(`/reviews/master/${masterId}`, { params }),
+  create: (data: Record<string, unknown>) => api.post('/reviews', data),
+  reply: (id: number, text: string) =>
+    api.post(`/reviews/${id}/reply`, { text }),
+};
+
+// ── Waitlist ──
+export const waitlistApi = {
+  join: (data: Record<string, unknown>) => api.post('/waitlist', data),
+  confirm: (id: number) => api.post(`/waitlist/${id}/confirm`),
+};
+
+// ── Clients (CRM) ──
+export const clientsApi = {
+  list: (params?: Record<string, string>) =>
+    api.get('/clients', { params }),
+  get: (id: number) => api.get(`/clients/${id}`),
+  addTag: (id: number, tag: string) =>
+    api.post(`/clients/${id}/tags`, { tag }),
+  addNote: (id: number, note: string) =>
+    api.post(`/clients/${id}/notes`, { text: note }),
+};
+
+// ── Analytics ──
+export const analyticsApi = {
+  dashboard: (params?: Record<string, string>) =>
+    api.get('/analytics/dashboard', { params }),
+  revenue: (params?: Record<string, string>) =>
+    api.get('/analytics/revenue', { params }),
+};
+
+// ── AI ──
+export const aiApi = {
+  ask: (data: Record<string, unknown>) => api.post('/ai/ask', data),
+  generateContent: (data: Record<string, unknown>) =>
+    api.post('/ai/generate-content', data),
+};
+
+// ── Portfolio ──
+export const portfolioApi = {
+  list: (masterId: number) =>
+    api.get('/portfolio', { params: { master_id: masterId } }),
+  upload: (formData: FormData) =>
+    api.post('/portfolio/upload', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }),
+  delete: (id: number) => api.delete(`/portfolio/${id}`),
+};
+
+// ── Support ──
+export const supportApi = {
+  list: () => api.get('/support/tickets'),
+  create: (data: Record<string, unknown>) =>
+    api.post('/support/tickets', data),
+  reply: (id: number, text: string) =>
+    api.post(`/support/tickets/${id}/reply`, { text }),
+};
+
+// ── Superadmin ──
+export const superadminApi = {
+  dashboard: () => api.get('/superadmin/dashboard'),
+  masters: (params?: Record<string, string>) =>
+    api.get('/superadmin/masters', { params }),
+  healthChecks: () => api.post('/superadmin/health-checks'),
+  auditLog: (params?: Record<string, string>) =>
+    api.get('/superadmin/audit-log', { params }),
+};
