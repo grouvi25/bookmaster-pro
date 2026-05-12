@@ -1,9 +1,9 @@
 """
-Client — профиль клиента.
+Client — профиль клиента и CRM-связанные таблицы.
 """
 
 from sqlalchemy import (
-    Column, Integer, String, Text, Date,
+    Column, Integer, String, Text, Date, Float,
     ForeignKey, JSON,
 )
 from sqlalchemy.orm import relationship
@@ -21,10 +21,28 @@ class Client(BaseModel):
     display_name = Column(String(100), nullable=False)
     phone = Column(String(20), nullable=True)
     birthday = Column(Date, nullable=True)
-    notes = Column(Text, nullable=True)  # Заметки клиента о себе
+    notes = Column(Text, nullable=True)
     avatar_url = Column(String(500), nullable=True)
 
     identity = relationship("Identity", backref="client", uselist=False)
+    profile = relationship("ClientProfile", back_populates="client", uselist=False, cascade="all, delete-orphan")
+
+
+class ClientProfile(BaseModel):
+    """Расширенный профиль клиента (ДР, город, физ. параметры, предпочтения)."""
+    __tablename__ = "client_profiles"
+
+    client_id = Column(
+        Integer, ForeignKey("clients.id", ondelete="CASCADE"), unique=True, nullable=False
+    )
+
+    city = Column(String(100), nullable=True)
+    physical_params = Column(JSON, default=dict)
+    preferences = Column(JSON, default=dict)
+    allergies = Column(JSON, default=list)
+    source = Column(String(50), nullable=True)
+
+    client = relationship("Client", back_populates="profile")
 
 
 class ClientMasterLink(BaseModel):
@@ -41,4 +59,33 @@ class ClientMasterLink(BaseModel):
     visit_count = Column(Integer, default=0)
     total_spent = Column(Integer, default=0)
     no_show_count = Column(Integer, default=0)
-    source = Column(String(50), nullable=True)  # 'direct' | 'marketplace' | 'referral'
+    source = Column(String(50), nullable=True)
+
+
+class ClientTag(BaseModel):
+    """Теги клиентов (per-мастер)."""
+    __tablename__ = "client_tags"
+
+    master_id = Column(Integer, ForeignKey("masters.id", ondelete="CASCADE"), nullable=False)
+    client_id = Column(Integer, ForeignKey("clients.id", ondelete="CASCADE"), nullable=False)
+    tag = Column(String(100), nullable=False)
+
+
+class ClientNote(BaseModel):
+    """Заметки мастера о клиенте."""
+    __tablename__ = "client_notes"
+
+    master_id = Column(Integer, ForeignKey("masters.id", ondelete="CASCADE"), nullable=False)
+    client_id = Column(Integer, ForeignKey("clients.id", ondelete="CASCADE"), nullable=False)
+    text = Column(Text, nullable=False)
+    appointment_id = Column(Integer, ForeignKey("appointments.id", ondelete="SET NULL"), nullable=True)
+
+
+class ClientMasterScore(BaseModel):
+    """Приватная оценка клиента мастером (для CRM)."""
+    __tablename__ = "client_master_scores"
+
+    master_id = Column(Integer, ForeignKey("masters.id", ondelete="CASCADE"), nullable=False)
+    client_id = Column(Integer, ForeignKey("clients.id", ondelete="CASCADE"), nullable=False)
+    score = Column(Float, default=5.0)
+    comment = Column(Text, nullable=True)

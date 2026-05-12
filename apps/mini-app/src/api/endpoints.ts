@@ -102,9 +102,12 @@ export const analyticsApi = {
 
 // ── AI ──
 export const aiApi = {
-  ask: (data: Record<string, unknown>) => api.post('/ai/ask', data),
+  ask: (data: { message: string; session_id?: string }) =>
+    api.post('/ai/ask', data),
   generateContent: (data: Record<string, unknown>) =>
-    api.post('/ai/generate-content', data),
+    api.post('/ai/content', data),
+  templates: () => api.get('/ai/templates'),
+  tokens: () => api.get('/ai/tokens'),
 };
 
 // ── Portfolio ──

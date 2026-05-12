@@ -89,3 +89,23 @@ class MasterLocation(BaseModel):
     is_active = Column(Boolean, default=True)
 
     master = relationship("Master", back_populates="locations")
+
+
+class MasterPage(BaseModel):
+    """TapLink-подобная публичная страница мастера."""
+    __tablename__ = "master_pages"
+
+    master_id = Column(
+        Integer, ForeignKey("masters.id", ondelete="CASCADE"), unique=True, nullable=False
+    )
+
+    theme = Column(String(50), default="default")
+    custom_links = Column(JSON, default=list)
+    show_reviews = Column(Boolean, default=True)
+    show_portfolio = Column(Boolean, default=True)
+    show_services = Column(Boolean, default=True)
+    bio_text = Column(Text, nullable=True)
+    seo_title = Column(String(200), nullable=True)
+    seo_description = Column(Text, nullable=True)
+
+    master = relationship("Master", backref="page", uselist=False)
