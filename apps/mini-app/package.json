@@ -1,0 +1,35 @@
+{
+  "name": "@bookmaster/mini-app",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.26.0",
+    "@tma.js/sdk-react": "^1.1.1",
+    "@vkontakte/vk-bridge": "^2.21.0",
+    "@tanstack/react-query": "^5.52.0",
+    "zustand": "^4.5.5",
+    "axios": "^1.7.4",
+    "date-fns": "^3.6.0",
+    "clsx": "^2.1.1"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.4",
+    "vite": "^5.4.0",
+    "@vitejs/plugin-react": "^4.3.1",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "tailwindcss": "^3.4.9",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.41"
+  }
+}
