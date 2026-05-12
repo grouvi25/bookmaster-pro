@@ -1,11 +1,20 @@
 """
 FeatureFlags — тарифные ограничения per-мастер.
+SystemSetting — ключ-значение системных настроек (без деплоя).
 """
 
-from sqlalchemy import Column, Integer, Boolean, ForeignKey
+from sqlalchemy import Column, Integer, Boolean, String, Text, ForeignKey
 
-from app.core.base_model import TimestampMixin
+from app.core.base_model import BaseModel, TimestampMixin
 from app.core.database import Base
+
+
+class SystemSetting(BaseModel):
+    __tablename__ = "system_settings"
+
+    key = Column(String(100), unique=True, nullable=False, index=True)
+    value = Column(Text, nullable=True)
+    description = Column(Text, nullable=True)
 
 
 class FeatureFlags(Base, TimestampMixin):
