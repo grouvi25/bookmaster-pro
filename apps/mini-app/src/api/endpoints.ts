@@ -130,6 +130,37 @@ export const supportApi = {
     api.post(`/support/tickets/${id}/reply`, { text }),
 };
 
+// ── Consultations ──
+export const consultationsApi = {
+  getSlots: (masterId: number, serviceId?: number) =>
+    api.get(`/consultations/slots/${masterId}`, {
+      params: serviceId ? { service_id: serviceId } : {},
+    }),
+  createSlot: (data: Record<string, unknown>) =>
+    api.post('/consultations/slots', data),
+  createSlotsBulk: (data: Record<string, unknown>) =>
+    api.post('/consultations/slots/bulk', data),
+  deleteSlot: (id: number) => api.delete(`/consultations/slots/${id}`),
+  book: (data: Record<string, unknown>) =>
+    api.post('/consultations/book', data),
+  my: (status?: string) =>
+    api.get('/consultations/my', { params: status ? { status } : {} }),
+  masterList: (params?: Record<string, string>) =>
+    api.get('/consultations/master', { params }),
+  stats: () => api.get('/consultations/stats'),
+  get: (id: number) => api.get(`/consultations/${id}`),
+  update: (id: number, data: Record<string, unknown>) =>
+    api.patch(`/consultations/${id}`, data),
+  cancel: (id: number, reason?: string) =>
+    api.post(`/consultations/${id}/cancel`, null, {
+      params: reason ? { reason } : {},
+    }),
+  convert: (id: number, appointmentId: number) =>
+    api.post(`/consultations/${id}/convert`, {
+      appointment_id: appointmentId,
+    }),
+};
+
 // ── Superadmin ──
 export const superadminApi = {
   dashboard: () => api.get('/superadmin/dashboard'),
