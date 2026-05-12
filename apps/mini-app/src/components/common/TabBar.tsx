@@ -1,19 +1,21 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import clsx from 'clsx';
+import { Home, CalendarDays, Users, Wrench, Sparkles, Menu } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 
 interface Tab {
   path: string;
   label: string;
-  icon: string;
+  Icon: LucideIcon;
 }
 
 const MASTER_TABS: Tab[] = [
-  { path: '/master', label: 'Главная', icon: '\ud83c\udfe0' },
-  { path: '/master/schedule', label: 'Расписание', icon: '\ud83d\udcc5' },
-  { path: '/master/clients', label: 'Клиенты', icon: '\ud83d\udc65' },
-  { path: '/master/tools', label: 'Инструменты', icon: '\ud83c\udf81' },
-  { path: '/master/ai', label: 'AI', icon: '\u2728' },
-  { path: '/master/settings', label: 'Ещё', icon: '\u2699\ufe0f' },
+  { path: '/master', label: 'Главная', Icon: Home },
+  { path: '/master/schedule', label: 'Расписание', Icon: CalendarDays },
+  { path: '/master/clients', label: 'Клиенты', Icon: Users },
+  { path: '/master/tools', label: 'Инструменты', Icon: Wrench },
+  { path: '/master/ai', label: 'AI', Icon: Sparkles },
+  { path: '/master/settings', label: 'Ещё', Icon: Menu },
 ];
 
 export default function TabBar() {
@@ -21,7 +23,7 @@ export default function TabBar() {
   const location = useLocation();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-tg-bg border-t border-gray-200 z-50 safe-area-bottom">
+    <nav className="fixed bottom-0 left-0 right-0 bg-tg-bg border-t border-gray-200/60 z-50 safe-area-bottom">
       <div className="flex justify-around items-center h-14">
         {MASTER_TABS.map((tab) => {
           const active =
@@ -37,7 +39,7 @@ export default function TabBar() {
                 active ? 'text-brand-600' : 'text-tg-hint'
               )}
             >
-              <span className="text-lg mb-0.5">{tab.icon}</span>
+              <tab.Icon className="w-5 h-5 mb-0.5" strokeWidth={active ? 2.2 : 1.8} />
               <span>{tab.label}</span>
             </button>
           );

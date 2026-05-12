@@ -5,6 +5,7 @@ import Loading from '@/components/common/Loading';
 import { format, addDays, startOfWeek } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import clsx from 'clsx';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 export default function Schedule() {
   const [viewMode, setViewMode] = useState<'week' | 'month'>('week');
@@ -51,7 +52,7 @@ export default function Schedule() {
           onClick={() => setWeekStart(addDays(weekStart, -7))}
           className="text-tg-link text-sm px-2"
         >
-          &larr;
+          <ChevronLeft className="w-4 h-4" />
         </button>
         <span className="font-medium text-sm">
           {format(weekStart, 'd MMM', { locale: ru })} &mdash;{' '}
@@ -61,7 +62,7 @@ export default function Schedule() {
           onClick={() => setWeekStart(addDays(weekStart, 7))}
           className="text-tg-link text-sm px-2"
         >
-          &rarr;
+          <ChevronRight className="w-4 h-4" />
         </button>
       </div>
 

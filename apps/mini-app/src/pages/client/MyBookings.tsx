@@ -5,6 +5,7 @@ import Loading from '@/components/common/Loading';
 import { format, parseISO } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import clsx from 'clsx';
+import { CalendarDays } from 'lucide-react';
 
 const STATUS_MAP: Record<string, { label: string; color: string }> = {
   confirmed: { label: 'Подтверждена', color: 'text-green-600 bg-green-50' },
@@ -31,7 +32,7 @@ export default function MyBookings() {
 
       {bookings.length === 0 ? (
         <div className="text-center py-12">
-          <div className="text-4xl mb-3">{'\ud83d\udcc5'}</div>
+          <CalendarDays className="w-10 h-10 text-tg-hint mb-3" strokeWidth={1.5} />
           <p className="text-tg-hint">У вас пока нет записей</p>
         </div>
       ) : (
