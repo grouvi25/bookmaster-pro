@@ -1,0 +1,189 @@
+"""
+Telegram Bot — минималистичный слой уведомлений.
+Единственные задачи:
+1. /start [deep_link] → кнопка открытия Mini-App
+2. Входящие голосовые → API /ai/voice (если включён ai_client_bot)
+3. Webhook от API → отправка push-уведомлений
+4. Все остальные сообщения → redirect в Mini-App
+Не содержит никакой бизнес-логики.
+"""
+
+import asyncio
+import logging
+import httpx
+from typing import Optional
+
+from aiogram import Bot, Dispatcher, F
+from aiogram.types import (
+    Message, CallbackQuery,
+    InlineKeyboardMarkup, InlineKeyboardButton,
+    WebAppInfo, BufferedInputFile,
+)
+from aiogram.filters import CommandStart, Command
+from aiogram.fsm.storage.memory import MemoryStorage
+from aiogram.webhook.aiohttp_server import (
+    SimpleRequestHandler, setup_application
+)
+from aiohttp import web
+
+from app.config import settings
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+)
+logger = logging.getLogger(__name__)
+
+bot = Bot(token=settings.TG_BOT_TOKEN)
+dp = Dispatcher(storage=MemoryStorage())
+
+
+# ─── Хелпер: кнопка открытия Mini-App ────────────────────────────────
+def mini_app_keyboard(
+    label: str = "\U0001f4f1 Открыть приложение",
+    start_param: str = "",
+) -> InlineKeyboardMarkup:
+    url = settings.APP_URL
+    if start_param:
+        url = f"{settings.APP_URL}?startParam={start_param}"
+    return InlineKeyboardMarkup(inline_keyboard=[[
+        InlineKeyboardButton(
+            text=label,
+            web_app=WebAppInfo(url=url),
+        )
+    ]])
+
+
+# ─── /start ──────────────────────────────────────────────────────────
+@dp.message(CommandStart())
+async def cmd_start(message: Message):
+    """
+    Обрабатываем /start с deep_link параметром.
+    Форматы параметров:
+      m_{slug}              → страница мастера (клиент записывается)
+      dashboard             → дашборд мастера
+      review_{appt_id}      → форма отзыва
+      waitlist_confirm_{id} → подтверждение из waitlist
+      payment_result_{id}   → статус оплаты
+      billing               → страница биллинга мастера
+      ticket_{id}           → конкретный тикет
+      rate_support_{id}     → оценка поддержки
+    """
+    args = message.text.split() if message.text else []
+    param = args[1] if len(args) > 1 else ""
+
+    if param.startswith("m_"):
+        text = "\U0001f484 Открываю страницу мастера..."
+        label = "\U0001f4c5 Записаться"
+    elif param == "dashboard":
+        text = "\U0001f4ca Открываю дашборд"
+        label = "\U0001f4f1 Открыть"
+    elif param.startswith("review_"):
+        text = "\u2b50 Оцените ваш визит!"
+        label = "\u270d\ufe0f Оставить отзыв"
+    elif param.startswith("waitlist_confirm_"):
+        text = "\U0001f389 Появилось свободное окошко!\nПодтвердите запись."
+        label = "\u2705 Подтвердить"
+    elif param.startswith("payment_result_"):
+        text = "\U0001f4b3 Проверяю статус оплаты..."
+        label = "\U0001f4f1 Открыть"
+    elif param == "billing" or param == "billing_renew":
+        text = "\U0001f4b0 Управление подпиской"
+        label = "\U0001f4f1 Открыть"
+    elif param.startswith("ticket_"):
+        text = "\U0001f4e9 Открываю ваш тикет"
+        label = "\U0001f4e9 Тикет поддержки"
+    elif param.startswith("rate_support_"):
+        text = "\U0001f31f Оцените качество поддержки"
+        label = "\u2b50 Оценить"
+    else:
+        text = (
+            "\U0001f44b Добро пожаловать в <b>BookMaster Pro</b>!\n\n"
+            "\U0001f4c5 Удобная онлайн-запись к мастерам\n"
+            "\U0001f514 Напоминания и баллы лояльности\n"
+            "\U0001f916 AI-ассистент для мастеров"
+        )
+        label = "\U0001f4f1 Открыть приложение"
+
+    await message.answer(
+        text,
+        parse_mode="HTML",
+        reply_markup=mini_app_keyboard(label, param),
+    )
+
+
+# ─── Голосовые сообщения клиентов ────────────────────────────────────
+@dp.message(F.voice)
+async def handle_voice(message: Message):
+    """
+    Клиент отправил голосовое.
+    Если в контексте мастера включён ai_client_bot — обрабатываем.
+    Иначе — redirect в Mini-App.
+    """
+    await message.answer(
+        "\U0001f3a4 Голосовое получено! Открой приложение для удобного общения.",
+        reply_markup=mini_app_keyboard(),
+    )
+
+
+# ─── Все остальные сообщения ─────────────────────────────────────────
+@dp.message()
+async def handle_any(message: Message):
+    """Любое неизвестное сообщение → Mini-App."""
+    await message.answer(
+        "Используйте приложение для записи и управления \U0001f447",
+        reply_markup=mini_app_keyboard(),
+    )
+
+
+# ─── Запуск в режиме polling (разработка) ────────────────────────────
+async def run_polling():
+    logger.info("Starting bot in polling mode...")
+    await bot.delete_webhook(drop_pending_updates=True)
+    await dp.start_polling(bot)
+
+
+# ─── Запуск в режиме webhook (продакшн) ──────────────────────────────
+async def run_webhook():
+    """
+    Webhook через aiohttp. Telegram шлёт POST на /webhook/tg.
+    HTTPS обязателен — настраивается через nginx.
+    """
+    logger.info(f"Starting bot in webhook mode: {settings.TG_WEBHOOK_URL}")
+    await bot.set_webhook(
+        url=settings.TG_WEBHOOK_URL,
+        secret_token=settings.TG_WEBHOOK_SECRET,
+        drop_pending_updates=True,
+    )
+
+    app = web.Application()
+    handler = SimpleRequestHandler(
+        dispatcher=dp,
+        bot=bot,
+        secret_token=settings.TG_WEBHOOK_SECRET,
+    )
+    handler.register(app, path="/webhook/tg")
+    setup_application(app, dp, bot=bot)
+
+    runner = web.AppRunner(app)
+    await runner.setup()
+    site = web.TCPSite(runner, host="0.0.0.0", port=settings.BOT_PORT)
+    await site.start()
+    logger.info(f"Webhook server started on port {settings.BOT_PORT}")
+
+    try:
+        await asyncio.Event().wait()
+    finally:
+        await runner.cleanup()
+
+
+# ─── Точка входа ─────────────────────────────────────────────────────
+async def main():
+    if settings.ENVIRONMENT == "production":
+        await run_webhook()
+    else:
+        await run_polling()
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
