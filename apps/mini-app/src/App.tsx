@@ -4,6 +4,7 @@ import { PlatformAdapter } from '@/platform/platform-adapter';
 import { useAuthStore } from '@/stores/auth';
 import { useBookingStore } from '@/stores/booking';
 import { authApi } from '@/api/endpoints';
+import { ShieldAlert, CalendarDays } from 'lucide-react';
 
 // Клиентские экраны
 import MasterProfile from '@/pages/client/MasterProfile';
@@ -22,6 +23,7 @@ import Clients from '@/pages/master/Clients';
 import Tools from '@/pages/master/Tools';
 import AIAssistant from '@/pages/master/AI';
 import Settings from '@/pages/master/Settings';
+import Consultations from '@/pages/master/Consultations';
 import TabBar from '@/components/common/TabBar';
 
 // Специальные страницы
@@ -37,7 +39,7 @@ function RequireAuth({ children, allowedRoles }: { children: ReactNode; allowedR
   if (!token || !role) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-tg-bg text-tg-text p-6">
-        <div className="text-5xl mb-4">{'\ud83d\udd12'}</div>
+        <ShieldAlert className="w-12 h-12 text-tg-hint mb-4" strokeWidth={1.5} />
         <h2 className="text-xl font-bold mb-2">Доступ запрещён</h2>
         <p className="text-tg-hint text-center text-sm">
           Откройте приложение через Telegram для авторизации
@@ -156,6 +158,7 @@ function AppRouter() {
         <Route path="/master/tools" element={<RequireAuth allowedRoles={['master', 'superadmin']}><Tools /></RequireAuth>} />
         <Route path="/master/ai" element={<RequireAuth allowedRoles={['master', 'superadmin']}><AIAssistant /></RequireAuth>} />
         <Route path="/master/settings" element={<RequireAuth allowedRoles={['master', 'superadmin']}><Settings /></RequireAuth>} />
+        <Route path="/master/consultations" element={<RequireAuth allowedRoles={['master', 'superadmin']}><Consultations /></RequireAuth>} />
 
         {/* Публичная страница-линк (TapLink) */}
         <Route path="/p/:slug" element={<LinkPage />} />
@@ -181,7 +184,7 @@ function MasterProfileRoute() {
 function HomePage() {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-tg-bg text-tg-text p-6 animate-fade-in">
-      <div className="text-5xl mb-4">{'\ud83d\udcc5'}</div>
+      <CalendarDays className="w-12 h-12 text-brand-500 mb-4" strokeWidth={1.5} />
       <h1 className="text-2xl font-bold mb-2">BookMaster Pro</h1>
       <p className="text-tg-hint text-center mb-6">
         Платформа онлайн-записи к мастерам

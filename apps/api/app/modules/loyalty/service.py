@@ -84,8 +84,7 @@ class LoyaltyService:
         result = await self.db.execute(
             select(Master).where(Master.id == master_id)
         )
-        master = result.scalar_one_or_none()
-        max_percent = master.loyalty_max_spend_percent if master else 30
+        result.scalar_one_or_none()
 
         account.balance -= points
 

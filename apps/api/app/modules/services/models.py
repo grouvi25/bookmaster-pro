@@ -24,5 +24,7 @@ class Service(BaseModel):
     sort_order = Column(Integer, default=0)
     is_active = Column(Boolean, default=True)
     is_online = Column(Boolean, default=False)  # онлайн-консультация
+    is_consultation = Column(Boolean, default=False)  # тип "консультация"
+    consultation_url = Column(String(500), nullable=True)  # ссылка на звонок
 
     master = relationship("Master", back_populates="services")

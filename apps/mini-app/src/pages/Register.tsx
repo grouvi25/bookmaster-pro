@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { authApi } from '@/api/endpoints';
 import { useAuthStore } from '@/stores/auth';
 import { PlatformAdapter } from '@/platform/platform-adapter';
+import { Scissors, UserCircle } from 'lucide-react';
 
 export default function Register() {
   const navigate = useNavigate();
@@ -36,7 +37,9 @@ export default function Register() {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-tg-bg text-tg-text p-6 animate-fade-in">
-      <div className="text-5xl mb-4">{'\u{1f44b}'}</div>
+      <div className="w-16 h-16 bg-brand-50 rounded-2xl flex items-center justify-center mb-4">
+        <Scissors className="w-8 h-8 text-brand-500" strokeWidth={1.8} />
+      </div>
       <h1 className="text-2xl font-bold mb-2">Добро пожаловать!</h1>
       <p className="text-tg-hint text-center text-sm mb-8">
         Выберите, как вы хотите использовать BookMaster Pro
@@ -51,7 +54,7 @@ export default function Register() {
               : 'border-gray-200 bg-tg-secondary'
           }`}
         >
-          <div className="text-2xl mb-1">{'\u{1f487}'}</div>
+          <Scissors className="w-6 h-6 text-brand-500 mb-1" strokeWidth={1.8} />
           <div className="font-semibold">Я мастер</div>
           <div className="text-tg-hint text-xs mt-1">
             Принимайте записи, управляйте расписанием, используйте AI-помощника
@@ -66,7 +69,7 @@ export default function Register() {
               : 'border-gray-200 bg-tg-secondary'
           }`}
         >
-          <div className="text-2xl mb-1">{'\u{1f464}'}</div>
+          <UserCircle className="w-6 h-6 text-brand-500 mb-1" strokeWidth={1.8} />
           <div className="font-semibold">Я клиент</div>
           <div className="text-tg-hint text-xs mt-1">
             Записывайтесь к мастерам, копите баллы, получайте напоминания

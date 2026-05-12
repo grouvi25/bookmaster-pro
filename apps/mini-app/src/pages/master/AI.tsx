@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { aiApi } from '@/api/endpoints';
+import { SendHorizontal } from 'lucide-react';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -113,9 +114,9 @@ export default function AIAssistant() {
           <button
             onClick={handleSend}
             disabled={!input.trim() || loading}
-            className="px-4 py-2.5 bg-tg-button text-tg-button-text rounded-xl text-sm font-medium disabled:opacity-50"
+            className="px-3 py-2.5 bg-tg-button text-tg-button-text rounded-xl disabled:opacity-50"
           >
-            {'\u2191'}
+            <SendHorizontal className="w-4 h-4" />
           </button>
         </div>
       </div>

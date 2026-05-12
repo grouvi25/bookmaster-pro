@@ -143,7 +143,6 @@ async def update_booking_status(
     master = await MasterService(db).get_by_identity(identity_id)
 
     is_master = master and appointment.master_id == master.id
-    is_client = appointment.client_id is not None
 
     if not is_master and user.get("role") != "superadmin":
         # Клиент может только отменить

@@ -3,7 +3,7 @@ Reviews — отзывы клиентов, рейтинги.
 """
 
 from sqlalchemy import (
-    Column, Integer, String, Text, Boolean, SmallInteger,
+    Column, Integer, Text, Boolean, SmallInteger,
     ForeignKey, CheckConstraint,
 )
 

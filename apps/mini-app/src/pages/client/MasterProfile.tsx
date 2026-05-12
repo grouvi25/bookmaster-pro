@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { mastersApi, servicesApi, reviewsApi, loyaltyApi } from '@/api/endpoints';
 import { useBookingStore } from '@/stores/booking';
 import Loading from '@/components/common/Loading';
+import { User, Star } from 'lucide-react';
 
 interface MasterProfileProps {
   slug: string;
@@ -44,13 +45,13 @@ export default function MasterProfile({ slug }: MasterProfileProps) {
 
   return (
     <div className="pb-24 animate-fade-in">
-      {/* Шапка */}
+      {/* Header */}
       <div className="bg-gradient-to-b from-brand-50 to-tg-bg p-6 text-center">
-        <div className="w-24 h-24 rounded-full bg-brand-100 mx-auto mb-3 flex items-center justify-center text-4xl overflow-hidden">
+        <div className="w-24 h-24 rounded-full bg-brand-100 mx-auto mb-3 flex items-center justify-center overflow-hidden">
           {master.avatar_url ? (
             <img src={master.avatar_url} alt={master.name} className="w-full h-full object-cover" />
           ) : (
-            '\ud83d\udc64'
+            <User className="w-10 h-10 text-brand-300" strokeWidth={1.5} />
           )}
         </div>
         <h1 className="text-xl font-bold text-tg-text">{master.name}</h1>
@@ -60,14 +61,14 @@ export default function MasterProfile({ slug }: MasterProfileProps) {
         </p>
         {master.rating_count > 0 && (
           <div className="flex items-center justify-center gap-1 mt-2">
-            <span className="text-yellow-400">{'\u2605'}</span>
+            <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
             <span className="font-semibold">{master.rating_avg?.toFixed(1)}</span>
             <span className="text-tg-hint text-xs">({master.rating_count} отзывов)</span>
           </div>
         )}
       </div>
 
-      {/* Баланс баллов */}
+      {/* Loyalty points */}
       {loyalty?.balance > 0 && (
         <div className="mx-4 mt-4 p-3 bg-brand-50 rounded-xl flex items-center justify-between">
           <span className="text-sm text-brand-700">Баллы лояльности</span>
@@ -82,7 +83,7 @@ export default function MasterProfile({ slug }: MasterProfileProps) {
         </div>
       )}
 
-      {/* Услуги */}
+      {/* Services */}
       {services?.length > 0 && (
         <div className="px-4 mt-6">
           <h2 className="font-bold text-lg mb-3">Услуги</h2>
@@ -109,7 +110,7 @@ export default function MasterProfile({ slug }: MasterProfileProps) {
         </div>
       )}
 
-      {/* Отзывы */}
+      {/* Reviews */}
       {reviews?.reviews?.length > 0 && (
         <div className="px-4 mt-6">
           <h2 className="font-bold text-lg mb-3">Отзывы</h2>
@@ -118,9 +119,11 @@ export default function MasterProfile({ slug }: MasterProfileProps) {
               <div key={r.id as number} className="bg-tg-secondary rounded-xl p-3">
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-sm font-medium">{r.client_name as string}</span>
-                  <span className="text-yellow-400 text-sm">
-                    {'\u2605'.repeat(r.rating as number)}
-                  </span>
+                  <div className="flex gap-0.5">
+                    {Array.from({ length: r.rating as number }).map((_, i) => (
+                      <Star key={i} className="w-3 h-3 text-yellow-400 fill-yellow-400" />
+                    ))}
+                  </div>
                 </div>
                 {r.text ? (
                   <p className="text-xs text-tg-hint leading-relaxed">{String(r.text)}</p>

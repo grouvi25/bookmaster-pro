@@ -3,10 +3,10 @@ SlotService — генерация доступных слотов с учёто
 записей, блокировок и буфера.
 """
 
-from datetime import date, time, datetime, timedelta
+from datetime import date, datetime, timedelta
 from typing import List, Optional
 
-from sqlalchemy import select, and_
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.booking.models import (
@@ -125,7 +125,7 @@ class SlotService:
         """Генерация слотов из одного шаблона расписания."""
         slots = []
         step = 30  # шаг сетки в минутах
-        slot_duration = duration + buffer
+        duration + buffer
 
         current_time = datetime.combine(target_date, template.start_time)
         end_time = datetime.combine(target_date, template.end_time)

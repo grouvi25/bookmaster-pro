@@ -3,7 +3,7 @@
 Все переменные читаются из .env файла.
 """
 
-from typing import List, Optional
+from typing import List
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 

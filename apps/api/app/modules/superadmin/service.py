@@ -4,14 +4,14 @@ Superadmin service — платформенная аналитика, управ
 
 import logging
 from datetime import datetime, timedelta, timezone
-from typing import Dict, Any, List, Optional, Tuple
+from typing import List, Optional, Tuple
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, and_, case, cast, Date
+from sqlalchemy import select, func
 
 from app.modules.masters.models import Master
 from app.modules.auth.models import Identity
-from app.modules.booking.models import Appointment, AppointmentStatus
+from app.modules.booking.models import Appointment
 from app.modules.payments.models import Payment, MasterSubscription
 from app.modules.clients.models import Client
 from app.modules.superadmin.models import AdminAuditLog

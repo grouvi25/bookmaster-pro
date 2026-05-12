@@ -5,7 +5,7 @@ Portfolio service — CRUD фото работ мастера.
 from typing import List, Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, update
+from sqlalchemy import select
 
 from app.modules.portfolio.models import WorkPhoto
 
