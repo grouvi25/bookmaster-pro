@@ -4,15 +4,13 @@ Analytics service — дашборд аналитики мастера.
 """
 
 from datetime import datetime, timedelta, date, timezone
-from typing import Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, and_, case, cast, Date
+from sqlalchemy import select, func, case, cast, Date
 
 from app.modules.booking.models import Appointment, AppointmentStatus
 from app.modules.services.models import Service
 from app.modules.payments.models import Payment
-from app.modules.clients.models import ClientMasterLink
 from app.modules.masters.models import Master
 
 
@@ -75,7 +73,7 @@ class AnalyticsService:
         )
         row = r.one()
         total_revenue = float(row[0])
-        payments_count = row[1]
+        row[1]
 
         # Appointments count
         r2 = await self.db.execute(
