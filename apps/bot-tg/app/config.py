@@ -15,6 +15,11 @@ class BotSettings(BaseSettings):
     API_URL: str = "http://localhost:8000"
     BOT_PORT: int = 8081
     ENVIRONMENT: str = "development"
+    SUPERADMIN_IDS: str = ""
+
+    @property
+    def superadmin_list(self) -> list[int]:
+        return [int(s.strip()) for s in self.SUPERADMIN_IDS.split(",") if s.strip()]
 
 
 settings = BotSettings()
