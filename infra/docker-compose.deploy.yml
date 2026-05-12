@@ -1,0 +1,89 @@
+x-restart: &restart
+  restart: unless-stopped
+
+x-env: &env
+  env_file: ../.env
+
+services:
+  db:
+    <<: *restart
+    build:
+      context: .
+      dockerfile: docker/db.Dockerfile
+    container_name: bm_db
+    environment:
+      POSTGRES_DB: bookmaster
+      POSTGRES_USER: bookmaster
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-prodpassword42}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./scripts/init_extensions.sql:/docker-entrypoint-initdb.d/01_ext.sql
+    ports:
+      - "127.0.0.1:5432:5432"
+    networks: [bookmaster]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bookmaster"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    <<: *restart
+    image: redis:7-alpine
+    container_name: bm_redis
+    command: redis-server --appendonly yes
+    volumes: [redisdata:/data]
+    ports:
+      - "127.0.0.1:6379:6379"
+    networks: [bookmaster]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+
+  api:
+    <<: [*restart, *env]
+    container_name: bm_api
+    build:
+      context: ..
+      dockerfile: apps/api/Dockerfile
+    command: >
+      sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 2"
+    depends_on:
+      db: { condition: service_healthy }
+      redis: { condition: service_healthy }
+    ports:
+      - "127.0.0.1:8000:8000"
+    networks: [bookmaster]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  bot-tg:
+    <<: [*restart, *env]
+    container_name: bm_bot_tg
+    build:
+      context: ..
+      dockerfile: apps/bot-tg/Dockerfile
+    depends_on:
+      api: { condition: service_healthy }
+    networks: [bookmaster]
+
+  mini-app:
+    <<: *restart
+    container_name: bm_mini_app
+    build:
+      context: ..
+      dockerfile: apps/mini-app/Dockerfile
+    ports:
+      - "127.0.0.1:5173:5173"
+    networks: [bookmaster]
+
+volumes:
+  pgdata:
+  redisdata:
+
+networks:
+  bookmaster:
+    driver: bridge
