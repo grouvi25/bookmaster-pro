@@ -5,6 +5,7 @@ class BotSettings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file="../../.env",
         case_sensitive=False,
+        extra="ignore",
     )
 
     TG_BOT_TOKEN: str

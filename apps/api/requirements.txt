@@ -8,7 +8,7 @@ sqlalchemy[asyncio]==2.0.31
 asyncpg==0.29.0
 alembic==1.13.2
 psycopg2-binary==2.9.9
-pgvector==0.3.2
+pgvector==0.2.5
 
 # === VALIDATION ===
 pydantic==2.8.2
@@ -35,14 +35,13 @@ yookassa==3.4.0
 
 # === STORAGE (S3) ===
 aioboto3==13.1.1
-boto3==1.35.0
 
 # === TELEGRAM BOT ===
 aiogram==3.13.0
 
 # === HTTP ===
 httpx==0.27.2
-aiofiles==24.1.0
+aiofiles==23.2.1
 
 # === UTILS ===
 python-dateutil==2.9.0
