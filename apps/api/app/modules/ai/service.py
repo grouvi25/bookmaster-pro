@@ -195,6 +195,55 @@ class AIService:
         )
         await self._consume_tokens(master_id, tokens_used)
 
+    # ─── Чат-советник (синхронный, для POST /ai/ask) ─────────────────
+    async def chat(
+        self,
+        master_id: int,
+        session_id: str,
+        user_message: str,
+    ) -> dict:
+        """Синхронный чат с AI-советником (без стриминга)."""
+        history = await self._get_chat_history(master_id, session_id)
+        system_prompt = await self._build_advisor_prompt(master_id, user_message)
+
+        messages = [{"role": "system", "content": system_prompt}]
+        messages.extend(history)
+        messages.append({"role": "user", "content": user_message})
+
+        await self._save_message(
+            master_id=master_id,
+            session_id=session_id,
+            role="user",
+            content=user_message,
+        )
+
+        try:
+            response = await self.provider.chat(
+                messages=messages,
+                temperature=0.7,
+                max_tokens=1500,
+            )
+        except Exception as e:
+            logger.error(f"AI chat error: {e}")
+            response = "Извините, произошла ошибка. Попробуйте ещё раз."
+
+        tokens_used = len(response) // 4
+
+        await self._save_message(
+            master_id=master_id,
+            session_id=session_id,
+            role="assistant",
+            content=response,
+            tokens_used=tokens_used,
+        )
+        await self._consume_tokens(master_id, tokens_used)
+
+        return {
+            "response": response,
+            "session_id": session_id,
+            "tokens_used": tokens_used,
+        }
+
     # ─── Ответ клиенту ────────────────────────────────────────────────
     async def answer_client(
         self,
