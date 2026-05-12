@@ -1,0 +1,312 @@
+"""
+Payments service — ЮKassa integration, splits.
+"""
+
+import logging
+from datetime import date, timedelta
+from decimal import Decimal
+from typing import Optional
+
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.config import settings
+from app.modules.payments.models import Payment, MasterSubscription, ClientSubscription
+from app.modules.booking.models import Appointment, AppointmentStatus
+from app.modules.masters.models import Master
+from app.modules.core.models import FeatureFlags
+
+logger = logging.getLogger(__name__)
+
+PLAN_PRICES = {
+    "start": Decimal("0"),
+    "basic": Decimal("490"),
+    "pro": Decimal("990"),
+    "pro_ai": Decimal("1990"),
+    "business": Decimal("4990"),
+}
+
+
+class PaymentService:
+    def __init__(self, db: AsyncSession):
+        self.db = db
+
+    async def create_payment(
+        self,
+        appointment_id: int,
+        payment_type: str = "full",
+        return_url: Optional[str] = None,
+    ) -> dict:
+        """Создать платёж через ЮKassa."""
+        # Получаем запись
+        result = await self.db.execute(
+            select(Appointment).where(Appointment.id == appointment_id)
+        )
+        appointment = result.scalar_one_or_none()
+        if not appointment:
+            raise ValueError("Appointment not found")
+
+        if appointment.status not in (
+            AppointmentStatus.PENDING.value,
+            AppointmentStatus.CONFIRMED.value,
+        ):
+            raise ValueError("Appointment cannot be paid in current status")
+
+        # Рассчитываем сумму
+        total = Decimal(str(appointment.price_final or 0))
+        if payment_type == "prepay_30":
+            amount = total * Decimal("0.3")
+        elif payment_type == "prepay_50":
+            amount = total * Decimal("0.5")
+        elif payment_type == "deposit":
+            # Получаем настройку депозита мастера
+            result = await self.db.execute(
+                select(Master).where(Master.id == appointment.master_id)
+            )
+            master = result.scalar_one_or_none()
+            amount = Decimal(str(master.noshow_deposit_amount)) if master else total
+        else:
+            amount = total
+
+        # Рассчитываем splits (комиссия платформы)
+        result = await self.db.execute(
+            select(FeatureFlags).where(FeatureFlags.master_id == appointment.master_id)
+        )
+        flags = result.scalar_one_or_none()
+        commission_rate = Decimal(str(flags.commission_rate_bp if flags else 700)) / Decimal("10000")
+        amount_service = amount * commission_rate
+        amount_master = amount - amount_service
+
+        # Создаём запись о платеже
+        payment = Payment(
+            appointment_id=appointment_id,
+            master_id=appointment.master_id,
+            client_id=appointment.client_id,
+            amount_total=total,
+            amount_paid=amount,
+            amount_master=amount_master,
+            amount_service=amount_service,
+            payment_type=payment_type,
+            status="pending",
+        )
+        self.db.add(payment)
+        await self.db.flush()
+
+        # Создаём платёж в ЮKassa
+        confirmation_url = await self._create_yookassa_payment(
+            payment, amount, return_url
+        )
+
+        return {
+            "confirmation_url": confirmation_url,
+            "payment_id": payment.id,
+        }
+
+    async def handle_webhook(self, event_type: str, payment_data: dict) -> None:
+        """Обработать webhook от ЮKassa."""
+        yookassa_id = payment_data.get("id")
+        if not yookassa_id:
+            return
+
+        result = await self.db.execute(
+            select(Payment).where(Payment.yookassa_payment_id == yookassa_id)
+        )
+        payment = result.scalar_one_or_none()
+        if not payment:
+            logger.warning(f"Payment not found for yookassa_id: {yookassa_id}")
+            return
+
+        if event_type == "payment.succeeded":
+            payment.status = "succeeded"
+            # Обновляем статус записи
+            result = await self.db.execute(
+                select(Appointment).where(Appointment.id == payment.appointment_id)
+            )
+            appointment = result.scalar_one_or_none()
+            if appointment:
+                appointment.status = AppointmentStatus.PAID.value
+
+        elif event_type == "payment.canceled":
+            payment.status = "failed"
+
+        elif event_type == "refund.succeeded":
+            payment.status = "refunded"
+
+        await self.db.flush()
+
+    async def create_master_subscription(
+        self, master_id: int, plan: str, billing_period: str = "monthly"
+    ) -> MasterSubscription:
+        """Создать/обновить подписку мастера."""
+        price = PLAN_PRICES.get(plan, Decimal("0"))
+
+        subscription = MasterSubscription(
+            master_id=master_id,
+            plan=plan,
+            price=price,
+            billing_period=billing_period,
+            status="active",
+            started_at=date.today(),
+            next_billing=date.today() + timedelta(days=30),
+        )
+        self.db.add(subscription)
+
+        # Обновляем тариф мастера
+        result = await self.db.execute(
+            select(Master).where(Master.id == master_id)
+        )
+        master = result.scalar_one_or_none()
+        if master:
+            master.current_plan = plan
+
+        # Обновляем feature flags
+        await self._update_feature_flags(master_id, plan)
+        await self.db.flush()
+        return subscription
+
+    async def create_client_subscription(
+        self,
+        master_id: int,
+        client_id: int,
+        service_id: int,
+        total_visits: int,
+        price: Decimal,
+    ) -> ClientSubscription:
+        """Создать абонемент клиента."""
+        sub = ClientSubscription(
+            master_id=master_id,
+            client_id=client_id,
+            service_id=service_id,
+            total_visits=total_visits,
+            used_visits=0,
+            price_paid=price,
+            status="active",
+            expires_at=date.today() + timedelta(days=90),
+        )
+        self.db.add(sub)
+        await self.db.flush()
+        return sub
+
+    async def _create_yookassa_payment(
+        self, payment: Payment, amount: Decimal, return_url: Optional[str]
+    ) -> str:
+        """Создать платёж в ЮKassa API."""
+        if not settings.YOOKASSA_SHOP_ID or not settings.YOOKASSA_SECRET_KEY:
+            # Dev mode — без реального ЮKassa
+            payment.yookassa_payment_id = f"dev_{payment.id}"
+            payment.status = "succeeded"
+            return return_url or settings.APP_URL
+
+        try:
+            from yookassa import Configuration, Payment as YKPayment
+            Configuration.account_id = settings.YOOKASSA_SHOP_ID
+            Configuration.secret_key = settings.YOOKASSA_SECRET_KEY
+
+            yk_payment = YKPayment.create({
+                "amount": {
+                    "value": str(amount),
+                    "currency": "RUB",
+                },
+                "confirmation": {
+                    "type": "redirect",
+                    "return_url": return_url or settings.APP_URL,
+                },
+                "capture": True,
+                "description": f"Запись #{payment.appointment_id}",
+                "metadata": {
+                    "payment_id": payment.id,
+                    "appointment_id": payment.appointment_id,
+                },
+            })
+
+            payment.yookassa_payment_id = yk_payment.id
+            return yk_payment.confirmation.confirmation_url
+        except Exception as e:
+            logger.error(f"YooKassa payment error: {e}")
+            raise ValueError(f"Payment creation failed: {e}")
+
+    async def _update_feature_flags(self, master_id: int, plan: str) -> None:
+        """Обновить feature flags по тарифу."""
+        result = await self.db.execute(
+            select(FeatureFlags).where(FeatureFlags.master_id == master_id)
+        )
+        flags = result.scalar_one_or_none()
+        if not flags:
+            flags = FeatureFlags(master_id=master_id)
+            self.db.add(flags)
+
+        # Тарифная матрица
+        if plan == "start":
+            flags.max_bookings_per_month = 30
+            flags.max_services = 3
+            flags.commission_rate_bp = 700
+            flags.crm_basic = False
+            flags.promo_enabled = False
+            flags.loyalty_enabled = False
+            flags.analytics_enabled = False
+            flags.ai_advisor = False
+        elif plan == "basic":
+            flags.max_bookings_per_month = 100
+            flags.max_services = 10
+            flags.commission_rate_bp = 500
+            flags.crm_basic = True
+            flags.promo_enabled = True
+            flags.loyalty_enabled = False
+            flags.analytics_enabled = True
+            flags.ai_advisor = False
+            flags.reviews_enabled = True
+        elif plan == "pro":
+            flags.max_bookings_per_month = 500
+            flags.max_services = 50
+            flags.commission_rate_bp = 350
+            flags.crm_basic = True
+            flags.crm_advanced = True
+            flags.promo_enabled = True
+            flags.loyalty_enabled = True
+            flags.client_subscriptions = True
+            flags.analytics_enabled = True
+            flags.portfolio_enabled = True
+            flags.marketplace_enabled = True
+            flags.widget_enabled = True
+            flags.broadcast_enabled = True
+        elif plan == "pro_ai":
+            flags.max_bookings_per_month = 500
+            flags.max_services = 50
+            flags.commission_rate_bp = 350
+            flags.crm_basic = True
+            flags.crm_advanced = True
+            flags.promo_enabled = True
+            flags.loyalty_enabled = True
+            flags.client_subscriptions = True
+            flags.analytics_enabled = True
+            flags.ai_advisor = True
+            flags.ai_client_bot = True
+            flags.ai_voice = True
+            flags.ai_tokens_monthly = 100000
+            flags.portfolio_enabled = True
+            flags.marketplace_enabled = True
+            flags.widget_enabled = True
+            flags.broadcast_enabled = True
+        elif plan == "business":
+            flags.max_bookings_per_month = 999999
+            flags.max_services = 999
+            flags.commission_rate_bp = 200
+            flags.crm_basic = True
+            flags.crm_advanced = True
+            flags.promo_enabled = True
+            flags.loyalty_enabled = True
+            flags.client_subscriptions = True
+            flags.analytics_enabled = True
+            flags.ai_advisor = True
+            flags.ai_client_bot = True
+            flags.ai_voice = True
+            flags.ai_tokens_monthly = 500000
+            flags.portfolio_enabled = True
+            flags.marketplace_enabled = True
+            flags.marketplace_featured = True
+            flags.widget_enabled = True
+            flags.multi_location = True
+            flags.consultations_enabled = True
+            flags.broadcast_enabled = True
+
+        await self.db.flush()

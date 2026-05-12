@@ -63,23 +63,27 @@ app.include_router(services_router, prefix="/api/v1/services", tags=["services"]
 from app.modules.booking.router import router as booking_router
 app.include_router(booking_router, prefix="/api/v1/booking", tags=["booking"])
 
-# from app.modules.payments.router import router as payments_router
-# app.include_router(payments_router, prefix="/api/v1/payments", tags=["payments"])
+from app.modules.payments.router import router as payments_router, router_webhook
+app.include_router(payments_router, prefix="/api/v1/payments", tags=["payments"])
+app.include_router(router_webhook, prefix="/webhook", tags=["webhooks"])
 
-# from app.modules.promo.router import router as promo_router
-# app.include_router(promo_router, prefix="/api/v1/promo", tags=["promo"])
+from app.modules.promo.router import router as promo_router
+app.include_router(promo_router, prefix="/api/v1/promo", tags=["promo"])
 
-# from app.modules.loyalty.router import router as loyalty_router
-# app.include_router(loyalty_router, prefix="/api/v1/loyalty", tags=["loyalty"])
+from app.modules.loyalty.router import router as loyalty_router
+app.include_router(loyalty_router, prefix="/api/v1/loyalty", tags=["loyalty"])
 
-# from app.modules.reviews.router import router as reviews_router
-# app.include_router(reviews_router, prefix="/api/v1/reviews", tags=["reviews"])
+from app.modules.reviews.router import router as reviews_router
+app.include_router(reviews_router, prefix="/api/v1/reviews", tags=["reviews"])
+
+from app.modules.waitlist.router import router as waitlist_router
+app.include_router(waitlist_router, prefix="/api/v1/waitlist", tags=["waitlist"])
+
+from app.modules.clients.router import router as clients_router
+app.include_router(clients_router, prefix="/api/v1/clients", tags=["clients"])
 
 # from app.modules.ai.router import router as ai_router
 # app.include_router(ai_router, prefix="/api/v1/ai", tags=["ai"])
-
-# from app.modules.waitlist.router import router as waitlist_router
-# app.include_router(waitlist_router, prefix="/api/v1/waitlist", tags=["waitlist"])
 
 # from app.modules.analytics.router import router as analytics_router
 # app.include_router(analytics_router, prefix="/api/v1/analytics", tags=["analytics"])
@@ -92,9 +96,6 @@ app.include_router(booking_router, prefix="/api/v1/booking", tags=["booking"])
 
 # from app.modules.superadmin.router import router as superadmin_router
 # app.include_router(superadmin_router, prefix="/api/v1/superadmin", tags=["superadmin"])
-
-# from app.modules.webhooks.router import router as webhooks_router
-# app.include_router(webhooks_router, prefix="/webhook", tags=["webhooks"])
 
 
 # ── APScheduler ──────────────────────────────────────────────
