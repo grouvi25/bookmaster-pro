@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { PlatformAdapter } from '@/platform/platform-adapter';
 import { useAuthStore } from '@/stores/auth';
@@ -30,10 +30,31 @@ import SuperadminPanel from '@/pages/superadmin/SuperadminPanel';
 
 import Loading from '@/components/common/Loading';
 
+
+function RequireAuth({ children, allowedRoles }: { children: ReactNode; allowedRoles: string[] }) {
+  const { role, token } = useAuthStore();
+  if (!token || !role) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-tg-bg text-tg-text p-6">
+        <div className="text-5xl mb-4">{'\ud83d\udd12'}</div>
+        <h2 className="text-xl font-bold mb-2">Доступ запрещён</h2>
+        <p className="text-tg-hint text-center text-sm">
+          Откройте приложение через Telegram для авторизации
+        </p>
+      </div>
+    );
+  }
+  if (!allowedRoles.includes(role)) {
+    return <Navigate to="/" replace />;
+  }
+  return <>{children}</>;
+}
+
+
 function AppRouter() {
   const navigate = useNavigate();
   const { role, setUser, setAuth } = useAuthStore();
-  useBookingStore.getState(); // ensure store is initialized
+  useBookingStore.getState();
   const [initializing, setInitializing] = useState(true);
 
   useEffect(() => {
@@ -42,6 +63,8 @@ function AppRouter() {
       const user = await PlatformAdapter.getUser();
       if (user) setUser(user);
 
+      let authRole: string | null = null;
+
       const initData = PlatformAdapter.getInitData();
       if (initData) {
         try {
@@ -49,10 +72,10 @@ function AppRouter() {
           const data = resp.data;
           if (data.access_token) {
             setAuth(data.access_token, data.role, data.master_id);
+            authRole = data.role;
           }
-          // role='new' without token — user needs to register
         } catch {
-          // не авторизован — покажем лендинг
+          // не авторизован
         }
       }
 
@@ -62,13 +85,19 @@ function AppRouter() {
         if (startParam.startsWith('m_')) {
           const slug = startParam.slice(2);
           navigate(`/m/${slug}`);
+        } else if (startParam === 'superadmin' && authRole === 'superadmin') {
+          navigate('/superadmin');
         } else if (startParam === 'dashboard') {
           navigate('/master');
         } else if (startParam.startsWith('review_')) {
           navigate(`/review/${startParam.slice(7)}`);
         } else if (startParam === 'billing') {
           navigate('/billing');
+        } else if (startParam.startsWith('ref_')) {
+          navigate(`/?ref=${startParam.slice(4)}`);
         }
+      } else if (authRole === 'superadmin') {
+        navigate('/superadmin');
       }
 
       setInitializing(false);
@@ -87,11 +116,17 @@ function AppRouter() {
         <Route
           path="/"
           element={
-            isMaster ? <Navigate to="/master" replace /> : <HomePage />
+            role === 'superadmin' ? (
+              <Navigate to="/superadmin" replace />
+            ) : isMaster ? (
+              <Navigate to="/master" replace />
+            ) : (
+              <HomePage />
+            )
           }
         />
 
-        {/* Клиентские роуты — запись к мастеру */}
+        {/* Клиентские роуты — запись к мастеру (публичные, не требуют auth) */}
         <Route path="/m/:slug" element={<MasterProfileRoute />} />
         <Route path="/book/service" element={<SelectService />} />
         <Route path="/book/date" element={<SelectDate />} />
@@ -101,19 +136,19 @@ function AppRouter() {
         <Route path="/book/success" element={<BookingSuccess />} />
         <Route path="/bookings" element={<MyBookings />} />
 
-        {/* Мастерские роуты (с TabBar) */}
-        <Route path="/master" element={<Dashboard />} />
-        <Route path="/master/schedule" element={<Schedule />} />
-        <Route path="/master/clients" element={<Clients />} />
-        <Route path="/master/tools" element={<Tools />} />
-        <Route path="/master/ai" element={<AIAssistant />} />
-        <Route path="/master/settings" element={<Settings />} />
+        {/* Мастерские роуты — только для master и superadmin */}
+        <Route path="/master" element={<RequireAuth allowedRoles={['master', 'superadmin']}><Dashboard /></RequireAuth>} />
+        <Route path="/master/schedule" element={<RequireAuth allowedRoles={['master', 'superadmin']}><Schedule /></RequireAuth>} />
+        <Route path="/master/clients" element={<RequireAuth allowedRoles={['master', 'superadmin']}><Clients /></RequireAuth>} />
+        <Route path="/master/tools" element={<RequireAuth allowedRoles={['master', 'superadmin']}><Tools /></RequireAuth>} />
+        <Route path="/master/ai" element={<RequireAuth allowedRoles={['master', 'superadmin']}><AIAssistant /></RequireAuth>} />
+        <Route path="/master/settings" element={<RequireAuth allowedRoles={['master', 'superadmin']}><Settings /></RequireAuth>} />
 
         {/* Публичная страница-линк (TapLink) */}
         <Route path="/p/:slug" element={<LinkPage />} />
 
-        {/* Суперадмин */}
-        <Route path="/superadmin" element={<SuperadminPanel />} />
+        {/* Суперадмин — только superadmin */}
+        <Route path="/superadmin" element={<RequireAuth allowedRoles={['superadmin']}><SuperadminPanel /></RequireAuth>} />
 
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />
