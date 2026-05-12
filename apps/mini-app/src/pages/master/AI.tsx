@@ -21,6 +21,7 @@ export default function AIAssistant() {
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [sessionId, setSessionId] = useState<string | undefined>(undefined);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -40,16 +41,23 @@ export default function AIAssistant() {
     try {
       const resp = await aiApi.ask({
         message: userMessage,
-        context: messages.slice(-10),
+        session_id: sessionId,
       });
+      if (resp.data.session_id) {
+        setSessionId(resp.data.session_id);
+      }
       setMessages((prev) => [
         ...prev,
-        { role: 'assistant', content: resp.data.response || resp.data.text || 'Нет ответа' },
+        { role: 'assistant', content: resp.data.response || 'Нет ответа' },
       ]);
-    } catch {
+    } catch (err: unknown) {
+      const errorMsg =
+        (err as { response?: { status?: number } })?.response?.status === 403
+          ? 'AI-ассистент недоступен на вашем тарифе.'
+          : 'Произошла ошибка. Попробуйте позже.';
       setMessages((prev) => [
         ...prev,
-        { role: 'assistant', content: 'Произошла ошибка. Попробуйте позже.' },
+        { role: 'assistant', content: errorMsg },
       ]);
     } finally {
       setLoading(false);
