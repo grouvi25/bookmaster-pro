@@ -119,7 +119,7 @@ function MastersTab() {
             </div>
             <span
               className={`text-xs px-2 py-1 rounded-lg ${
-                m.is_active ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-500'
+                m.is_active ? 'bg-green-500/15 text-green-600' : 'bg-red-500/15 text-red-500'
               }`}
             >
               {m.is_active ? 'Активен' : 'Неактивен'}
@@ -298,10 +298,10 @@ function TicketsTab() {
                 </div>
                 <div className="flex items-center gap-2">
                   <span className={`text-xs px-2 py-0.5 rounded-lg ${
-                    t.status === 'open' ? 'bg-yellow-50 text-yellow-600' :
-                    t.status === 'escalated' ? 'bg-red-50 text-red-500' :
-                    t.status === 'resolved' ? 'bg-green-50 text-green-600' :
-                    'bg-gray-50 text-gray-500'
+                    t.status === 'open' ? 'bg-yellow-500/15 text-yellow-600' :
+                    t.status === 'escalated' ? 'bg-red-500/15 text-red-500' :
+                    t.status === 'resolved' ? 'bg-green-500/15 text-green-600' :
+                    'bg-tg-secondary text-tg-hint'
                   }`}>
                     {t.status as string}
                   </span>

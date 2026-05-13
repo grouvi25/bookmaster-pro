@@ -152,7 +152,7 @@ function LoyaltySection() {
 
   return (
     <div>
-      <div className="bg-brand-50 rounded-xl p-4 mb-4">
+      <div className="bg-brand-500/10 rounded-xl p-4 mb-4">
         <div className="text-sm text-brand-700 mb-1">Программа лояльности</div>
         <p className="text-xs text-brand-600">
           Клиенты получают баллы за каждый визит и могут оплачивать ими услуги.

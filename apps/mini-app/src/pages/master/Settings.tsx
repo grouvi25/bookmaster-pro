@@ -50,7 +50,7 @@ function SettingsMain({ onNavigate }: { onNavigate: (tab: SettingsTab) => void }
           onClick={() => onNavigate(item.key)}
           className="flex items-center gap-3.5 p-4 bg-surface-elevated shadow-card rounded-2xl text-left active:scale-[0.98] transition-all duration-200"
         >
-          <div className="w-10 h-10 bg-brand-50 rounded-xl flex items-center justify-center">
+          <div className="w-10 h-10 bg-brand-500/10 rounded-xl flex items-center justify-center">
             <item.Icon className="w-5 h-5 text-brand-500" strokeWidth={1.8} />
           </div>
           <div className="flex-1">
@@ -63,9 +63,9 @@ function SettingsMain({ onNavigate }: { onNavigate: (tab: SettingsTab) => void }
 
       <button
         onClick={() => navigate('/link-page/edit')}
-        className="flex items-center gap-3.5 p-4 bg-brand-50 rounded-2xl text-left active:scale-[0.98] transition-all duration-200"
+        className="flex items-center gap-3.5 p-4 bg-brand-500/10 rounded-2xl text-left active:scale-[0.98] transition-all duration-200"
       >
-        <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-card">
+        <div className="w-10 h-10 bg-tg-bg rounded-xl flex items-center justify-center shadow-card">
           <Link2 className="w-5 h-5 text-brand-500" strokeWidth={1.8} />
         </div>
         <div className="flex-1">
@@ -81,7 +81,7 @@ function SettingsMain({ onNavigate }: { onNavigate: (tab: SettingsTab) => void }
         onClick={() => navigate('/billing')}
         className="flex items-center gap-3.5 p-4 bg-surface-elevated shadow-card rounded-2xl text-left active:scale-[0.98] transition-all duration-200"
       >
-        <div className="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center">
+        <div className="w-10 h-10 bg-amber-500/10 rounded-xl flex items-center justify-center">
           <CreditCard className="w-5 h-5 text-accent-orange" strokeWidth={1.8} />
         </div>
         <div className="flex-1">
@@ -95,7 +95,7 @@ function SettingsMain({ onNavigate }: { onNavigate: (tab: SettingsTab) => void }
         onClick={() => navigate('/master/broadcast')}
         className="flex items-center gap-3.5 p-4 bg-surface-elevated shadow-card rounded-2xl text-left active:scale-[0.98] transition-all duration-200"
       >
-        <div className="w-10 h-10 bg-purple-50 rounded-xl flex items-center justify-center">
+        <div className="w-10 h-10 bg-accent-purple/10 rounded-xl flex items-center justify-center">
           <Megaphone className="w-5 h-5 text-accent-purple" strokeWidth={1.8} />
         </div>
         <div className="flex-1">
@@ -109,7 +109,7 @@ function SettingsMain({ onNavigate }: { onNavigate: (tab: SettingsTab) => void }
         onClick={() => navigate('/master/locations')}
         className="flex items-center gap-3.5 p-4 bg-surface-elevated shadow-card rounded-2xl text-left active:scale-[0.98] transition-all duration-200"
       >
-        <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center">
+        <div className="w-10 h-10 bg-accent-emerald/10 rounded-xl flex items-center justify-center">
           <MapPin className="w-5 h-5 text-accent-emerald" strokeWidth={1.8} />
         </div>
         <div className="flex-1">
@@ -301,7 +301,7 @@ function ProfileSection({ onBack }: { onBack: () => void }) {
 
       <Card>
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-16 h-16 bg-brand-50 rounded-full flex items-center justify-center overflow-hidden">
+          <div className="w-16 h-16 bg-brand-500/10 rounded-full flex items-center justify-center overflow-hidden">
             {profile?.avatar_url ? (
               <img src={profile.avatar_url} alt="" className="w-full h-full rounded-full object-cover" />
             ) : (

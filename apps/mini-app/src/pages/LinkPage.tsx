@@ -39,10 +39,10 @@ export default function LinkPage() {
   const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(appUrl)}`;
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-tg-bg">
       {/* Header */}
       <div className="pt-10 pb-6 px-6 text-center">
-        <div className="w-28 h-28 rounded-3xl bg-brand-50 shadow-card-lg mx-auto mb-4 flex items-center justify-center overflow-hidden">
+        <div className="w-28 h-28 rounded-3xl bg-brand-500/10 shadow-card-lg mx-auto mb-4 flex items-center justify-center overflow-hidden">
           {master.avatar_url ? (
             <img src={master.avatar_url} alt={master.name} className="w-full h-full object-cover" />
           ) : (

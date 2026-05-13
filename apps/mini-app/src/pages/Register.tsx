@@ -81,7 +81,7 @@ export default function Register() {
     return (
       <div className="flex flex-col min-h-screen px-5 pt-16 pb-8 gap-6 animate-fade-in">
         <div className="text-center">
-          <div className="w-16 h-16 bg-brand-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 bg-brand-500/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
             <Scissors className="w-8 h-8 text-brand-500" strokeWidth={1.8} />
           </div>
           <h1 className="text-2xl font-bold tracking-tight mb-2">BookMaster Pro</h1>
@@ -98,7 +98,7 @@ export default function Register() {
             className="bg-surface-elevated shadow-card-lg p-5 rounded-2xl text-left active:scale-[0.98] transition-all duration-200"
           >
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-brand-50 flex items-center justify-center">
+              <div className="w-12 h-12 rounded-2xl bg-brand-500/10 flex items-center justify-center">
                 <Scissors className="w-6 h-6 text-brand-500" strokeWidth={1.8} />
               </div>
               <div className="flex-1">
@@ -116,7 +116,7 @@ export default function Register() {
             className="bg-surface-elevated shadow-card-lg p-5 rounded-2xl text-left active:scale-[0.98] transition-all duration-200"
           >
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center">
+              <div className="w-12 h-12 rounded-2xl bg-accent-emerald/10 flex items-center justify-center">
                 <UserCircle className="w-6 h-6 text-accent-emerald" strokeWidth={1.8} />
               </div>
               <div className="flex-1">

@@ -32,12 +32,12 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 const STATUS_COLORS: Record<string, string> = {
-  pending: 'bg-yellow-100 text-yellow-800',
-  confirmed: 'bg-blue-100 text-blue-800',
-  in_progress: 'bg-green-100 text-green-800',
-  completed: 'bg-gray-100 text-gray-600',
-  cancelled: 'bg-red-100 text-red-800',
-  no_show: 'bg-red-100 text-red-800',
+  pending: 'bg-yellow-500/15 text-yellow-600',
+  confirmed: 'bg-blue-500/15 text-blue-600',
+  in_progress: 'bg-green-500/15 text-green-600',
+  completed: 'bg-tg-secondary text-tg-hint',
+  cancelled: 'bg-red-500/15 text-red-500',
+  no_show: 'bg-red-500/15 text-red-500',
 };
 
 export default function Consultations() {
@@ -154,7 +154,7 @@ function ConsultationsList() {
                 </div>
                 <span
                   className={`text-xs px-2 py-1 rounded-lg ${
-                    STATUS_COLORS[c.status] || 'bg-gray-100 text-gray-600'
+                    STATUS_COLORS[c.status] || 'bg-tg-secondary text-tg-hint'
                   }`}
                 >
                   {STATUS_LABELS[c.status] || c.status}
@@ -194,7 +194,7 @@ function ConsultationsList() {
                   </button>
                   <button
                     onClick={() => cancelMutation.mutate(c.id)}
-                    className="flex-1 bg-red-100 text-red-700 text-xs py-1.5 rounded-lg"
+                    className="flex-1 bg-red-500/15 text-red-500 text-xs py-1.5 rounded-lg"
                   >
                     Отменить
                   </button>
@@ -254,7 +254,7 @@ function StatCard({
   return (
     <div
       className={`rounded-xl p-3 ${
-        highlight ? 'bg-brand-50' : 'bg-tg-secondary'
+        highlight ? 'bg-brand-500/10' : 'bg-tg-secondary'
       }`}
     >
       <div className="text-xs text-tg-hint mb-1">{label}</div>

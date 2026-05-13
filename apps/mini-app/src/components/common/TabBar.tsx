@@ -24,7 +24,7 @@ export default function TabBar() {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 safe-area-bottom px-4 pb-2">
-      <div className="bg-surface-elevated/95 backdrop-blur-lg shadow-tab-bar rounded-2xl">
+      <div className="bg-tg-bg/95 backdrop-blur-lg shadow-tab-bar rounded-2xl">
         <div className="flex justify-around items-center h-[60px]">
           {MASTER_TABS.map((tab) => {
             const active =
@@ -42,7 +42,7 @@ export default function TabBar() {
               >
                 <div className={clsx(
                   'flex items-center justify-center w-8 h-8 rounded-xl transition-all duration-200 mb-0.5',
-                  active && 'bg-brand-50'
+                  active && 'bg-brand-500/10'
                 )}>
                   <tab.Icon className="w-[20px] h-[20px]" strokeWidth={active ? 2.2 : 1.6} />
                 </div>

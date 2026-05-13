@@ -41,7 +41,7 @@ export default function Clients() {
         <div className="bg-surface-elevated shadow-card-lg rounded-2xl p-4 mb-4 animate-slide-up">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-brand-50 rounded-2xl flex items-center justify-center">
+              <div className="w-12 h-12 bg-brand-500/10 rounded-2xl flex items-center justify-center">
                 <User className="w-6 h-6 text-brand-500" strokeWidth={1.8} />
               </div>
               <div>
@@ -81,7 +81,7 @@ export default function Clients() {
               {(selected.tags as string[]).map((tag: string) => (
                 <span
                   key={tag}
-                  className="px-2 py-0.5 bg-brand-50 text-brand-600 text-xs rounded-lg"
+                  className="px-2 py-0.5 bg-brand-500/10 text-brand-600 text-xs rounded-lg"
                 >
                   {tag}
                 </span>
@@ -117,7 +117,7 @@ export default function Clients() {
               onClick={() => setSelectedId(c.id as number)}
               className="flex items-center gap-3 p-3.5 bg-surface-elevated shadow-card rounded-2xl text-left active:scale-[0.98] transition-all duration-200"
             >
-              <div className="w-10 h-10 bg-brand-50 rounded-xl flex items-center justify-center">
+              <div className="w-10 h-10 bg-brand-500/10 rounded-xl flex items-center justify-center">
                 <User className="w-5 h-5 text-brand-500" strokeWidth={1.8} />
               </div>
               <div className="flex-1">

@@ -35,7 +35,7 @@ export default {
         surface: {
           primary:   'var(--tg-theme-bg-color, #ffffff)',
           secondary: 'var(--tg-theme-secondary-bg-color, #f7f7f8)',
-          elevated:  '#ffffff',
+          elevated:  'var(--tg-theme-secondary-bg-color, #f7f7f8)',
         },
       },
       fontFamily: {
