@@ -3,7 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { subscriptionsApi } from '@/api/endpoints';
 import Loading from '@/components/common/Loading';
 import Card from '@/shared/ui/Card';
-import { ChevronLeft, CreditCard, CheckCircle, AlertCircle, XCircle } from 'lucide-react';
+import SectionBack from '@/shared/ui/SectionBack';
+import EmptyState from '@/shared/ui/EmptyState';
+import StatusBadge from '@/shared/ui/StatusBadge';
+import { CreditCard } from 'lucide-react';
 
 interface ClientSubscription {
   id: number;
@@ -17,11 +20,18 @@ interface ClientSubscription {
   expires_at: string | null;
 }
 
-const STATUS_CONFIG: Record<string, { label: string; icon: typeof CheckCircle; color: string }> = {
-  active: { label: 'Активен', icon: CheckCircle, color: 'text-green-500' },
-  exhausted: { label: 'Использован', icon: AlertCircle, color: 'text-yellow-500' },
-  expired: { label: 'Истёк', icon: XCircle, color: 'text-red-400' },
-  refunded: { label: 'Возврат', icon: XCircle, color: 'text-gray-400' },
+const STATUS_VARIANT: Record<string, 'success' | 'warning' | 'danger' | 'neutral'> = {
+  active: 'success',
+  exhausted: 'warning',
+  expired: 'danger',
+  refunded: 'neutral',
+};
+
+const STATUS_LABEL: Record<string, string> = {
+  active: 'Активен',
+  exhausted: 'Использован',
+  expired: 'Истёк',
+  refunded: 'Возврат',
 };
 
 export default function Subscriptions() {
@@ -40,12 +50,7 @@ export default function Subscriptions() {
 
   return (
     <div className="p-5 pb-24 animate-fade-in">
-      <button
-        onClick={() => navigate(-1)}
-        className="flex items-center gap-0.5 text-tg-link text-sm mb-3"
-      >
-        <ChevronLeft className="w-4 h-4" /> Назад
-      </button>
+      <SectionBack onBack={() => navigate(-1)} />
 
       <h1 className="text-2xl font-bold tracking-tight mb-5">
         <CreditCard className="w-5 h-5 inline mr-1.5" />
@@ -53,11 +58,11 @@ export default function Subscriptions() {
       </h1>
 
       {subscriptions.length === 0 ? (
-        <div className="text-center py-12">
-          <CreditCard className="w-12 h-12 text-tg-hint mx-auto mb-3" strokeWidth={1} />
-          <p className="text-tg-hint mb-1">Нет абонементов</p>
-          <p className="text-xs text-tg-hint">Абонементы появятся после покупки у мастера</p>
-        </div>
+        <EmptyState
+          Icon={CreditCard}
+          title="Нет абонементов"
+          description="Абонементы появятся после покупки у мастера"
+        />
       ) : (
         <>
           {active.length > 0 && (
@@ -86,19 +91,17 @@ export default function Subscriptions() {
   );
 }
 
-function SubscriptionCard({ sub }: { sub: { id: number; total_visits: number; used_visits: number; price_paid: number; status: string; expires_at: string | null } }) {
-  const config = STATUS_CONFIG[sub.status] ?? STATUS_CONFIG.active;
-  const StatusIcon = config.icon;
+function SubscriptionCard({ sub }: { sub: ClientSubscription }) {
   const remaining = sub.total_visits - sub.used_visits;
   const progress = sub.total_visits > 0 ? (sub.used_visits / sub.total_visits) * 100 : 0;
 
   return (
     <Card>
       <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-1.5">
-          <StatusIcon className={`w-4 h-4 ${config.color}`} />
-          <span className={`text-sm font-medium ${config.color}`}>{config.label}</span>
-        </div>
+        <StatusBadge
+          label={STATUS_LABEL[sub.status] || sub.status}
+          variant={STATUS_VARIANT[sub.status] || 'neutral'}
+        />
         <span className="text-sm font-bold">{Number(sub.price_paid).toLocaleString('ru')} ₽</span>
       </div>
 

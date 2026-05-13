@@ -4,31 +4,28 @@ import { promoApi, loyaltyApi } from '@/api/endpoints';
 import { toArray } from '@/shared/lib/normalize';
 import { useAuthStore } from '@/stores/auth';
 import Loading from '@/components/common/Loading';
+import PageHeader from '@/shared/ui/PageHeader';
+import ChipTabs from '@/shared/ui/ChipTabs';
+import EmptyState from '@/shared/ui/EmptyState';
 import { Ticket, Star, Plus, Tag } from 'lucide-react';
+import type { Promo, LoyaltyTransaction } from '@/shared/types/api';
+
+type ToolsTab = 'promo' | 'loyalty';
+
+const TABS: { key: ToolsTab; label: string; Icon: typeof Ticket }[] = [
+  { key: 'promo', label: 'Промокоды', Icon: Ticket },
+  { key: 'loyalty', label: 'Лояльность', Icon: Star },
+];
 
 export default function Tools() {
-  const [tab, setTab] = useState<'promo' | 'loyalty'>('promo');
+  const [tab, setTab] = useState<ToolsTab>('promo');
 
   return (
     <div className="p-5 pb-24 animate-fade-in">
-      <h1 className="text-2xl font-bold tracking-tight mb-4">Инструменты</h1>
+      <PageHeader title="Инструменты" />
 
-      <div className="flex gap-2 mb-5">
-        {[
-          { key: 'promo' as const, label: 'Промокоды', Icon: Ticket },
-          { key: 'loyalty' as const, label: 'Лояльность', Icon: Star },
-        ].map(({ key, label, Icon }) => (
-          <button
-            key={key}
-            onClick={() => setTab(key)}
-            className={`chip ${
-              tab === key ? 'chip-active' : 'chip-inactive'
-            }`}
-          >
-            <Icon className="w-3.5 h-3.5" />
-            {label}
-          </button>
-        ))}
+      <div className="mb-5">
+        <ChipTabs tabs={TABS} active={tab} onChange={setTab} />
       </div>
 
       {tab === 'promo' ? <PromoSection /> : <LoyaltySection />}
@@ -48,7 +45,8 @@ function PromoSection() {
   });
 
   const createMutation = useMutation({
-    mutationFn: (data: Record<string, unknown>) => promoApi.create(data),
+    mutationFn: (payload: { code: string; discount_percent?: number; discount_amount?: number }) =>
+      promoApi.create(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['promos'] });
       setShowForm(false);
@@ -59,7 +57,7 @@ function PromoSection() {
 
   if (isLoading) return <Loading />;
 
-  const promos = toArray(data);
+  const promos = toArray<Promo>(data);
 
   return (
     <div>
@@ -108,28 +106,25 @@ function PromoSection() {
       )}
 
       {promos.length === 0 ? (
-        <div className="text-center py-6">
-          <Tag className="w-8 h-8 text-tg-hint mx-auto mb-2" strokeWidth={1.5} />
-          <p className="text-tg-hint text-sm">Нет активных промокодов</p>
-        </div>
+        <EmptyState Icon={Tag} title="Нет активных промокодов" />
       ) : (
         <div className="flex flex-col gap-2">
-          {promos.map((p: Record<string, unknown>) => (
+          {promos.map((p) => (
             <div
-              key={p.id as number}
+              key={p.id}
               className="bg-surface-elevated shadow-card rounded-2xl p-3.5 flex justify-between items-center"
             >
               <div>
-                <div className="font-mono font-bold text-sm">{String(p.code)}</div>
+                <div className="font-mono font-bold text-sm">{p.code}</div>
                 <div className="text-xs text-tg-hint">
-                  Использований: {Number(p.usage_count)}
-                  {p.max_uses ? ` / ${Number(p.max_uses)}` : null}
+                  Использований: {p.usage_count ?? p.used_count ?? 0}
+                  {p.max_uses ? ` / ${p.max_uses}` : null}
                 </div>
               </div>
               <div className="font-medium text-brand-600 text-sm">
                 {p.discount_percent
                   ? `-${p.discount_percent}%`
-                  : `-${Number(p.discount_amount).toLocaleString('ru')} \u20bd`}
+                  : `-${Number(p.discount_amount ?? p.discount_value).toLocaleString('ru')} ₽`}
               </div>
             </div>
           ))}
@@ -149,7 +144,7 @@ function LoyaltySection() {
 
   if (isLoading) return <Loading />;
 
-  const history = toArray(data);
+  const history = toArray<LoyaltyTransaction>(data);
 
   return (
     <div>
@@ -161,20 +156,17 @@ function LoyaltySection() {
       </div>
 
       {history.length === 0 ? (
-        <div className="text-center py-6">
-          <Star className="w-8 h-8 text-tg-hint mx-auto mb-2" strokeWidth={1.5} />
-          <p className="text-tg-hint text-sm">История начислений пуста</p>
-        </div>
+        <EmptyState Icon={Star} title="История начислений пуста" />
       ) : (
         <div className="flex flex-col gap-2">
-          {history.map((h: Record<string, unknown>, i: number) => (
-            <div key={i} className="bg-surface-elevated shadow-card rounded-2xl p-3.5 flex justify-between items-center">
+          {history.map((h) => (
+            <div key={h.id} className="bg-surface-elevated shadow-card rounded-2xl p-3.5 flex justify-between items-center">
               <div>
-                <div className="text-sm font-medium">{h.client_name as string}</div>
-                <div className="text-xs text-tg-hint">{h.reason as string}</div>
+                <div className="text-sm font-medium">{h.description}</div>
+                <div className="text-xs text-tg-hint">{h.type}</div>
               </div>
-              <span className={`font-bold text-sm ${(h.amount as number) > 0 ? 'text-green-600' : 'text-red-500'}`}>
-                {(h.amount as number) > 0 ? '+' : ''}{h.amount as number}
+              <span className={`font-bold text-sm ${h.amount > 0 ? 'text-green-600' : 'text-red-500'}`}>
+                {h.amount > 0 ? '+' : ''}{h.amount}
               </span>
             </div>
           ))}

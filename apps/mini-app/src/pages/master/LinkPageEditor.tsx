@@ -2,14 +2,17 @@ import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { mastersApi, servicesApi, portfolioApi } from '@/api/endpoints';
+import { toArray } from '@/shared/lib/normalize';
 import Loading from '@/components/common/Loading';
 import Card from '@/shared/ui/Card';
 import Button from '@/shared/ui/Button';
+import SectionBack from '@/shared/ui/SectionBack';
 import { toast } from '@/shared/ui/Toast';
 import {
-  ChevronLeft, Link2, Eye, Copy, Plus, Trash2,
+  Link2, Eye, Copy, Plus, Trash2,
   User, Image,
 } from 'lucide-react';
+import type { Service, PortfolioItem } from '@/shared/types/api';
 
 interface SocialLink {
   url: string;
@@ -88,18 +91,13 @@ export default function LinkPageEditor() {
   if (isLoading) return <Loading />;
   if (!master) return <div className="p-5 text-center text-tg-hint">Профиль не найден</div>;
 
-  const servicesList = Array.isArray(services) ? services : services?.items || [];
-  const portfolioItems = portfolio?.items || [];
+  const servicesList: Service[] = toArray<Service>(services);
+  const portfolioItems: PortfolioItem[] = toArray<PortfolioItem>(portfolio?.items);
   const pageUrl = `/p/${master.slug}`;
 
   return (
     <div className="p-5 pb-24 animate-fade-in">
-      <button
-        onClick={() => navigate(-1)}
-        className="flex items-center gap-0.5 text-tg-link text-sm mb-3"
-      >
-        <ChevronLeft className="w-4 h-4" /> Назад
-      </button>
+      <SectionBack onBack={() => navigate(-1)} />
 
       <h1 className="text-2xl font-bold tracking-tight mb-1">Моя страница-визитка</h1>
       <p className="text-tg-hint text-sm mb-5">TapLink-аналог для ваших клиентов</p>
@@ -209,7 +207,7 @@ export default function LinkPageEditor() {
         </div>
         <div className="bg-tg-secondary rounded-xl p-3 text-sm text-tg-hint">
           {servicesList.length > 0
-            ? `Отображаются: ${servicesList.slice(0, 3).map((s: Record<string, unknown>) => s.name).join(', ')}${servicesList.length > 3 ? ` и ещё ${servicesList.length - 3}` : ''}`
+            ? `Отображаются: ${servicesList.slice(0, 3).map((s) => s.name).join(', ')}${servicesList.length > 3 ? ` и ещё ${servicesList.length - 3}` : ''}`
             : 'Добавьте услуги в разделе «Мои услуги»'}
         </div>
       </div>
@@ -222,10 +220,10 @@ export default function LinkPageEditor() {
         </div>
         {portfolioItems.length > 0 ? (
           <div className="grid grid-cols-4 gap-1 rounded-xl overflow-hidden">
-            {portfolioItems.slice(0, 8).map((item: Record<string, unknown>) => (
+            {portfolioItems.slice(0, 8).map((item) => (
               <img
-                key={item.id as number}
-                src={item.url as string}
+                key={item.id}
+                src={item.image_url}
                 alt=""
                 className="w-full aspect-square object-cover"
               />

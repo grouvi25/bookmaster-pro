@@ -1,5 +1,160 @@
 import api from './client';
 
+// ── Payload types ──
+
+interface MasterProfilePayload {
+  name?: string;
+  bio?: string;
+  city?: string;
+  specialization?: string;
+  avatar_url?: string;
+  social_links?: { url: string; label?: string }[];
+}
+
+interface SchedulePayload {
+  working_days?: number[];
+  start_time?: string;
+  end_time?: string;
+  slot_duration?: number;
+  break_between?: number;
+}
+
+interface ServicePayload {
+  name: string;
+  price: number;
+  duration_min: number;
+  price_max?: number;
+  category?: string;
+  description?: string;
+}
+
+interface BookingPayload {
+  master_id: number | null;
+  service_id: number | null;
+  date: string;
+  time: string;
+  client_name?: string;
+  client_phone?: string;
+  promo_code?: string;
+  use_loyalty_points?: boolean;
+}
+
+interface PaymentPayload {
+  booking_id?: number;
+  appointment_id?: number;
+  amount: number;
+  method?: string;
+  type?: string;
+}
+
+interface ClientSubscriptionPayload {
+  master_id: number;
+  service_id?: number;
+  total_visits: number;
+  price: number;
+}
+
+interface PromoPayload {
+  code: string;
+  discount_type?: string;
+  discount_value?: number;
+  discount_percent?: number;
+  discount_amount?: number;
+  valid_until?: string;
+  max_uses?: number;
+}
+
+interface LoyaltySettingsPayload {
+  cashback_percent?: number;
+  welcome_bonus?: number;
+  review_bonus?: number;
+  referral_bonus?: number;
+}
+
+interface ReviewPayload {
+  master_id?: number;
+  booking_id?: number;
+  appointment_id?: number;
+  rating: number;
+  text?: string;
+}
+
+interface WaitlistPayload {
+  master_id: number;
+  service_id: number;
+  preferred_date?: string;
+  preferred_time?: string;
+  note?: string;
+  phone?: string;
+  comment?: string;
+}
+
+interface ClientTagPayload {
+  tags?: string[];
+  segment?: string;
+}
+
+interface ClientNotePayload {
+  text: string;
+}
+
+interface AIContentPayload {
+  type: string;
+  context?: string;
+  language?: string;
+}
+
+interface SupportTicketPayload {
+  subject: string;
+  message: string;
+  priority?: string;
+}
+
+interface ConsultationSlotPayload {
+  date: string;
+  start_time: string;
+  end_time?: string;
+  service_id?: number;
+  price?: number;
+}
+
+interface ConsultationBookPayload {
+  slot_id: number;
+  client_name?: string;
+  note?: string;
+}
+
+interface ConsultationUpdatePayload {
+  status?: string;
+  notes?: string;
+}
+
+interface BroadcastPayload {
+  title: string;
+  message?: string;
+  text?: string;
+  segment?: string;
+  segment_filter?: Record<string, unknown>;
+  filters?: Record<string, string>;
+}
+
+interface BroadcastPreviewPayload {
+  title?: string;
+  text?: string;
+  segment?: string;
+  segment_filter?: Record<string, unknown>;
+  filters?: Record<string, string>;
+}
+
+interface LocationPayload {
+  name: string;
+  address: string;
+  city?: string;
+  lat?: number;
+  lng?: number;
+  is_default?: boolean;
+}
+
 // ── Auth ──
 export const authApi = {
   identify: (initData: string) =>
@@ -12,11 +167,11 @@ export const authApi = {
 export const mastersApi = {
   getPublic: (slug: string) => api.get(`/masters/${slug}/public`),
   getProfile: () => api.get('/masters/me'),
-  updateProfile: (data: Record<string, unknown>) =>
+  updateProfile: (data: MasterProfilePayload) =>
     api.put('/masters/me', data),
   getSchedule: (params?: Record<string, string>) =>
     api.get('/masters/me/schedule', { params }),
-  updateSchedule: (data: Record<string, unknown>) =>
+  updateSchedule: (data: SchedulePayload) =>
     api.put('/masters/me/schedule', data),
   getStats: () => api.get('/masters/me/stats'),
 };
@@ -25,8 +180,8 @@ export const mastersApi = {
 export const servicesApi = {
   list: (masterId?: number) =>
     api.get('/services', { params: masterId ? { master_id: masterId } : {} }),
-  create: (data: Record<string, unknown>) => api.post('/services', data),
-  update: (id: number, data: Record<string, unknown>) =>
+  create: (data: ServicePayload) => api.post('/services', data),
+  update: (id: number, data: Partial<ServicePayload>) =>
     api.patch(`/services/${id}`, data),
   delete: (id: number) => api.delete(`/services/${id}`),
   reorder: (order: number[]) => api.post('/services/reorder', { order }),
@@ -40,7 +195,7 @@ export const bookingApi = {
     api.get('/booking/available-dates', {
       params: { master_id: masterId, service_id: serviceId },
     }),
-  create: (data: Record<string, unknown>) => api.post('/booking', data),
+  create: (data: BookingPayload) => api.post('/booking', data),
   cancel: (id: number) =>
     api.patch(`/booking/${id}`, { status: 'cancelled_by_client' }),
   myBookings: (params?: Record<string, string>) =>
@@ -53,7 +208,7 @@ export const bookingApi = {
 
 // ── Payments ──
 export const paymentsApi = {
-  create: (data: Record<string, unknown>) => api.post('/payments/create', data),
+  create: (data: PaymentPayload) => api.post('/payments/create', data),
   refund: (id: number) => api.post(`/payments/refund/${id}`),
 };
 
@@ -72,7 +227,7 @@ export const featureFlagsApi = {
 // ── Client Subscriptions ──
 export const subscriptionsApi = {
   list: () => api.get('/payments/client-subscriptions'),
-  create: (data: Record<string, unknown>) =>
+  create: (data: ClientSubscriptionPayload) =>
     api.post('/payments/client-subscription', data),
 };
 
@@ -81,7 +236,7 @@ export const promoApi = {
   validate: (code: string, masterId: number) =>
     api.post('/promo/validate', { code, master_id: masterId }),
   list: () => api.get('/promo'),
-  create: (data: Record<string, unknown>) => api.post('/promo', data),
+  create: (data: PromoPayload) => api.post('/promo', data),
 };
 
 // ── Loyalty ──
@@ -91,7 +246,7 @@ export const loyaltyApi = {
   processReferral: (referrerCode: string) =>
     api.post('/loyalty/referral', { referrer_code: referrerCode }),
   getSettings: () => api.get('/loyalty/settings'),
-  updateSettings: (data: Record<string, unknown>) =>
+  updateSettings: (data: LoyaltySettingsPayload) =>
     api.put('/loyalty/settings', data),
 };
 
@@ -99,14 +254,14 @@ export const loyaltyApi = {
 export const reviewsApi = {
   getByMaster: (masterId: number, params?: Record<string, string>) =>
     api.get(`/reviews/master/${masterId}`, { params }),
-  create: (data: Record<string, unknown>) => api.post('/reviews', data),
+  create: (data: ReviewPayload) => api.post('/reviews', data),
   reply: (id: number, text: string) =>
     api.post(`/reviews/${id}/reply`, { text }),
 };
 
 // ── Waitlist ──
 export const waitlistApi = {
-  join: (data: Record<string, unknown>) => api.post('/waitlist', data),
+  join: (data: WaitlistPayload) => api.post('/waitlist', data),
   confirm: (id: number) => api.post(`/waitlist/${id}/confirm`),
 };
 
@@ -115,9 +270,9 @@ export const clientsApi = {
   list: (params?: Record<string, string>) =>
     api.get('/clients', { params }),
   get: (id: number) => api.get(`/clients/${id}/detail`),
-  addTag: (id: number, data: Record<string, unknown>) =>
+  addTag: (id: number, data: ClientTagPayload) =>
     api.patch(`/clients/${id}`, data),
-  addNote: (id: number, data: Record<string, unknown>) =>
+  addNote: (id: number, data: ClientNotePayload) =>
     api.post(`/clients/${id}/notes`, data),
 };
 
@@ -133,7 +288,7 @@ export const analyticsApi = {
 export const aiApi = {
   ask: (data: { message: string; session_id?: string }) =>
     api.post('/ai/ask', data),
-  generateContent: (data: Record<string, unknown>) =>
+  generateContent: (data: AIContentPayload) =>
     api.post('/ai/content', data),
   templates: () => api.get('/ai/templates'),
   tokens: () => api.get('/ai/tokens'),
@@ -153,7 +308,7 @@ export const portfolioApi = {
 // ── Support ──
 export const supportApi = {
   list: () => api.get('/support/tickets'),
-  create: (data: Record<string, unknown>) =>
+  create: (data: SupportTicketPayload) =>
     api.post('/support/tickets', data),
   reply: (id: number, text: string) =>
     api.post(`/support/tickets/${id}/reply`, { text }),
@@ -165,12 +320,12 @@ export const consultationsApi = {
     api.get(`/consultations/slots/${masterId}`, {
       params: serviceId ? { service_id: serviceId } : {},
     }),
-  createSlot: (data: Record<string, unknown>) =>
+  createSlot: (data: ConsultationSlotPayload) =>
     api.post('/consultations/slots', data),
-  createSlotsBulk: (data: Record<string, unknown>) =>
+  createSlotsBulk: (data: { slots: ConsultationSlotPayload[] }) =>
     api.post('/consultations/slots/bulk', data),
   deleteSlot: (id: number) => api.delete(`/consultations/slots/${id}`),
-  book: (data: Record<string, unknown>) =>
+  book: (data: ConsultationBookPayload) =>
     api.post('/consultations/book', data),
   my: (status?: string) =>
     api.get('/consultations/my', { params: status ? { status } : {} }),
@@ -178,7 +333,7 @@ export const consultationsApi = {
     api.get('/consultations/master', { params }),
   stats: () => api.get('/consultations/stats'),
   get: (id: number) => api.get(`/consultations/${id}`),
-  update: (id: number, data: Record<string, unknown>) =>
+  update: (id: number, data: ConsultationUpdatePayload) =>
     api.patch(`/consultations/${id}`, data),
   cancel: (id: number, reason?: string) =>
     api.post(`/consultations/${id}/cancel`, null, {
@@ -193,8 +348,8 @@ export const consultationsApi = {
 // ── Broadcast ──
 export const broadcastApi = {
   list: () => api.get('/broadcast'),
-  create: (data: Record<string, unknown>) => api.post('/broadcast', data),
-  previewSegment: (data: Record<string, unknown>) =>
+  create: (data: BroadcastPayload) => api.post('/broadcast', data),
+  previewSegment: (data: BroadcastPreviewPayload) =>
     api.post('/broadcast/preview-segment', data),
   send: (id: number) => api.post(`/broadcast/${id}/send`),
 };
@@ -211,9 +366,9 @@ export const npsApi = {
 // ── Locations ──
 export const locationsApi = {
   list: () => api.get('/masters/me/locations'),
-  create: (data: Record<string, unknown>) =>
+  create: (data: LocationPayload) =>
     api.post('/masters/me/locations', data),
-  update: (id: number, data: Record<string, unknown>) =>
+  update: (id: number, data: Partial<LocationPayload>) =>
     api.patch(`/masters/me/locations/${id}`, data),
   delete: (id: number) => api.delete(`/masters/me/locations/${id}`),
 };

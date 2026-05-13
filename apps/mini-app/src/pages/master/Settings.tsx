@@ -6,9 +6,16 @@ import { toArray } from '@/shared/lib/normalize';
 import Loading from '@/components/common/Loading';
 import Button from '@/shared/ui/Button';
 import Card from '@/shared/ui/Card';
+import StatCard from '@/shared/ui/StatCard';
+import SectionBack from '@/shared/ui/SectionBack';
+import MenuItem from '@/shared/ui/MenuItem';
 import { toast } from '@/shared/ui/Toast';
-import { BarChart3, ClipboardList, User, MessageCircle, Link2, CreditCard, ChevronLeft, ChevronRight, Star, Plus, Pencil, Trash2, Send, MapPin, Megaphone } from 'lucide-react';
-import type { LucideIcon } from 'lucide-react';
+import {
+  BarChart3, ClipboardList, User, MessageCircle,
+  Link2, CreditCard, Star, Plus, Trash2, Send,
+  MapPin, Megaphone,
+} from 'lucide-react';
+import type { Service, SupportTicket, MasterProfile } from '@/shared/types/api';
 
 type SettingsTab = 'main' | 'analytics' | 'services' | 'profile' | 'support';
 
@@ -36,89 +43,66 @@ export default function Settings() {
 
 function SettingsMain({ onNavigate }: { onNavigate: (tab: SettingsTab) => void }) {
   const navigate = useNavigate();
-  const menuItems: { key: SettingsTab; Icon: LucideIcon; label: string; desc: string }[] = [
-    { key: 'analytics', Icon: BarChart3, label: 'Аналитика', desc: 'Статистика и отчёты' },
-    { key: 'services', Icon: ClipboardList, label: 'Мои услуги', desc: 'Управление услугами' },
-    { key: 'profile', Icon: User, label: 'Профиль', desc: 'Настройки профиля' },
-    { key: 'support', Icon: MessageCircle, label: 'Поддержка', desc: 'Помощь и обратная связь' },
-  ];
 
   return (
     <div className="flex flex-col gap-2">
-      {menuItems.map((item) => (
-        <button
-          key={item.key}
-          onClick={() => onNavigate(item.key)}
-          className="flex items-center gap-3.5 p-4 bg-surface-elevated shadow-card rounded-2xl text-left active:scale-[0.98] transition-all duration-200"
-        >
-          <div className="w-10 h-10 bg-brand-500/10 rounded-xl flex items-center justify-center">
-            <item.Icon className="w-5 h-5 text-brand-500" strokeWidth={1.8} />
-          </div>
-          <div className="flex-1">
-            <div className="font-semibold text-sm">{item.label}</div>
-            <div className="text-xs text-tg-hint mt-0.5">{item.desc}</div>
-          </div>
-          <ChevronRight className="w-4 h-4 text-tg-hint" />
-        </button>
-      ))}
-
-      <button
+      <MenuItem
+        Icon={BarChart3}
+        label="Аналитика"
+        description="Статистика и отчёты"
+        onClick={() => onNavigate('analytics')}
+      />
+      <MenuItem
+        Icon={ClipboardList}
+        label="Мои услуги"
+        description="Управление услугами"
+        onClick={() => onNavigate('services')}
+      />
+      <MenuItem
+        Icon={User}
+        label="Профиль"
+        description="Настройки профиля"
+        onClick={() => onNavigate('profile')}
+      />
+      <MenuItem
+        Icon={MessageCircle}
+        label="Поддержка"
+        description="Помощь и обратная связь"
+        onClick={() => onNavigate('support')}
+      />
+      <MenuItem
+        Icon={Link2}
+        label="Моя страница-визитка"
+        description="TapLink-аналог"
         onClick={() => navigate('/link-page/edit')}
-        className="flex items-center gap-3.5 p-4 bg-brand-500/10 rounded-2xl text-left active:scale-[0.98] transition-all duration-200"
-      >
-        <div className="w-10 h-10 bg-tg-bg rounded-xl flex items-center justify-center shadow-card">
-          <Link2 className="w-5 h-5 text-brand-500" strokeWidth={1.8} />
-        </div>
-        <div className="flex-1">
-          <div className="font-semibold text-sm text-brand-700">
-            Моя страница-визитка
-          </div>
-          <div className="text-xs text-brand-500 mt-0.5">TapLink-аналог</div>
-        </div>
-        <ChevronRight className="w-4 h-4 text-brand-400" />
-      </button>
-
-      <button
+        iconBg="bg-tg-bg"
+        iconColor="text-brand-500"
+        className="!bg-brand-500/10"
+      />
+      <MenuItem
+        Icon={CreditCard}
+        label="Тарифы и подписка"
+        description="Управление подпиской"
         onClick={() => navigate('/billing')}
-        className="flex items-center gap-3.5 p-4 bg-surface-elevated shadow-card rounded-2xl text-left active:scale-[0.98] transition-all duration-200"
-      >
-        <div className="w-10 h-10 bg-amber-500/10 rounded-xl flex items-center justify-center">
-          <CreditCard className="w-5 h-5 text-accent-orange" strokeWidth={1.8} />
-        </div>
-        <div className="flex-1">
-          <div className="font-semibold text-sm">Тарифы и подписка</div>
-          <div className="text-xs text-tg-hint mt-0.5">Управление подпиской</div>
-        </div>
-        <ChevronRight className="w-4 h-4 text-tg-hint" />
-      </button>
-
-      <button
+        iconBg="bg-amber-500/10"
+        iconColor="text-accent-orange"
+      />
+      <MenuItem
+        Icon={Megaphone}
+        label="Рассылки"
+        description="Рассылки по сегментам"
         onClick={() => navigate('/master/broadcast')}
-        className="flex items-center gap-3.5 p-4 bg-surface-elevated shadow-card rounded-2xl text-left active:scale-[0.98] transition-all duration-200"
-      >
-        <div className="w-10 h-10 bg-accent-purple/10 rounded-xl flex items-center justify-center">
-          <Megaphone className="w-5 h-5 text-accent-purple" strokeWidth={1.8} />
-        </div>
-        <div className="flex-1">
-          <div className="font-semibold text-sm">Рассылки</div>
-          <div className="text-xs text-tg-hint mt-0.5">Рассылки по сегментам</div>
-        </div>
-        <ChevronRight className="w-4 h-4 text-tg-hint" />
-      </button>
-
-      <button
+        iconBg="bg-accent-purple/10"
+        iconColor="text-accent-purple"
+      />
+      <MenuItem
+        Icon={MapPin}
+        label="Локации"
+        description="Управление адресами"
         onClick={() => navigate('/master/locations')}
-        className="flex items-center gap-3.5 p-4 bg-surface-elevated shadow-card rounded-2xl text-left active:scale-[0.98] transition-all duration-200"
-      >
-        <div className="w-10 h-10 bg-accent-emerald/10 rounded-xl flex items-center justify-center">
-          <MapPin className="w-5 h-5 text-accent-emerald" strokeWidth={1.8} />
-        </div>
-        <div className="flex-1">
-          <div className="font-semibold text-sm">Локации</div>
-          <div className="text-xs text-tg-hint mt-0.5">Управление адресами</div>
-        </div>
-        <ChevronRight className="w-4 h-4 text-tg-hint" />
-      </button>
+        iconBg="bg-accent-emerald/10"
+        iconColor="text-accent-emerald"
+      />
     </div>
   );
 }
@@ -133,23 +117,14 @@ function AnalyticsSection({ onBack }: { onBack: () => void }) {
 
   return (
     <div className="animate-slide-up">
-      <button onClick={onBack} className="flex items-center gap-0.5 text-tg-link text-sm mb-3">
-        <ChevronLeft className="w-4 h-4" /> Назад
-      </button>
+      <SectionBack onBack={onBack} />
       <h2 className="font-bold text-lg mb-3">Аналитика за 30 дней</h2>
 
       <div className="grid grid-cols-2 gap-3 mb-4">
-        {[
-          { label: 'Выручка', value: `${(data?.total_revenue ?? 0).toLocaleString('ru')} \u20bd` },
-          { label: 'Записей', value: data?.total_bookings ?? 0 },
-          { label: 'Клиентов', value: data?.unique_clients ?? 0 },
-          { label: 'Средний чек', value: `${(data?.avg_check ?? 0).toLocaleString('ru')} \u20bd` },
-        ].map((item) => (
-          <div key={item.label} className="bg-surface-elevated shadow-card rounded-2xl p-3.5">
-            <div className="text-xl font-bold">{item.value}</div>
-            <div className="text-2xs text-tg-hint mt-0.5">{item.label}</div>
-          </div>
-        ))}
+        <StatCard label="Выручка" value={`${(data?.total_revenue ?? 0).toLocaleString('ru')} ₽`} />
+        <StatCard label="Записей" value={data?.total_bookings ?? 0} />
+        <StatCard label="Клиентов" value={data?.unique_clients ?? 0} />
+        <StatCard label="Средний чек" value={`${(data?.avg_check ?? 0).toLocaleString('ru')} ₽`} />
       </div>
     </div>
   );
@@ -169,7 +144,7 @@ function ServicesSection({ onBack }: { onBack: () => void }) {
 
   if (isLoading) return <Loading />;
 
-  const services = toArray(data);
+  const services = toArray<Service>(data);
 
   const handleCreate = async () => {
     if (!formName.trim()) { toast.error('Введите название'); return; }
@@ -177,7 +152,7 @@ function ServicesSection({ onBack }: { onBack: () => void }) {
     try {
       await servicesApi.create({
         name: formName.trim(),
-        price: formPrice ? Number(formPrice) : null,
+        price: formPrice ? Number(formPrice) : 0,
         duration_min: Number(formDuration) || 60,
       });
       await queryClient.invalidateQueries({ queryKey: ['my-services'] });
@@ -203,9 +178,7 @@ function ServicesSection({ onBack }: { onBack: () => void }) {
 
   return (
     <div className="animate-slide-up">
-      <button onClick={onBack} className="flex items-center gap-0.5 text-tg-link text-sm mb-3">
-        <ChevronLeft className="w-4 h-4" /> Назад
-      </button>
+      <SectionBack onBack={onBack} />
       <div className="flex items-center justify-between mb-3">
         <h2 className="font-bold text-lg">Мои услуги</h2>
         <button onClick={() => setShowForm(!showForm)} className="flex items-center gap-1 text-tg-link text-sm">
@@ -220,7 +193,7 @@ function ServicesSection({ onBack }: { onBack: () => void }) {
               placeholder="Название услуги" className="w-full p-3 rounded-xl text-sm outline-none bg-tg-bg" />
             <div className="flex gap-2">
               <input value={formPrice} onChange={e => setFormPrice(e.target.value)}
-                placeholder="Цена, \u20bd" type="number" className="flex-1 p-3 rounded-xl text-sm outline-none bg-tg-bg" />
+                placeholder="Цена, ₽" type="number" className="flex-1 p-3 rounded-xl text-sm outline-none bg-tg-bg" />
               <input value={formDuration} onChange={e => setFormDuration(e.target.value)}
                 placeholder="Мин" type="number" className="w-20 p-3 rounded-xl text-sm outline-none bg-tg-bg" />
             </div>
@@ -230,17 +203,17 @@ function ServicesSection({ onBack }: { onBack: () => void }) {
       )}
 
       <div className="flex flex-col gap-2">
-        {services.map((svc: Record<string, unknown>) => (
-          <Card key={svc.id as number} className="flex justify-between items-center">
+        {services.map((svc) => (
+          <Card key={svc.id} className="flex justify-between items-center">
             <div>
-              <div className="font-medium text-sm">{svc.name as string}</div>
-              <div className="text-xs text-tg-hint">{svc.duration_min as number} мин</div>
+              <div className="font-medium text-sm">{svc.name}</div>
+              <div className="text-xs text-tg-hint">{svc.duration_min} мин</div>
             </div>
             <div className="flex items-center gap-3">
               <span className="font-bold text-sm text-brand-600">
-                {svc.price ? `${Number(svc.price).toLocaleString('ru')} \u20bd` : 'Дог.'}
+                {svc.price ? `${Number(svc.price).toLocaleString('ru')} ₽` : 'Дог.'}
               </span>
-              <button onClick={() => handleDelete(svc.id as number)} className="text-red-400 active:text-red-600">
+              <button onClick={() => handleDelete(svc.id)} className="text-red-400 active:text-red-600">
                 <Trash2 className="w-4 h-4" />
               </button>
             </div>
@@ -253,7 +226,7 @@ function ServicesSection({ onBack }: { onBack: () => void }) {
 
 function ProfileSection({ onBack }: { onBack: () => void }) {
   const queryClient = useQueryClient();
-  const { data: profile, isLoading } = useQuery({
+  const { data: profile, isLoading } = useQuery<MasterProfile>({
     queryKey: ['master-profile'],
     queryFn: () => mastersApi.getProfile().then((r) => r.data),
   });
@@ -288,14 +261,12 @@ function ProfileSection({ onBack }: { onBack: () => void }) {
 
   return (
     <div className="animate-slide-up">
-      <button onClick={onBack} className="flex items-center gap-0.5 text-tg-link text-sm mb-3">
-        <ChevronLeft className="w-4 h-4" /> Назад
-      </button>
+      <SectionBack onBack={onBack} />
       <div className="flex items-center justify-between mb-3">
         <h2 className="font-bold text-lg">Профиль</h2>
         {!editing && (
           <button onClick={startEdit} className="flex items-center gap-1 text-tg-link text-sm">
-            <Pencil className="w-3.5 h-3.5" /> Редактировать
+            Редактировать
           </button>
         )}
       </div>
@@ -354,7 +325,7 @@ function ProfileSection({ onBack }: { onBack: () => void }) {
               <span className="text-tg-hint">Рейтинг</span>
               <span className="flex items-center gap-1">
                 <Star className="w-3.5 h-3.5 text-yellow-400 fill-yellow-400" />
-                {profile?.rating_avg?.toFixed(1) || '\u2014'} ({profile?.rating_count || 0})
+                {profile?.rating_avg?.toFixed(1) || '—'} ({profile?.rating_count || 0})
               </span>
             </div>
           </div>
@@ -385,13 +356,11 @@ function SupportSection({ onBack }: { onBack: () => void }) {
 
   if (isLoading) return <Loading />;
 
-  const tickets = toArray(data);
+  const tickets = toArray<SupportTicket>(data);
 
   return (
     <div className="animate-slide-up">
-      <button onClick={onBack} className="flex items-center gap-0.5 text-tg-link text-sm mb-3">
-        <ChevronLeft className="w-4 h-4" /> Назад
-      </button>
+      <SectionBack onBack={onBack} />
       <h2 className="font-bold text-lg mb-3">Поддержка</h2>
 
       <div className="mb-4">
@@ -410,14 +379,14 @@ function SupportSection({ onBack }: { onBack: () => void }) {
         <>
           <h3 className="font-medium text-sm mb-2">Ваши обращения</h3>
           <div className="flex flex-col gap-2">
-            {tickets.map((t: Record<string, unknown>) => (
+            {tickets.map((t) => (
               <div
-                key={t.id as number}
+                key={t.id}
                 className="bg-surface-elevated shadow-card rounded-2xl p-3.5"
               >
                 <div className="flex justify-between text-sm">
-                  <span className="font-medium">{t.subject as string}</span>
-                  <span className="text-xs text-tg-hint">{t.status as string}</span>
+                  <span className="font-medium">{t.subject}</span>
+                  <span className="text-xs text-tg-hint">{t.status}</span>
                 </div>
               </div>
             ))}

@@ -3,7 +3,9 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { loyaltyApi } from '@/api/endpoints';
 import Loading from '@/components/common/Loading';
 import Card from '@/shared/ui/Card';
-import { ChevronLeft, Star, TrendingUp, TrendingDown, Gift } from 'lucide-react';
+import SectionBack from '@/shared/ui/SectionBack';
+import EmptyState from '@/shared/ui/EmptyState';
+import { Star, TrendingUp, TrendingDown, Gift, History } from 'lucide-react';
 
 interface LoyaltyBalance {
   master_id: number;
@@ -13,7 +15,7 @@ interface LoyaltyBalance {
   total_earned: number;
 }
 
-interface LoyaltyTransaction {
+interface LoyaltyTx {
   id: number;
   type: string;
   points: number;
@@ -35,6 +37,12 @@ const TYPE_LABELS: Record<string, { label: string; icon: 'up' | 'down' | 'gift' 
   expire: { label: 'Сгорание', icon: 'down' },
 };
 
+const ICON_MAP = {
+  up: TrendingUp,
+  down: TrendingDown,
+  gift: Gift,
+} as const;
+
 export default function LoyaltyHistory() {
   const { masterId } = useParams<{ masterId: string }>();
   const navigate = useNavigate();
@@ -45,7 +53,7 @@ export default function LoyaltyHistory() {
     enabled: !!masterId,
   });
 
-  const { data: history, isLoading: histLoading } = useQuery<LoyaltyTransaction[]>({
+  const { data: history, isLoading: histLoading } = useQuery<LoyaltyTx[]>({
     queryKey: ['loyalty-history', masterId],
     queryFn: () => loyaltyApi.getHistory(Number(masterId)).then((r) => r.data),
     enabled: !!masterId,
@@ -57,12 +65,7 @@ export default function LoyaltyHistory() {
 
   return (
     <div className="p-5 pb-24 animate-fade-in">
-      <button
-        onClick={() => navigate(-1)}
-        className="flex items-center gap-0.5 text-tg-link text-sm mb-3"
-      >
-        <ChevronLeft className="w-4 h-4" /> Назад
-      </button>
+      <SectionBack onBack={() => navigate(-1)} />
 
       <h1 className="text-2xl font-bold tracking-tight mb-5">Программа лояльности</h1>
 
@@ -92,12 +95,13 @@ export default function LoyaltyHistory() {
       <h2 className="font-bold text-sm mb-2">История баллов</h2>
 
       {!history || history.length === 0 ? (
-        <p className="text-center text-sm text-tg-hint py-8">Нет операций</p>
+        <EmptyState Icon={History} title="Нет операций" />
       ) : (
         <div className="flex flex-col gap-2">
           {history.map((tx) => {
             const config = TYPE_LABELS[tx.type] ?? { label: tx.type, icon: 'up' as const };
             const isPositive = tx.points > 0;
+            const TxIcon = ICON_MAP[config.icon];
             return (
               <Card key={tx.id} className="flex items-center gap-3">
                 <div
@@ -105,13 +109,10 @@ export default function LoyaltyHistory() {
                     isPositive ? 'bg-green-500/15' : 'bg-red-500/15'
                   }`}
                 >
-                  {config.icon === 'gift' ? (
-                    <Gift className="w-4 h-4 text-yellow-500" />
-                  ) : isPositive ? (
-                    <TrendingUp className="w-4 h-4 text-green-500" />
-                  ) : (
-                    <TrendingDown className="w-4 h-4 text-red-500" />
-                  )}
+                  <TxIcon className={`w-4 h-4 ${
+                    config.icon === 'gift' ? 'text-yellow-500' :
+                    isPositive ? 'text-green-500' : 'text-red-500'
+                  }`} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-medium">{config.label}</div>

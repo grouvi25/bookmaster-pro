@@ -3,6 +3,14 @@ import { useParams } from 'react-router-dom';
 import { mastersApi, servicesApi, reviewsApi, portfolioApi } from '@/api/endpoints';
 import Loading from '@/components/common/Loading';
 import { User, Star, ExternalLink } from 'lucide-react';
+import type { Service, PortfolioItem } from '@/shared/types/api';
+
+interface Review {
+  id: number;
+  client_name: string;
+  rating: number;
+  text: string | null;
+}
 
 export default function LinkPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -87,18 +95,18 @@ export default function LinkPage() {
         <div className="px-4 mb-6">
           <h2 className="font-bold text-lg mb-3 text-center">Мои услуги</h2>
           <div className="flex flex-col gap-2 max-w-md mx-auto">
-            {services.map((svc: Record<string, unknown>) => (
+            {(services as Service[]).map((svc) => (
               <div
-                key={svc.id as number}
+                key={svc.id}
                 className="flex justify-between items-center p-3.5 bg-surface-elevated shadow-card rounded-2xl"
               >
                 <div>
-                  <div className="font-medium text-sm">{svc.name as string}</div>
-                  <div className="text-xs text-gray-400">{svc.duration_min as number} мин</div>
+                  <div className="font-medium text-sm">{svc.name}</div>
+                  <div className="text-xs text-gray-400">{svc.duration_min} мин</div>
                 </div>
                 <div className="font-bold text-brand-600 text-sm">
                   {svc.price
-                    ? `${Number(svc.price).toLocaleString('ru')} \u20bd`
+                    ? `${Number(svc.price).toLocaleString('ru')} ₽`
                     : 'Дог.'}
                 </div>
               </div>
@@ -112,10 +120,10 @@ export default function LinkPage() {
         <div className="px-4 mb-6">
           <h2 className="font-bold text-lg mb-3 text-center">Портфолио</h2>
           <div className="grid grid-cols-3 gap-1 max-w-md mx-auto rounded-xl overflow-hidden">
-            {portfolio.items.map((item: Record<string, unknown>) => (
+            {(portfolio.items as PortfolioItem[]).map((item) => (
               <img
-                key={item.id as number}
-                src={item.url as string}
+                key={item.id}
+                src={item.image_url}
                 alt=""
                 className="w-full aspect-square object-cover"
               />
@@ -129,18 +137,18 @@ export default function LinkPage() {
         <div className="px-4 mb-6">
           <h2 className="font-bold text-lg mb-3 text-center">Отзывы</h2>
           <div className="flex flex-col gap-2 max-w-md mx-auto">
-            {reviews.reviews.map((r: Record<string, unknown>) => (
-              <div key={r.id as number} className="bg-surface-elevated shadow-card rounded-2xl p-3.5">
+            {(reviews.reviews as Review[]).map((r) => (
+              <div key={r.id} className="bg-surface-elevated shadow-card rounded-2xl p-3.5">
                 <div className="flex justify-between mb-1">
-                  <span className="text-sm font-medium">{r.client_name as string}</span>
+                  <span className="text-sm font-medium">{r.client_name}</span>
                   <div className="flex gap-0.5">
-                    {Array.from({ length: r.rating as number }).map((_, i) => (
+                    {Array.from({ length: r.rating }).map((_, i) => (
                       <Star key={i} className="w-3 h-3 text-yellow-400 fill-yellow-400" />
                     ))}
                   </div>
                 </div>
                 {r.text ? (
-                  <p className="text-xs text-gray-500">{String(r.text)}</p>
+                  <p className="text-xs text-gray-500">{r.text}</p>
                 ) : null}
               </div>
             ))}
