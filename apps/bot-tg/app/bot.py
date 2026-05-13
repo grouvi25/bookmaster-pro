@@ -127,16 +127,115 @@ async def cmd_superadmin(message: Message):
     )
 
 
+# ─── Хелпер: отправка сообщения в API /ai/client-message ──────────────
+async def _forward_to_ai_client_bot(
+    message: Message, text: str, master_id: Optional[int] = None
+) -> Optional[str]:
+    """Пересылка сообщения клиента в API для AI-ответа."""
+    if not master_id:
+        return None
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            resp = await client.post(
+                f"{settings.API_URL}/api/v1/ai/client-message",
+                json={"master_id": master_id, "message": text},
+            )
+            if resp.status_code == 200:
+                data = resp.json()
+                return data.get("response")
+    except Exception as e:
+        logger.error(f"AI client-message error: {e}")
+    return None
+
+
+async def _get_master_id_for_client(user_id: int) -> Optional[int]:
+    """Получить master_id, с которым клиент взаимодействовал последним."""
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            resp = await client.get(
+                f"{settings.API_URL}/api/v1/clients/last-master",
+                params={"platform_id": str(user_id)},
+            )
+            if resp.status_code == 200:
+                data = resp.json()
+                return data.get("master_id")
+    except Exception as e:
+        logger.error(f"Get last master error: {e}")
+    return None
+
+
 # ─── Голосовые сообщения клиентов ────────────────────────────────────
 @dp.message(F.voice)
 async def handle_voice(message: Message):
     """
     Клиент отправил голосовое.
-    Если в контексте мастера включён ai_client_bot — обрабатываем.
-    Иначе — redirect в Mini-App.
+    Скачиваем, транскрибируем через API /ai/transcribe, затем пересылаем в /ai/client-message.
     """
+    if not message.from_user:
+        return
+
+    master_id = await _get_master_id_for_client(message.from_user.id)
+    if not master_id:
+        await message.answer(
+            "\U0001f3a4 Голосовое получено! Откройте приложение для удобного общения.",
+            reply_markup=mini_app_keyboard(),
+        )
+        return
+
+    await message.answer("\U0001f3a4 Обрабатываю голосовое сообщение...")
+
+    try:
+        voice_file = await bot.get_file(message.voice.file_id)
+        voice_data = await bot.download_file(voice_file.file_path)
+        if voice_data is None:
+            raise ValueError("Failed to download voice")
+
+        voice_bytes = voice_data.read()
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            resp = await client.post(
+                f"{settings.API_URL}/api/v1/ai/transcribe",
+                files={"audio": ("voice.ogg", voice_bytes, "audio/ogg")},
+            )
+            if resp.status_code == 200:
+                transcript = resp.json().get("transcript", "")
+                if transcript:
+                    ai_response = await _forward_to_ai_client_bot(
+                        message, transcript, master_id
+                    )
+                    if ai_response:
+                        await message.answer(ai_response)
+                        return
+
+        await message.answer(
+            "\U0001f3a4 Голосовое получено! Откройте приложение для подробностей.",
+            reply_markup=mini_app_keyboard(),
+        )
+    except Exception as e:
+        logger.error(f"Voice handling error: {e}")
+        await message.answer(
+            "\U0001f3a4 Не удалось обработать голосовое. Попробуйте текстом.",
+            reply_markup=mini_app_keyboard(),
+        )
+
+
+# ─── Текстовые сообщения клиентов → AI бот ──────────────────────────
+@dp.message(F.text)
+async def handle_text(message: Message):
+    """Текстовое сообщение клиента → AI клиентский бот или redirect."""
+    if not message.from_user or not message.text:
+        return
+
+    master_id = await _get_master_id_for_client(message.from_user.id)
+    if master_id:
+        ai_response = await _forward_to_ai_client_bot(
+            message, message.text, master_id
+        )
+        if ai_response:
+            await message.answer(ai_response)
+            return
+
     await message.answer(
-        "\U0001f3a4 Голосовое получено! Открой приложение для удобного общения.",
+        "Используйте приложение для записи и управления \U0001f447",
         reply_markup=mini_app_keyboard(),
     )
 

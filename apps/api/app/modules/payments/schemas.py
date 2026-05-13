@@ -55,6 +55,7 @@ class SubscriptionOut(BaseModel):
 
 
 class ClientSubscriptionCreate(BaseModel):
+    master_id: int
     service_id: int
     total_visits: int
     price: Decimal

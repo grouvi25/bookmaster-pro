@@ -2,7 +2,7 @@
 Loyalty schemas.
 """
 
-from typing import Optional
+from typing import Optional, Dict, Any
 
 from pydantic import BaseModel
 
@@ -32,3 +32,16 @@ class LoyaltySpendRequest(BaseModel):
 
 class ReferralCreate(BaseModel):
     referrer_code: str
+
+
+class LoyaltySettingsOut(BaseModel):
+    tiers: Dict[str, Any]
+    points_expiry_months: int
+    streak_threshold: int
+    streak_bonus: int
+    referral_bonus: int
+
+
+class LoyaltySettingsUpdate(BaseModel):
+    referral_bonus: Optional[int] = None
+    streak_bonus: Optional[int] = None

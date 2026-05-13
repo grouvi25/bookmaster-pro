@@ -1,10 +1,12 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { clientsApi } from '@/api/endpoints';
 import Loading from '@/components/common/Loading';
-import { User, X, Search } from 'lucide-react';
+import { User, X, Search, ChevronRight } from 'lucide-react';
 
 export default function Clients() {
+  const navigate = useNavigate();
   const [search, setSearch] = useState('');
 
   const { data, isLoading } = useQuery({
@@ -92,6 +94,13 @@ export default function Clients() {
               {selected.notes as string}
             </p>
           )}
+
+          <button
+            onClick={() => navigate(`/master/clients/${selectedId}`)}
+            className="w-full mt-3 flex items-center justify-center gap-1 py-2 bg-brand-500 text-white rounded-xl text-sm font-medium active:scale-[0.98]"
+          >
+            Подробнее <ChevronRight className="w-4 h-4" />
+          </button>
         </div>
       ) : null}
 

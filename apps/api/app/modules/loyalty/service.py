@@ -257,3 +257,45 @@ class LoyaltyService:
         self.db.add(referral)
         await self.db.flush()
         return referral
+
+    async def process_referral(
+        self, referrer_code: str, referred_client_id: int
+    ) -> dict:
+        """
+        Обработать реферальную ссылку: найти реферера, создать Referral, начислить бонусы.
+        referrer_code = "{master_slug}_{referrer_client_id}" (формат deep link ref_)
+        """
+        parts = referrer_code.rsplit("_", 1)
+        if len(parts) != 2:
+            raise ValueError("Invalid referral code format")
+
+        master_slug, referrer_id_str = parts
+        try:
+            referrer_client_id = int(referrer_id_str)
+        except ValueError:
+            raise ValueError("Invalid referral code format")
+
+        result = await self.db.execute(
+            select(Master).where(Master.slug == master_slug)
+        )
+        master = result.scalar_one_or_none()
+        if not master:
+            raise ValueError("Master not found")
+
+        if referrer_client_id == referred_client_id:
+            raise ValueError("Cannot refer yourself")
+
+        referral = await self.create_referral(master.id, referrer_client_id, referred_client_id)
+
+        referral_bonus = master.loyalty_referral_bonus or 500
+        await self.earn_points(
+            master_id=master.id,
+            client_id=referrer_client_id,
+            points=referral_bonus,
+            earn_type="earn_referral",
+            note="Бонус за приглашение друга",
+        )
+        referral.bonus_applied = referral_bonus
+
+        await self.db.flush()
+        return {"status": "ok", "bonus_applied": referral_bonus, "master_id": master.id}

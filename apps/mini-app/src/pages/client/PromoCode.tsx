@@ -17,8 +17,9 @@ export default function PromoCode() {
   const [loading, setLoading] = useState(false);
 
   const { data: loyaltyData } = useQuery({
-    queryKey: ['loyalty-balance'],
-    queryFn: () => loyaltyApi.getBalance().then((r) => r.data),
+    queryKey: ['loyalty-balance', masterId],
+    queryFn: () => loyaltyApi.getBalance(masterId!).then((r) => r.data),
+    enabled: !!masterId,
   });
 
   const balance = loyaltyData?.balance ?? 0;
