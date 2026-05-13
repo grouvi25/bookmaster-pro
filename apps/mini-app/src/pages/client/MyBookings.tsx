@@ -42,7 +42,7 @@ const TABS = [
 
 const UPCOMING_STATUSES = ['confirmed', 'paid', 'pending'];
 
-export default function MyBookings() {
+export default function MyBookings({ hideBack }: { hideBack?: boolean } = {}) {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<'upcoming' | 'past'>('upcoming');
 
@@ -76,7 +76,7 @@ export default function MyBookings() {
 
   return (
     <div className="p-5 pb-24 animate-fade-in">
-      <BackButton to="/" />
+      {!hideBack && <BackButton to="/" />}
       <h1 className="text-2xl font-bold tracking-tight mb-5">Мои записи</h1>
 
       <div className="flex gap-2 mb-5">
@@ -104,10 +104,10 @@ export default function MyBookings() {
               <Card key={b.id}>
                 <div className="flex justify-between items-start mb-2">
                   <div>
-                    <div className="font-medium text-sm">{b.service_name}</div>
+                    <div className="font-medium text-sm">{b.service_name || 'Услуга'}</div>
                     <div className="text-xs text-tg-hint mt-0.5 flex items-center gap-1">
                       <User className="w-3 h-3" />
-                      {b.client_name}
+                      {b.master_name || b.client_name || 'Мастер'}
                     </div>
                   </div>
                   <StatusBadge
@@ -119,7 +119,8 @@ export default function MyBookings() {
                   <CalendarDays className="w-3.5 h-3.5" />
                   {b.date ? format(parseISO(b.date), 'd MMM, EEE', { locale: ru }) : ''}
                   <Clock className="w-3.5 h-3.5 ml-1" />
-                  {b.time} &middot; {b.duration_min} мин
+                  {b.time || (b.time_start ? b.time_start.slice(11, 16) : '')}
+                  {b.duration_min ? ` · ${b.duration_min} мин` : ''}
                 </div>
                 {canCancel && (
                   <button

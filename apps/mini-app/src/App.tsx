@@ -271,6 +271,10 @@ function MasterProfileRoute() {
 }
 
 function HomePage() {
+  const { role } = useAuthStore();
+  if (role === 'client') {
+    return <MyBookings hideBack />;
+  }
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-tg-bg text-tg-text p-6 animate-fade-in">
       <CalendarDays className="w-12 h-12 text-brand-500 mb-4" strokeWidth={1.5} />

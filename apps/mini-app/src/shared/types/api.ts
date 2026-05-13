@@ -14,6 +14,7 @@ export interface Booking {
   client_comment: string | null;
   master_comment: string | null;
   service_name?: string;
+  master_name?: string;
   duration_min?: number;
   price?: number;
   price_final: number | null;

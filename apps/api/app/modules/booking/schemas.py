@@ -5,7 +5,7 @@ Booking schemas.
 from datetime import date, datetime
 from typing import Optional, List
 
-from pydantic import BaseModel
+from pydantic import BaseModel, computed_field, field_validator
 
 
 class TimeSlot(BaseModel):
@@ -47,8 +47,17 @@ class BookingOut(BaseModel):
     price_final: Optional[int] = None
     discount_amount: int = 0
     source: str = "mini_app"
+    service_name: Optional[str] = None
+    duration_min: Optional[int] = None
+    time: Optional[str] = None
+    master_name: Optional[str] = None
 
     model_config = {"from_attributes": True}
+
+    @field_validator("discount_amount", mode="before")
+    @classmethod
+    def _discount_none(cls, v: object) -> int:
+        return int(v) if v is not None else 0
 
 
 class BookingStatusUpdate(BaseModel):

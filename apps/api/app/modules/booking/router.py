@@ -24,8 +24,37 @@ from app.modules.booking.service import BookingService
 from app.modules.booking.slot_service import SlotService
 from app.modules.masters.service import MasterService
 from app.modules.clients.models import Client
+from app.modules.booking.models import Appointment
 
 router = APIRouter()
+
+
+def _enrich_booking(appt: Appointment) -> dict:
+    """Add service_name, duration_min, time, master_name from relationships."""
+    data = {
+        "id": appt.id,
+        "master_id": appt.master_id,
+        "client_id": appt.client_id,
+        "service_id": appt.service_id,
+        "date": appt.date,
+        "time_start": appt.time_start,
+        "time_end": appt.time_end,
+        "status": appt.status,
+        "client_name": appt.client_name,
+        "client_phone": appt.client_phone,
+        "client_comment": appt.client_comment,
+        "master_comment": appt.master_comment,
+        "price_final": appt.price_final,
+        "discount_amount": appt.discount_amount or 0,
+        "source": appt.source or "mini_app",
+        "time": appt.time_start.strftime("%H:%M") if appt.time_start else None,
+    }
+    if appt.service:
+        data["service_name"] = appt.service.name
+        data["duration_min"] = appt.service.duration_min
+    if appt.master:
+        data["master_name"] = appt.master.display_name
+    return data
 
 
 # ── Слоты ──────────────────────────────────────────────────
@@ -121,14 +150,27 @@ async def get_master_bookings(
     db: AsyncSession = Depends(get_db),
 ):
     """Список записей мастера."""
+    from sqlalchemy import select
+    from sqlalchemy.orm import selectinload
     master = await MasterService(db).get_by_identity(int(user["sub"]))
     if not master:
         raise HTTPException(status_code=403, detail="Not a master")
 
-    service = BookingService(db)
-    return await service.get_appointments_for_master(
-        master.id, date_from, date_to, status
+    query = (
+        select(Appointment)
+        .options(selectinload(Appointment.service), selectinload(Appointment.master))
+        .where(Appointment.master_id == master.id)
     )
+    if date_from:
+        query = query.where(Appointment.date >= date_from)
+    if date_to:
+        query = query.where(Appointment.date <= date_to)
+    if status:
+        query = query.where(Appointment.status == status)
+    query = query.order_by(Appointment.time_start)
+    result = await db.execute(query)
+    appointments = list(result.scalars().all())
+    return [_enrich_booking(a) for a in appointments]
 
 
 @router.get("/client", response_model=List[BookingOut])
@@ -138,6 +180,7 @@ async def get_client_bookings(
 ):
     """Список записей клиента."""
     from sqlalchemy import select
+    from sqlalchemy.orm import selectinload
     result = await db.execute(
         select(Client).where(Client.identity_id == int(user["sub"]))
     )
@@ -145,8 +188,14 @@ async def get_client_bookings(
     if not client:
         raise HTTPException(status_code=404, detail="Client not found")
 
-    service = BookingService(db)
-    return await service.get_appointments_for_client(client.id)
+    result = await db.execute(
+        select(Appointment)
+        .options(selectinload(Appointment.service), selectinload(Appointment.master))
+        .where(Appointment.client_id == client.id)
+        .order_by(Appointment.time_start.desc())
+    )
+    appointments = list(result.scalars().all())
+    return [_enrich_booking(a) for a in appointments]
 
 
 @router.patch("/{appointment_id}", response_model=BookingOut)
