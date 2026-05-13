@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { bookingApi } from '@/api/endpoints';
 import { toArray } from '@/shared/lib/normalize';
 import BackButton from '@/components/common/BackButton';
-import Loading from '@/components/common/Loading';
+import { ListSkeleton } from '@/shared/ui/Skeleton';
 import Card from '@/shared/ui/Card';
 import EmptyState from '@/shared/ui/EmptyState';
 import StatusBadge from '@/shared/ui/StatusBadge';
@@ -51,7 +51,7 @@ export default function MyBookings() {
     queryFn: () => bookingApi.myBookings().then((r) => r.data),
   });
 
-  if (isLoading) return <Loading />;
+  if (isLoading) return <div className="p-5"><ListSkeleton count={4} /></div>;
 
   const bookings = toArray<Booking>(data);
   const filtered = activeTab === 'upcoming'
@@ -59,11 +59,17 @@ export default function MyBookings() {
     : bookings.filter((b) => !UPCOMING_STATUSES.includes(b.status));
 
   const handleCancel = async (id: number) => {
+    const prev = queryClient.getQueryData(['my-bookings']);
+    queryClient.setQueryData(['my-bookings'], (old: unknown) => {
+      if (Array.isArray(old)) return old.map((b: Booking) => b.id === id ? { ...b, status: 'cancelled_by_client' } : b);
+      return old;
+    });
     try {
       await bookingApi.cancel(id);
       await queryClient.invalidateQueries({ queryKey: ['my-bookings'] });
       toast.success('Запись отменена');
     } catch {
+      queryClient.setQueryData(['my-bookings'], prev);
       toast.error('Не удалось отменить');
     }
   };

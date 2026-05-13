@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { promoApi, loyaltyApi } from '@/api/endpoints';
 import { toArray } from '@/shared/lib/normalize';
 import { useAuthStore } from '@/stores/auth';
-import Loading from '@/components/common/Loading';
+import { ListSkeleton } from '@/shared/ui/Skeleton';
 import PageHeader from '@/shared/ui/PageHeader';
 import ChipTabs from '@/shared/ui/ChipTabs';
 import EmptyState from '@/shared/ui/EmptyState';
@@ -55,7 +55,7 @@ function PromoSection() {
     },
   });
 
-  if (isLoading) return <Loading />;
+  if (isLoading) return <div className="p-5"><ListSkeleton count={3} /></div>;
 
   const promos = toArray<Promo>(data);
 
@@ -142,7 +142,7 @@ function LoyaltySection() {
     enabled: !!masterId,
   });
 
-  if (isLoading) return <Loading />;
+  if (isLoading) return <div className="p-5"><ListSkeleton count={3} /></div>;
 
   const history = toArray<LoyaltyTransaction>(data);
 
