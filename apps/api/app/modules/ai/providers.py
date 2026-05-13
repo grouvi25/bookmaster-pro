@@ -81,6 +81,34 @@ class OpenAIProvider(AIProvider):
                 yield delta.content
 
 
+class STTProvider(ABC):
+    @abstractmethod
+    async def transcribe(self, audio_bytes: bytes, filename: str = "audio.ogg") -> str:
+        ...
+
+
+class OpenAISTTProvider(STTProvider):
+    def __init__(self):
+        import openai
+        self.client = openai.AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
+
+    async def transcribe(self, audio_bytes: bytes, filename: str = "audio.ogg") -> str:
+        import io
+        audio_file = io.BytesIO(audio_bytes)
+        audio_file.name = filename
+        response = await self.client.audio.transcriptions.create(
+            model="whisper-1",
+            file=audio_file,
+            language="ru",
+        )
+        return response.text
+
+
+class DummySTTProvider(STTProvider):
+    async def transcribe(self, audio_bytes: bytes, filename: str = "audio.ogg") -> str:
+        return "[STT] Распознавание речи доступно после настройки OPENAI_API_KEY."
+
+
 class OpenAIEmbedProvider(EmbedProvider):
     def __init__(self):
         import openai
@@ -196,3 +224,12 @@ def get_embed_provider() -> EmbedProvider:
         except Exception:
             pass
     return DummyEmbedProvider()
+
+
+def get_stt_provider() -> STTProvider:
+    if settings.OPENAI_API_KEY:
+        try:
+            return OpenAISTTProvider()
+        except Exception as e:
+            logger.warning(f"OpenAI STT init failed: {e}")
+    return DummySTTProvider()
