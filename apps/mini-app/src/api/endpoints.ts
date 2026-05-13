@@ -20,12 +20,13 @@ interface MasterProfilePayload {
   noshow_prepay_percent?: number;
 }
 
-interface SchedulePayload {
-  working_days?: number[];
-  start_time?: string;
-  end_time?: string;
-  slot_duration?: number;
-  break_between?: number;
+interface ScheduleTemplatePayload {
+  day_of_week: number;
+  start_time: string;
+  end_time: string;
+  break_start?: string;
+  break_end?: string;
+  location_id?: number;
 }
 
 interface ServicePayload {
@@ -173,9 +174,9 @@ export const mastersApi = {
   getProfile: () => api.get('/masters/me'),
   updateProfile: (data: MasterProfilePayload) =>
     api.patch('/masters/me', data),
-  getSchedule: (params?: Record<string, string>) =>
-    api.get('/masters/me/schedule', { params }),
-  updateSchedule: (data: SchedulePayload) =>
+  getSchedule: () =>
+    api.get('/masters/me/schedule'),
+  updateSchedule: (data: ScheduleTemplatePayload[]) =>
     api.put('/masters/me/schedule', data),
   getStats: () => api.get('/masters/me/stats'),
 };

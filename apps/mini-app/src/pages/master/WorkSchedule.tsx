@@ -1,0 +1,170 @@
+import { useState, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
+import { mastersApi } from '@/api/endpoints';
+import { ListSkeleton } from '@/shared/ui/Skeleton';
+import Card from '@/shared/ui/Card';
+import SectionBack from '@/shared/ui/SectionBack';
+import Button from '@/shared/ui/Button';
+import { toast } from '@/shared/ui/Toast';
+import { Clock, Save } from 'lucide-react';
+import clsx from 'clsx';
+
+const DAYS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'] as const;
+const DAY_FULL = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье'];
+
+interface DaySchedule {
+  day_of_week: number;
+  start_time: string;
+  end_time: string;
+  break_start: string | null;
+  break_end: string | null;
+  is_active: boolean;
+}
+
+const DEFAULT_SCHEDULE: DaySchedule[] = DAYS.map((_, i) => ({
+  day_of_week: i,
+  start_time: '09:00',
+  end_time: '18:00',
+  break_start: '13:00',
+  break_end: '14:00',
+  is_active: i < 5,
+}));
+
+export default function WorkSchedule() {
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [schedule, setSchedule] = useState<DaySchedule[]>(DEFAULT_SCHEDULE);
+  const [initialized, setInitialized] = useState(false);
+
+  const { data: serverData, isLoading } = useQuery({
+    queryKey: ['my-schedule'],
+    queryFn: () => mastersApi.getSchedule().then((r) => r.data),
+  });
+
+  useEffect(() => {
+    if (serverData && !initialized) {
+      if (Array.isArray(serverData) && serverData.length > 0) {
+        const merged = DEFAULT_SCHEDULE.map((def) => {
+          const existing = (serverData as DaySchedule[]).find(
+            (d) => d.day_of_week === def.day_of_week,
+          );
+          return existing
+            ? { ...def, ...existing, is_active: existing.is_active ?? true }
+            : def;
+        });
+        setSchedule(merged);
+      }
+      setInitialized(true);
+    }
+  }, [serverData, initialized]);
+
+  const saveMutation = useMutation({
+    mutationFn: () => {
+      const active = schedule.filter((d) => d.is_active).map((d) => ({
+        day_of_week: d.day_of_week,
+        start_time: d.start_time,
+        end_time: d.end_time,
+        break_start: d.break_start || undefined,
+        break_end: d.break_end || undefined,
+      }));
+      return mastersApi.updateSchedule(active);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['my-schedule'] });
+      toast.success('Расписание сохранено');
+    },
+    onError: () => toast.error('Ошибка сохранения'),
+  });
+
+  const updateDay = (dayIdx: number, patch: Partial<DaySchedule>) => {
+    setSchedule((prev) =>
+      prev.map((d) => (d.day_of_week === dayIdx ? { ...d, ...patch } : d))
+    );
+  };
+
+  if (isLoading && !initialized) return <div className="p-5"><ListSkeleton count={7} /></div>;
+
+  return (
+    <div className="p-5 pb-24 animate-fade-in">
+      <SectionBack onBack={() => navigate(-1)} />
+      <h1 className="text-2xl font-bold tracking-tight mb-1">Рабочее расписание</h1>
+      <p className="text-sm text-tg-hint mb-5">Настройте рабочие часы по дням недели</p>
+
+      <div className="flex flex-col gap-3">
+        {schedule.map((day) => (
+          <Card key={day.day_of_week} className={clsx(!day.is_active && 'opacity-50')}>
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => updateDay(day.day_of_week, { is_active: !day.is_active })}
+                  className={clsx(
+                    'w-10 h-6 rounded-full transition-all relative',
+                    day.is_active ? 'bg-brand-500' : 'bg-gray-300'
+                  )}
+                >
+                  <div className={clsx(
+                    'w-5 h-5 bg-white rounded-full shadow absolute top-0.5 transition-all',
+                    day.is_active ? 'left-[18px]' : 'left-0.5'
+                  )} />
+                </button>
+                <span className="font-medium text-sm">{DAY_FULL[day.day_of_week]}</span>
+              </div>
+              <span className="text-xs text-tg-hint">{DAYS[day.day_of_week]}</span>
+            </div>
+
+            {day.is_active && (
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-tg-hint" />
+                  <span className="text-xs text-tg-hint w-16">Работа:</span>
+                  <input
+                    type="time"
+                    value={day.start_time}
+                    onChange={(e) => updateDay(day.day_of_week, { start_time: e.target.value })}
+                    className="bg-tg-secondary rounded-lg px-2 py-1 text-sm flex-1"
+                  />
+                  <span className="text-tg-hint text-xs">—</span>
+                  <input
+                    type="time"
+                    value={day.end_time}
+                    onChange={(e) => updateDay(day.day_of_week, { end_time: e.target.value })}
+                    className="bg-tg-secondary rounded-lg px-2 py-1 text-sm flex-1"
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-tg-hint opacity-50" />
+                  <span className="text-xs text-tg-hint w-16">Перерыв:</span>
+                  <input
+                    type="time"
+                    value={day.break_start || ''}
+                    onChange={(e) => updateDay(day.day_of_week, { break_start: e.target.value || null })}
+                    className="bg-tg-secondary rounded-lg px-2 py-1 text-sm flex-1"
+                  />
+                  <span className="text-tg-hint text-xs">—</span>
+                  <input
+                    type="time"
+                    value={day.break_end || ''}
+                    onChange={(e) => updateDay(day.day_of_week, { break_end: e.target.value || null })}
+                    className="bg-tg-secondary rounded-lg px-2 py-1 text-sm flex-1"
+                  />
+                </div>
+              </div>
+            )}
+          </Card>
+        ))}
+      </div>
+
+      <div className="mt-5">
+        <Button
+          onClick={() => saveMutation.mutate()}
+          loading={saveMutation.isPending}
+          className="w-full"
+        >
+          <Save className="w-4 h-4 mr-2" />
+          Сохранить расписание
+        </Button>
+      </div>
+    </div>
+  );
+}

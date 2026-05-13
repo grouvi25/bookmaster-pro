@@ -42,6 +42,7 @@ import AIContentTools from '@/pages/master/AIContentTools';
 import VoiceDiary from '@/pages/master/VoiceDiary';
 import WidgetSettings from '@/pages/master/WidgetSettings';
 import SubscriptionPackages from '@/pages/master/SubscriptionPackages';
+import WorkSchedule from '@/pages/master/WorkSchedule';
 import TabBar from '@/components/common/TabBar';
 
 // Клиентские дополнительные экраны
@@ -248,6 +249,7 @@ function AppRouter() {
         <Route path="/master/ai/voice-diary" element={<RequireAuth allowedRoles={['master', 'superadmin']}><VoiceDiary /></RequireAuth>} />
         <Route path="/master/widget" element={<RequireAuth allowedRoles={['master', 'superadmin']}><WidgetSettings /></RequireAuth>} />
         <Route path="/master/subscription-packages" element={<RequireAuth allowedRoles={['master', 'superadmin']}><SubscriptionPackages /></RequireAuth>} />
+        <Route path="/master/work-schedule" element={<RequireAuth allowedRoles={['master', 'superadmin']}><WorkSchedule /></RequireAuth>} />
 
         {/* Публичная страница-линк (TapLink) */}
         <Route path="/p/:slug" element={<LinkPage />} />
