@@ -46,3 +46,14 @@ class ServiceService:
     async def delete(self, service: Service) -> None:
         service.is_active = False
         await self.db.flush()
+
+    async def reorder(self, master_id: int, order: List[int]) -> None:
+        """Обновить sort_order услуг по списку ID."""
+        for idx, service_id in enumerate(order):
+            result = await self.db.execute(
+                select(Service).where(Service.id == service_id, Service.master_id == master_id)
+            )
+            svc = result.scalar_one_or_none()
+            if svc:
+                svc.sort_order = idx
+        await self.db.flush()

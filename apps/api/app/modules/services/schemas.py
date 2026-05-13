@@ -2,7 +2,7 @@
 Services schemas.
 """
 
-from typing import Optional
+from typing import Optional, List
 
 from pydantic import BaseModel
 
@@ -50,3 +50,7 @@ class ServiceOut(BaseModel):
     sort_order: int = 0
 
     model_config = {"from_attributes": True}
+
+
+class ServiceReorderRequest(BaseModel):
+    order: List[int]

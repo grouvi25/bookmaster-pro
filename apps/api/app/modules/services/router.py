@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.auth import get_current_user
 from app.core.database import get_db
 from app.modules.masters.service import MasterService
-from app.modules.services.schemas import ServiceCreate, ServiceUpdate, ServiceOut
+from app.modules.services.schemas import ServiceCreate, ServiceUpdate, ServiceOut, ServiceReorderRequest
 from app.modules.services.service import ServiceService
 
 router = APIRouter()
@@ -73,3 +73,18 @@ async def delete_service(
     if not svc or svc.master_id != master.id:
         raise HTTPException(status_code=404, detail="Service not found")
     await svc_service.delete(svc)
+
+
+@router.post("/reorder")
+async def reorder_services(
+    body: ServiceReorderRequest,
+    user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Сортировка услуг drag-and-drop."""
+    master = await MasterService(db).get_by_identity(int(user["sub"]))
+    if not master:
+        raise HTTPException(status_code=403, detail="Not a master")
+    svc_service = ServiceService(db)
+    await svc_service.reorder(master.id, body.order)
+    return {"status": "ok"}

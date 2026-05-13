@@ -27,8 +27,9 @@ export const servicesApi = {
     api.get('/services', { params: masterId ? { master_id: masterId } : {} }),
   create: (data: Record<string, unknown>) => api.post('/services', data),
   update: (id: number, data: Record<string, unknown>) =>
-    api.put(`/services/${id}`, data),
+    api.patch(`/services/${id}`, data),
   delete: (id: number) => api.delete(`/services/${id}`),
+  reorder: (order: number[]) => api.post('/services/reorder', { order }),
 };
 
 // ── Booking ──
@@ -53,6 +54,13 @@ export const paymentsApi = {
   create: (data: Record<string, unknown>) => api.post('/payments/create', data),
 };
 
+// ── Client Subscriptions ──
+export const subscriptionsApi = {
+  list: () => api.get('/payments/client-subscriptions'),
+  create: (data: Record<string, unknown>) =>
+    api.post('/payments/client-subscription', data),
+};
+
 // ── Promo ──
 export const promoApi = {
   validate: (code: string, masterId: number) =>
@@ -63,8 +71,13 @@ export const promoApi = {
 
 // ── Loyalty ──
 export const loyaltyApi = {
-  getBalance: () => api.get('/loyalty/balance'),
-  getHistory: () => api.get('/loyalty/history'),
+  getBalance: (masterId: number) => api.get(`/loyalty/balance/${masterId}`),
+  getHistory: (masterId: number) => api.get(`/loyalty/history/${masterId}`),
+  processReferral: (referrerCode: string) =>
+    api.post('/loyalty/referral', { referrer_code: referrerCode }),
+  getSettings: () => api.get('/loyalty/settings'),
+  updateSettings: (data: Record<string, unknown>) =>
+    api.put('/loyalty/settings', data),
 };
 
 // ── Reviews ──
@@ -86,11 +99,11 @@ export const waitlistApi = {
 export const clientsApi = {
   list: (params?: Record<string, string>) =>
     api.get('/clients', { params }),
-  get: (id: number) => api.get(`/clients/${id}`),
-  addTag: (id: number, tag: string) =>
-    api.post(`/clients/${id}/tags`, { tag }),
-  addNote: (id: number, note: string) =>
-    api.post(`/clients/${id}/notes`, { text: note }),
+  get: (id: number) => api.get(`/clients/${id}/detail`),
+  addTag: (id: number, data: Record<string, unknown>) =>
+    api.patch(`/clients/${id}`, data),
+  addNote: (id: number, data: Record<string, unknown>) =>
+    api.post(`/clients/${id}/notes`, data),
 };
 
 // ── Analytics ──
