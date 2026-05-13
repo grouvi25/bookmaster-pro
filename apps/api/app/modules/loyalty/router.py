@@ -15,8 +15,12 @@ from app.modules.loyalty.schemas import (
     LoyaltyBalanceOut,
     LoyaltyTransactionOut,
     LoyaltySpendRequest,
+    ReferralCreate,
+    LoyaltySettingsOut,
+    LoyaltySettingsUpdate,
 )
-from app.modules.loyalty.service import LoyaltyService
+from app.modules.loyalty.service import LoyaltyService, TIER_CASHBACK_PERCENT, TIER_THRESHOLDS
+from app.modules.masters.service import MasterService
 
 router = APIRouter()
 
@@ -99,3 +103,62 @@ async def spend_points(
         raise HTTPException(status_code=400, detail=str(e))
 
     return {"status": "ok", "points_spent": body.points}
+
+
+@router.post("/referral")
+async def process_referral(
+    body: ReferralCreate,
+    user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Обработать реферальную ссылку и начислить бонус."""
+    result = await db.execute(
+        select(Client).where(Client.identity_id == int(user["sub"]))
+    )
+    client = result.scalar_one_or_none()
+    if not client:
+        raise HTTPException(status_code=403, detail="Not a client")
+
+    service = LoyaltyService(db)
+    try:
+        referral_result = await service.process_referral(body.referrer_code, client.id)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    return referral_result
+
+
+@router.get("/settings", response_model=LoyaltySettingsOut)
+async def get_loyalty_settings(
+    user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Настройки лояльности для мастера."""
+    master = await MasterService(db).get_by_identity(int(user["sub"]))
+    if not master:
+        raise HTTPException(status_code=403, detail="Not a master")
+
+    return LoyaltySettingsOut(
+        tiers={
+            "new": {"threshold": 0, "cashback_percent": TIER_CASHBACK_PERCENT["new"]},
+            "regular": {"threshold": TIER_THRESHOLDS["regular"], "cashback_percent": TIER_CASHBACK_PERCENT["regular"]},
+            "vip": {"threshold": TIER_THRESHOLDS["vip"], "cashback_percent": TIER_CASHBACK_PERCENT["vip"]},
+        },
+        points_expiry_months=12,
+        streak_threshold=3,
+        streak_bonus=100,
+        referral_bonus=200,
+    )
+
+
+@router.put("/settings")
+async def update_loyalty_settings(
+    body: LoyaltySettingsUpdate,
+    user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Обновить настройки лояльности (заглушка, настройки пока глобальные)."""
+    master = await MasterService(db).get_by_identity(int(user["sub"]))
+    if not master:
+        raise HTTPException(status_code=403, detail="Not a master")
+    return {"status": "ok"}

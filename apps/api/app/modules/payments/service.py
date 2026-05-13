@@ -363,3 +363,12 @@ class PaymentService:
             flags.broadcast_enabled = True
 
         await self.db.flush()
+
+    async def get_client_subscriptions(self, client_id: int) -> list:
+        """Получить все абонементы клиента."""
+        result = await self.db.execute(
+            select(ClientSubscription)
+            .where(ClientSubscription.client_id == client_id)
+            .order_by(ClientSubscription.id.desc())
+        )
+        return list(result.scalars().all())

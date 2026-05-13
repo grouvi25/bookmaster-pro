@@ -399,10 +399,16 @@ class AIService:
         self.db.add(vs)
         await self.db.flush()
 
+        saved_to_client = False
+        if client_id:
+            saved_to_client = await self._save_voice_diary_to_crm(
+                master_id, client_id, extracted, appointment_id
+            )
+
         return {
             "transcript": transcript,
             "extracted": extracted,
-            "saved_to_client": client_id is not None,
+            "saved_to_client": saved_to_client,
         }
 
     # ─── Контекст для запросов ────────────────────────────────────────
@@ -545,6 +551,52 @@ class AIService:
     async def _consume_tokens(self, master_id: int, tokens: int):
         """Обновляем счётчик использованных токенов (заглушка для будущего биллинга)."""
         logger.debug(f"Master {master_id} consumed ~{tokens} tokens")
+
+    async def _save_voice_diary_to_crm(
+        self,
+        master_id: int,
+        client_id: int,
+        extracted: Dict[str, Any],
+        appointment_id: Optional[int] = None,
+    ) -> bool:
+        """Сохранить результат голосового дневника в CRM клиента."""
+        from app.modules.clients.models import ClientNote, ClientProfile
+        try:
+            note_text = extracted.get("note_text", "")
+            if note_text:
+                note = ClientNote(
+                    master_id=master_id,
+                    client_id=client_id,
+                    text=note_text,
+                    appointment_id=appointment_id,
+                )
+                self.db.add(note)
+
+            profile_result = await self.db.execute(
+                select(ClientProfile).where(ClientProfile.client_id == client_id)
+            )
+            profile = profile_result.scalar_one_or_none()
+            if profile:
+                if extracted.get("physical_params"):
+                    existing = profile.physical_params or {}
+                    existing.update(extracted["physical_params"])
+                    profile.physical_params = existing
+                if extracted.get("preferences"):
+                    existing = profile.preferences or {}
+                    existing.update(extracted["preferences"])
+                    profile.preferences = existing
+                if extracted.get("allergies"):
+                    existing = profile.allergies or []
+                    for a in extracted["allergies"]:
+                        if a not in existing:
+                            existing.append(a)
+                    profile.allergies = existing
+
+            await self.db.flush()
+            return True
+        except Exception as e:
+            logger.error(f"Voice diary CRM save error: {e}")
+            return False
 
     async def get_tokens_info(self, master_id: int) -> dict:
         flags = await self.db.get(FeatureFlags, master_id)
