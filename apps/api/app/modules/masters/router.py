@@ -2,12 +2,15 @@
 Masters router — /api/v1/masters
 """
 
+import io
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth import get_current_user
+from app.core.config import settings
 from app.core.database import get_db
 from app.modules.masters.schemas import (
     MasterProfileOut,
@@ -118,3 +121,68 @@ async def set_my_schedule(
             is_active=s.is_active,
         ))
     return result
+
+
+# ── QR-код ─────────────────────────────────────────────
+
+@router.get("/me/qr")
+async def get_my_qr(
+    user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Генерация QR-кода со ссылкой на страницу записи мастера."""
+    import qrcode
+    from qrcode.image.styledpil import StyledPilImage
+    from qrcode.image.styles.moduledrawers import RoundedModuleDrawer
+
+    service = MasterService(db)
+    master = await service.get_by_identity(int(user["sub"]))
+    if not master:
+        raise HTTPException(status_code=404, detail="Master not found")
+
+    booking_url = f"{settings.APP_URL}?startParam=m_{master.slug}"
+
+    qr = qrcode.QRCode(version=1, box_size=10, border=2)
+    qr.add_data(booking_url)
+    qr.make(fit=True)
+
+    img = qr.make_image(
+        image_factory=StyledPilImage,
+        module_drawer=RoundedModuleDrawer(),
+    )
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    buf.seek(0)
+
+    return StreamingResponse(
+        buf,
+        media_type="image/png",
+        headers={"Content-Disposition": f"attachment; filename=qr_{master.slug}.png"},
+    )
+
+
+@router.get("/{slug}/qr")
+async def get_master_qr_public(
+    slug: str,
+    db: AsyncSession = Depends(get_db),
+):
+    """Публичный QR-код мастера по slug."""
+    import qrcode
+
+    service = MasterService(db)
+    master = await service.get_by_slug(slug)
+    if not master:
+        raise HTTPException(status_code=404, detail="Master not found")
+
+    booking_url = f"{settings.APP_URL}?startParam=m_{master.slug}"
+
+    img = qrcode.make(booking_url)
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    buf.seek(0)
+
+    return StreamingResponse(
+        buf,
+        media_type="image/png",
+        headers={"Content-Disposition": f"attachment; filename=qr_{slug}.png"},
+    )

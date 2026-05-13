@@ -413,3 +413,51 @@ async def ai_reindex():
 
         await db.commit()
         logger.info(f"ai_reindex: {len(master_ids)} masters, {total_chunks} total chunks")
+
+
+async def loyalty_expire():
+    """
+    Ежедневно — списание просроченных баллов лояльности (12 мес с начисления).
+    """
+    async with async_session_factory() as db:
+        from app.modules.loyalty.service import LoyaltyService
+
+        svc = LoyaltyService(db)
+        count = await svc.expire_points()
+        await db.commit()
+        logger.info(f"loyalty_expire: {count} points expired")
+
+
+async def loyalty_expiry_warn():
+    """
+    Ежедневно — уведомить клиентов о баллах, которые сгорят в ближайшие 30 дней.
+    """
+    async with async_session_factory() as db:
+        from app.modules.loyalty.service import LoyaltyService, POINTS_EXPIRY_WARN_DAYS
+
+        svc = LoyaltyService(db)
+        expiring = await svc.get_expiring_soon(days=POINTS_EXPIRY_WARN_DAYS)
+
+        sent = 0
+        seen = set()
+        for tx in expiring:
+            key = (tx.master_id, tx.client_id)
+            if key in seen:
+                continue
+            seen.add(key)
+
+            text = (
+                f"⚠️ Внимание: {tx.points} бонусных баллов сгорят "
+                f"{tx.expires_at.strftime('%d.%m.%Y') if tx.expires_at else 'скоро'}.\n"
+                f"Используйте их при следующей записи!"
+            )
+            ok = await notify.send_by_client_id(
+                db, tx.client_id, text,
+                button_text="Записаться",
+                button_url=f"{settings.APP_URL}?startParam=book",
+            )
+            if ok:
+                sent += 1
+
+        await db.commit()
+        logger.info(f"loyalty_expiry_warn: {sent} clients notified about expiring points")
