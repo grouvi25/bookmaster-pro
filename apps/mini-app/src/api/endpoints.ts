@@ -262,6 +262,7 @@ export const loyaltyApi = {
 export const reviewsApi = {
   getByMaster: (masterId: number, params?: Record<string, string>) =>
     api.get(`/reviews/master/${masterId}`, { params }),
+  myReviews: () => api.get('/reviews/client'),
   create: (data: ReviewPayload) => api.post('/reviews/', data),
   reply: (id: number, text: string) =>
     api.post(`/reviews/${id}/reply`, { text }),

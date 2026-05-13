@@ -65,6 +65,28 @@ async def reply_to_review(
     return review
 
 
+@router.get("/client", response_model=List[ReviewOut])
+async def get_client_reviews(
+    user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Мои отзывы (клиент)."""
+    result = await db.execute(
+        select(Client).where(Client.identity_id == int(user["sub"]))
+    )
+    client = result.scalar_one_or_none()
+    if not client:
+        raise HTTPException(status_code=403, detail="Not a client")
+
+    from app.modules.reviews.models import ClientReview
+    result = await db.execute(
+        select(ClientReview)
+        .where(ClientReview.client_id == client.id)
+        .order_by(ClientReview.created_at.desc())
+    )
+    return list(result.scalars().all())
+
+
 @router.get("/master/{master_id}", response_model=List[ReviewOut])
 async def get_master_reviews(
     master_id: int,
