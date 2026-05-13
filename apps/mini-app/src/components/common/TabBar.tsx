@@ -1,7 +1,10 @@
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
+import { useCallback } from 'react';
 import clsx from 'clsx';
 import { Home, CalendarDays, Users, Wrench, Sparkles, Menu } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+import { mastersApi, clientsApi, promoApi } from '@/api/endpoints';
 
 interface Tab {
   path: string;
@@ -18,9 +21,36 @@ const MASTER_TABS: Tab[] = [
   { path: '/master/settings', label: 'Ещё', Icon: Menu },
 ];
 
+const PREFETCH_MAP: Record<string, { key: string[]; fn: () => Promise<unknown> }[]> = {
+  '/master': [
+    { key: ['master-stats'], fn: () => mastersApi.getStats().then((r) => r.data) },
+  ],
+  '/master/schedule': [
+    { key: ['master-schedule'], fn: () => mastersApi.getSchedule().then((r) => r.data) },
+  ],
+  '/master/clients': [
+    { key: ['clients'], fn: () => clientsApi.list().then((r) => r.data) },
+  ],
+  '/master/tools': [
+    { key: ['promos'], fn: () => promoApi.list().then((r) => r.data) },
+  ],
+  '/master/settings': [
+    { key: ['master-profile'], fn: () => mastersApi.getProfile().then((r) => r.data) },
+  ],
+};
+
 export default function TabBar() {
   const navigate = useNavigate();
   const location = useLocation();
+  const queryClient = useQueryClient();
+
+  const handlePrefetch = useCallback((path: string) => {
+    const queries = PREFETCH_MAP[path];
+    if (!queries) return;
+    queries.forEach(({ key, fn }) => {
+      queryClient.prefetchQuery({ queryKey: key, queryFn: fn });
+    });
+  }, [queryClient]);
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 safe-area-bottom px-4 pb-2">
@@ -35,6 +65,8 @@ export default function TabBar() {
               <button
                 key={tab.path}
                 onClick={() => navigate(tab.path)}
+                onTouchStart={() => handlePrefetch(tab.path)}
+                onMouseEnter={() => handlePrefetch(tab.path)}
                 className={clsx(
                   'flex flex-col items-center justify-center flex-1 h-full transition-all duration-200',
                   active ? 'text-brand-500' : 'text-tg-hint'
