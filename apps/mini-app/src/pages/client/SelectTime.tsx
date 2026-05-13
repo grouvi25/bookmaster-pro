@@ -11,13 +11,13 @@ import { ru } from 'date-fns/locale';
 
 export default function SelectTime() {
   const navigate = useNavigate();
-  const { masterId, selectedDate, selectedTime, setTime, serviceDuration } = useBookingStore();
+  const { masterId, serviceId, selectedDate, selectedTime, setTime, serviceDuration } = useBookingStore();
 
   const { data: slotsData, isLoading } = useQuery({
-    queryKey: ['slots', masterId, selectedDate],
+    queryKey: ['slots', masterId, selectedDate, serviceId],
     queryFn: () =>
-      bookingApi.getSlots(masterId!, selectedDate).then((r) => r.data),
-    enabled: !!masterId && !!selectedDate,
+      bookingApi.getSlots(masterId!, selectedDate, serviceId!).then((r) => r.data),
+    enabled: !!masterId && !!selectedDate && !!serviceId,
   });
 
   if (isLoading) return <Loading />;

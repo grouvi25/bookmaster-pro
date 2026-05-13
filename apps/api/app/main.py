@@ -112,6 +112,9 @@ app.include_router(nps_router, prefix="/api/v1/nps", tags=["nps"])
 from app.modules.widget.router import router as widget_router
 app.include_router(widget_router, prefix="/api/v1/widget", tags=["widget"])
 
+from app.modules.core.router import router as feature_flags_router
+app.include_router(feature_flags_router, prefix="/api/v1/feature-flags", tags=["feature-flags"])
+
 
 # ── APScheduler ──────────────────────────────────────────────
 from apscheduler.schedulers.asyncio import AsyncIOScheduler

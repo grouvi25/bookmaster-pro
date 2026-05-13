@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { bookingApi } from '@/api/endpoints';
+import { toArray } from '@/shared/lib/normalize';
 import Loading from '@/components/common/Loading';
 import { format, addDays, startOfWeek } from 'date-fns';
 import { ru } from 'date-fns/locale';
@@ -20,7 +21,7 @@ export default function Schedule() {
 
   if (isLoading) return <Loading />;
 
-  const bookings = data?.items || [];
+  const bookings = toArray(data);
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
 
   return (

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { promoApi, loyaltyApi } from '@/api/endpoints';
+import { toArray } from '@/shared/lib/normalize';
 import { useAuthStore } from '@/stores/auth';
 import Loading from '@/components/common/Loading';
 import { Ticket, Star, Plus, Tag } from 'lucide-react';
@@ -58,7 +59,7 @@ function PromoSection() {
 
   if (isLoading) return <Loading />;
 
-  const promos = data?.items || [];
+  const promos = toArray(data);
 
   return (
     <div>
@@ -148,7 +149,7 @@ function LoyaltySection() {
 
   if (isLoading) return <Loading />;
 
-  const history = data?.items || [];
+  const history = toArray(data);
 
   return (
     <div>

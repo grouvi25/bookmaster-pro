@@ -34,24 +34,39 @@ export const servicesApi = {
 
 // ── Booking ──
 export const bookingApi = {
-  getSlots: (masterId: number, date: string) =>
-    api.get('/booking/slots', { params: { master_id: masterId, date } }),
+  getSlots: (masterId: number, date: string, serviceId: number) =>
+    api.get(`/booking/slots/${masterId}`, { params: { date, service_id: serviceId } }),
   getAvailableDates: (masterId: number, serviceId: number) =>
     api.get('/booking/available-dates', {
       params: { master_id: masterId, service_id: serviceId },
     }),
   create: (data: Record<string, unknown>) => api.post('/booking', data),
-  cancel: (id: number) => api.post(`/booking/${id}/cancel`),
+  cancel: (id: number) =>
+    api.patch(`/booking/${id}`, { status: 'cancelled_by_client' }),
   myBookings: (params?: Record<string, string>) =>
-    api.get('/booking/my', { params }),
+    api.get('/booking/client', { params }),
   masterBookings: (params?: Record<string, string>) =>
     api.get('/booking/master', { params }),
-  complete: (id: number) => api.post(`/booking/${id}/complete`),
+  complete: (id: number) =>
+    api.patch(`/booking/${id}`, { status: 'completed' }),
 };
 
 // ── Payments ──
 export const paymentsApi = {
   create: (data: Record<string, unknown>) => api.post('/payments/create', data),
+  refund: (id: number) => api.post(`/payments/refund/${id}`),
+};
+
+// ── Master Billing ──
+export const billingApi = {
+  current: () => api.get('/payments/subscription'),
+  subscribe: (data: { plan: string; billing_period: string }) =>
+    api.post('/payments/subscription', data),
+};
+
+// ── Feature Flags ──
+export const featureFlagsApi = {
+  get: () => api.get('/feature-flags'),
 };
 
 // ── Client Subscriptions ──

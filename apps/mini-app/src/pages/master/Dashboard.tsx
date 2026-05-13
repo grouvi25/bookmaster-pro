@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { bookingApi, mastersApi } from '@/api/endpoints';
+import { toArray } from '@/shared/lib/normalize';
 import Loading from '@/components/common/Loading';
 import Card from '@/shared/ui/Card';
 import { CalendarDays, Star, Clock, User, TrendingUp } from 'lucide-react';
@@ -28,7 +29,7 @@ export default function Dashboard() {
 
   if (isLoading) return <Loading />;
 
-  const bookings = data?.items || [];
+  const bookings = toArray(data);
   const confirmed = bookings.filter(
     (b: Record<string, unknown>) => ['confirmed', 'paid'].includes(b.status as string)
   );
