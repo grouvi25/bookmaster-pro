@@ -48,16 +48,23 @@ export default function LinkPageEditor() {
   useEffect(() => {
     if (master) {
       setBio(master.description || '');
-      setSocialLinks(master.link_page_links || []);
+      const allLinks = master.link_page_links || [];
+      setSocialLinks(allLinks.filter((l: Record<string, unknown>) => !l._type));
     }
   }, [master]);
 
   const handleSave = async () => {
     setSaving(true);
     try {
+      const existingPackages = (master?.link_page_links || []).filter(
+        (l: Record<string, unknown>) => l._type === 'subscription_package'
+      );
       await mastersApi.updateProfile({
         description: bio,
-        link_page_links: socialLinks.filter((l) => l.url.trim()),
+        link_page_links: [
+          ...socialLinks.filter((l) => l.url.trim()),
+          ...existingPackages,
+        ],
       });
       queryClient.invalidateQueries({ queryKey: ['master-profile'] });
       toast.success('Страница обновлена');
