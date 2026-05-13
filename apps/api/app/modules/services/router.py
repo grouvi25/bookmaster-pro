@@ -16,6 +16,19 @@ from app.modules.services.service import ServiceService
 router = APIRouter()
 
 
+@router.get("/my", response_model=List[ServiceOut])
+async def list_my_services(
+    user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Список услуг текущего мастера."""
+    master = await MasterService(db).get_by_identity(int(user["sub"]))
+    if not master:
+        raise HTTPException(status_code=403, detail="Not a master")
+    service = ServiceService(db)
+    return await service.list_by_master(master.id)
+
+
 @router.get("/master/{master_id}", response_model=List[ServiceOut])
 async def list_services(
     master_id: int,

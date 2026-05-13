@@ -186,8 +186,10 @@ export const mastersApi = {
 // ── Services ──
 export const servicesApi = {
   list: (masterId?: number) =>
-    api.get('/services', { params: masterId ? { master_id: masterId } : {} }),
-  create: (data: ServicePayload) => api.post('/services', data),
+    masterId
+      ? api.get(`/services/master/${masterId}`)
+      : api.get('/services/my'),
+  create: (data: ServicePayload) => api.post('/services/', data),
   update: (id: number, data: Partial<ServicePayload>) =>
     api.patch(`/services/${id}`, data),
   delete: (id: number) => api.delete(`/services/${id}`),
@@ -202,7 +204,7 @@ export const bookingApi = {
     api.get('/booking/available-dates', {
       params: { master_id: masterId, service_id: serviceId },
     }),
-  create: (data: BookingPayload) => api.post('/booking', data),
+  create: (data: BookingPayload) => api.post('/booking/', data),
   cancel: (id: number) =>
     api.patch(`/booking/${id}`, { status: 'cancelled_by_client' }),
   myBookings: (params?: Record<string, string>) =>
@@ -242,8 +244,8 @@ export const subscriptionsApi = {
 export const promoApi = {
   validate: (code: string, masterId: number) =>
     api.post('/promo/validate', { code, master_id: masterId }),
-  list: () => api.get('/promo'),
-  create: (data: PromoPayload) => api.post('/promo', data),
+  list: () => api.get('/promo/'),
+  create: (data: PromoPayload) => api.post('/promo/', data),
 };
 
 // ── Loyalty ──
@@ -261,21 +263,21 @@ export const loyaltyApi = {
 export const reviewsApi = {
   getByMaster: (masterId: number, params?: Record<string, string>) =>
     api.get(`/reviews/master/${masterId}`, { params }),
-  create: (data: ReviewPayload) => api.post('/reviews', data),
+  create: (data: ReviewPayload) => api.post('/reviews/', data),
   reply: (id: number, text: string) =>
     api.post(`/reviews/${id}/reply`, { text }),
 };
 
 // ── Waitlist ──
 export const waitlistApi = {
-  join: (data: WaitlistPayload) => api.post('/waitlist', data),
+  join: (data: WaitlistPayload) => api.post('/waitlist/', data),
   confirm: (id: number) => api.post(`/waitlist/${id}/confirm`),
 };
 
 // ── Clients (CRM) ──
 export const clientsApi = {
   list: (params?: Record<string, string>) =>
-    api.get('/clients', { params }),
+    api.get('/clients/', { params }),
   get: (id: number) => api.get(`/clients/${id}/detail`),
   addTag: (id: number, data: ClientTagPayload) =>
     api.patch(`/clients/${id}`, data),
@@ -304,17 +306,15 @@ export const aiApi = {
 // ── Portfolio ──
 export const portfolioApi = {
   list: (masterId: number) =>
-    api.get('/portfolio', { params: { master_id: masterId } }),
-  upload: (formData: FormData) =>
-    api.post('/portfolio/upload', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    }),
+    api.get(`/portfolio/master/${masterId}`),
+  upload: (data: { s3_key: string; caption?: string; client_id?: number; appointment_id?: number }) =>
+    api.post('/portfolio/', data),
   delete: (id: number) => api.delete(`/portfolio/${id}`),
 };
 
 // ── Support ──
 export const supportApi = {
-  list: () => api.get('/support/tickets'),
+  list: () => api.get('/support/tickets/my'),
   create: (data: SupportTicketPayload) =>
     api.post('/support/tickets', data),
   reply: (id: number, text: string) =>
@@ -354,8 +354,8 @@ export const consultationsApi = {
 
 // ── Broadcast ──
 export const broadcastApi = {
-  list: () => api.get('/broadcast'),
-  create: (data: BroadcastPayload) => api.post('/broadcast', data),
+  list: () => api.get('/broadcast/'),
+  create: (data: BroadcastPayload) => api.post('/broadcast/', data),
   previewSegment: (data: BroadcastPreviewPayload) =>
     api.post('/broadcast/preview-segment', data),
   send: (id: number) => api.post(`/broadcast/${id}/send`),
@@ -385,7 +385,7 @@ export const superadminApi = {
   dashboard: () => api.get('/superadmin/dashboard'),
   masters: (params?: Record<string, string | undefined>) =>
     api.get('/superadmin/masters', { params }),
-  healthChecks: () => api.post('/superadmin/health-checks'),
+  healthChecks: () => api.get('/superadmin/health'),
   auditLog: (params?: Record<string, string>) =>
     api.get('/superadmin/audit-log', { params }),
   finance: () => api.get('/superadmin/finance'),
