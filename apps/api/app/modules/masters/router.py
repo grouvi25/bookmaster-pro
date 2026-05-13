@@ -123,6 +123,53 @@ async def set_my_schedule(
     return result
 
 
+# ── Статистика мастера ──────────────────────────────────
+
+@router.get("/me/stats")
+async def get_my_stats(
+    user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Статистика мастера: выручка за сегодня, кол-во записей и т.д."""
+    from datetime import date
+    from sqlalchemy import select, func
+    from app.modules.booking.models import Appointment
+    from app.modules.payments.models import Payment
+
+    service = MasterService(db)
+    master = await service.get_by_identity(int(user["sub"]))
+    if not master:
+        raise HTTPException(status_code=404, detail="Master not found")
+
+    today = date.today()
+
+    today_revenue_result = await db.execute(
+        select(func.coalesce(func.sum(Payment.amount), 0))
+        .where(Payment.master_id == master.id)
+        .where(func.date(Payment.created_at) == today)
+    )
+    today_revenue = today_revenue_result.scalar() or 0
+
+    total_bookings_result = await db.execute(
+        select(func.count(Appointment.id))
+        .where(Appointment.master_id == master.id)
+    )
+    total_bookings = total_bookings_result.scalar() or 0
+
+    today_bookings_result = await db.execute(
+        select(func.count(Appointment.id))
+        .where(Appointment.master_id == master.id)
+        .where(Appointment.date == today)
+    )
+    today_bookings = today_bookings_result.scalar() or 0
+
+    return {
+        "today_revenue": float(today_revenue),
+        "total_bookings": total_bookings,
+        "today_bookings": today_bookings,
+    }
+
+
 # ── QR-код ─────────────────────────────────────────────
 
 @router.get("/me/qr")

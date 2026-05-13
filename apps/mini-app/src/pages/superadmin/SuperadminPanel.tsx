@@ -98,14 +98,14 @@ function MastersTab() {
             className="bg-surface-elevated shadow-card rounded-2xl p-3.5 flex justify-between items-center"
           >
             <div>
-              <div className="font-medium text-sm">{m.name}</div>
+              <div className="font-medium text-sm">{m.display_name}</div>
               <div className="text-xs text-tg-hint">
-                {m.specialization} &middot; {m.tariff_plan ?? m.current_plan}
+                {m.specialization} &middot; {m.current_plan}
               </div>
             </div>
             <StatusBadge
-              label={m.is_active ? 'Активен' : 'Неактивен'}
-              variant={m.is_active ? 'success' : 'danger'}
+              label={m.is_verified ? 'Активен' : 'Неактивен'}
+              variant={m.is_verified ? 'success' : 'danger'}
             />
           </div>
         ))}

@@ -52,16 +52,16 @@ export default function LinkPage() {
       <div className="pt-10 pb-6 px-6 text-center">
         <div className="w-28 h-28 rounded-3xl bg-brand-500/10 shadow-card-lg mx-auto mb-4 flex items-center justify-center overflow-hidden">
           {master.avatar_url ? (
-            <img src={master.avatar_url} alt={master.name} className="w-full h-full object-cover" />
+            <img src={master.avatar_url} alt={master.display_name} className="w-full h-full object-cover" />
           ) : (
             <User className="w-12 h-12 text-brand-300" strokeWidth={1.5} />
           )}
         </div>
-        <h1 className="text-2xl font-bold text-gray-900">{master.name}</h1>
+        <h1 className="text-2xl font-bold text-gray-900">{master.display_name}</h1>
         <p className="text-gray-500 mt-1">{master.specialization}</p>
-        {master.bio && (
+        {master.description && (
           <p className="text-gray-600 text-sm mt-2 max-w-md mx-auto leading-relaxed">
-            {master.bio}
+            {master.description}
           </p>
         )}
         {master.rating_count > 0 && (
@@ -74,9 +74,9 @@ export default function LinkPage() {
       </div>
 
       {/* Social links */}
-      {master.social_links?.length > 0 && (
+      {master.link_page_links?.length > 0 && (
         <div className="flex justify-center gap-3 px-4 mb-6">
-          {master.social_links.map((link: { url: string; icon?: string }, i: number) => (
+          {master.link_page_links.map((link: { url: string; icon?: string }, i: number) => (
             <a
               key={i}
               href={link.url}
