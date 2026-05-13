@@ -13,7 +13,7 @@ import {
   User, Image, QrCode, Download,
 } from 'lucide-react';
 import type { Service, PortfolioItem } from '@/shared/types/api';
-import { BOT_USERNAME, botLink } from '@/shared/config';
+import { pageUrl } from '@/shared/config';
 
 interface SocialLink {
   url: string;
@@ -83,8 +83,7 @@ export default function LinkPageEditor() {
 
   const copyLink = () => {
     if (master?.slug) {
-      const url = botLink(`m_${master.slug}`);
-      navigator.clipboard.writeText(url);
+      navigator.clipboard.writeText(pageUrl(master.slug));
       toast.success('Ссылка скопирована');
     }
   };
@@ -94,7 +93,7 @@ export default function LinkPageEditor() {
 
   const servicesList: Service[] = toArray<Service>(services);
   const portfolioItems: PortfolioItem[] = toArray<PortfolioItem>(portfolio?.items);
-  const pageUrl = `/p/${master.slug}`;
+  const previewPath = `/p/${master.slug}`;
 
   return (
     <div className="p-5 pb-24 animate-fade-in">
@@ -110,8 +109,8 @@ export default function LinkPageEditor() {
             <Link2 className="w-5 h-5 text-brand-500" />
           </div>
           <div className="flex-1 min-w-0">
-            <div className="text-sm font-medium truncate">t.me/{BOT_USERNAME}?start=m_{master.slug}</div>
-            <div className="text-xs text-tg-hint">Ваша ссылка для клиентов</div>
+            <div className="text-sm font-medium truncate">{pageUrl(master.slug)}</div>
+            <div className="text-xs text-tg-hint">Ваша публичная страница</div>
           </div>
         </div>
         <div className="flex gap-2">
@@ -121,7 +120,7 @@ export default function LinkPageEditor() {
           <Button
             variant="secondary"
             size="sm"
-            onClick={() => navigate(pageUrl)}
+            onClick={() => navigate(previewPath)}
             className="flex-1"
           >
             <Eye className="w-3.5 h-3.5" /> Предпросмотр
@@ -137,7 +136,7 @@ export default function LinkPageEditor() {
         </div>
         <div className="flex flex-col items-center">
           <img
-            src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(botLink(`m_${master.slug}`))}`}
+            src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(pageUrl(master.slug))}`}
             alt="QR код"
             className="w-40 h-40 rounded-xl mb-3"
           />
@@ -149,7 +148,7 @@ export default function LinkPageEditor() {
             size="sm"
             onClick={() => {
               const link = document.createElement('a');
-              link.href = `https://api.qrserver.com/v1/create-qr-code/?size=600x600&data=${encodeURIComponent(botLink(`m_${master.slug}`))}` ;
+              link.href = `https://api.qrserver.com/v1/create-qr-code/?size=600x600&data=${encodeURIComponent(pageUrl(master.slug))}` ;
               link.download = `qr-${master.slug}.png`;
               link.click();
             }}
