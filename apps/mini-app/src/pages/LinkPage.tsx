@@ -92,7 +92,7 @@ export default function LinkPage() {
             .map((link: { url: string; label?: string }, i: number) => (
             <a
               key={i}
-              href={link.url}
+              href={/^https?:\/\//i.test(link.url) ? link.url : `https://${link.url}`}
               target="_blank"
               rel="noopener noreferrer"
               className="w-full flex items-center gap-3 p-3 bg-surface-elevated shadow-card rounded-2xl hover:scale-[1.02] transition-transform"
@@ -101,7 +101,7 @@ export default function LinkPage() {
                 <ExternalLink className="w-4 h-4 text-gray-500" />
               </div>
               <span className="text-sm font-medium text-tg-text truncate">
-                {link.label || new URL(link.url).hostname.replace('www.', '')}
+                {link.label || link.url}
               </span>
             </a>
           ))}

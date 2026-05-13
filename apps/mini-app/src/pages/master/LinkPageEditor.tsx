@@ -59,10 +59,16 @@ export default function LinkPageEditor() {
       const existingPackages = (master?.link_page_links || []).filter(
         (l: Record<string, unknown>) => l._type === 'subscription_package'
       );
+      const normalizedLinks = socialLinks
+        .filter((l) => l.url.trim())
+        .map((l) => ({
+          ...l,
+          url: /^https?:\/\//i.test(l.url.trim()) ? l.url.trim() : `https://${l.url.trim()}`,
+        }));
       await mastersApi.updateProfile({
         description: bio,
         link_page_links: [
-          ...socialLinks.filter((l) => l.url.trim()),
+          ...normalizedLinks,
           ...existingPackages,
         ],
       });
