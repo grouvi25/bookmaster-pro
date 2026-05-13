@@ -57,10 +57,12 @@ async def get_feature_flags(
         "broadcast_enabled": flags.broadcast_enabled,
         "loyalty_enabled": flags.loyalty_enabled,
         "subscriptions_enabled": flags.client_subscriptions,
+        "client_subscriptions": flags.client_subscriptions,
         "consultations_enabled": flags.consultations_enabled,
         "portfolio_enabled": flags.portfolio_enabled,
         "locations_enabled": flags.multi_location,
         "analytics_enabled": flags.analytics_enabled,
         "waitlist_enabled": flags.waitlist_enabled,
         "custom_branding": flags.widget_enabled,
+        "widget_enabled": flags.widget_enabled,
     }
