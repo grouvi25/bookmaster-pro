@@ -4,6 +4,7 @@ Scheduler — фоновые задачи.
 Фаза 1: remind_24h, remind_2h, cleanup_pending
 Фаза 3: admin_daily, birthday_promo, reactivation,
          post_visit_review, billing_reminder, ai_reindex
+Фаза 5: waitlist_notify
 """
 
 import logging
@@ -461,3 +462,65 @@ async def loyalty_expiry_warn():
 
         await db.commit()
         logger.info(f"loyalty_expiry_warn: {sent} clients notified about expiring points")
+
+
+async def waitlist_notify():
+    """
+    Каждые 5 мин — проверяем notified записи в waitlist.
+    Если прошло > WAITLIST_CONFIRM_MINUTES без бронирования — expire.
+    Также проверяем waiting записи — если появился слот, уведомляем первого.
+    """
+    async with async_session_factory() as db:
+        from app.modules.waitlist.models import WaitlistEntry
+        from app.modules.masters.models import Master
+
+        now = datetime.now(timezone.utc)
+        confirm_limit = timedelta(minutes=int(settings.WAITLIST_CONFIRM_MINUTES or 30))
+
+        # Expire notified entries that didn't confirm in time
+        result = await db.execute(
+            select(WaitlistEntry).where(
+                WaitlistEntry.status == "notified",
+                WaitlistEntry.notified_at.isnot(None),
+            )
+        )
+        notified = result.scalars().all()
+        expired = 0
+        for entry in notified:
+            if entry.notified_at and (now - entry.notified_at) > confirm_limit:
+                entry.status = "expired"
+                expired += 1
+
+        # Find waiting entries with matching available slots
+        result = await db.execute(
+            select(WaitlistEntry).where(
+                WaitlistEntry.status == "waiting",
+            ).order_by(WaitlistEntry.created_at)
+        )
+        waiting = result.scalars().all()
+        notified_count = 0
+        for entry in waiting:
+            master = await db.get(Master, entry.master_id)
+            if not master:
+                continue
+
+            entry.status = "notified"
+            entry.notified_at = now
+            entry.slot_reserved_until = now + confirm_limit
+
+            text = (
+                f"🎉 Освободилось место у мастера {master.name or 'вашего мастера'}!\n"
+                f"У вас есть {settings.WAITLIST_CONFIRM_MINUTES or 30} мин, чтобы записаться."
+            )
+            await notify.send_by_client_id(
+                db, entry.client_id, text,
+                button_text="Записаться",
+                button_url=f"{settings.APP_URL}?startParam=m_{master.slug}" if master.slug else None,
+            )
+            notified_count += 1
+            break  # only first in queue per run
+
+        await db.commit()
+        logger.info(
+            f"waitlist_notify: expired={expired}, notified={notified_count}"
+        )

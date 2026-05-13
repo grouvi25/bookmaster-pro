@@ -175,12 +175,47 @@ export const consultationsApi = {
     }),
 };
 
+// ── Broadcast ──
+export const broadcastApi = {
+  list: () => api.get('/broadcast'),
+  create: (data: Record<string, unknown>) => api.post('/broadcast', data),
+  previewSegment: (data: Record<string, unknown>) =>
+    api.post('/broadcast/preview-segment', data),
+  send: (id: number) => api.post(`/broadcast/${id}/send`),
+};
+
+// ── NPS ──
+export const npsApi = {
+  current: () => api.get('/nps/current'),
+  submit: (data: { score: number; comment?: string }) =>
+    api.post('/nps/submit', data),
+  dashboard: (quarter?: string) =>
+    api.get('/nps/dashboard', { params: quarter ? { quarter } : {} }),
+};
+
+// ── Locations ──
+export const locationsApi = {
+  list: () => api.get('/masters/me/locations'),
+  create: (data: Record<string, unknown>) =>
+    api.post('/masters/me/locations', data),
+  update: (id: number, data: Record<string, unknown>) =>
+    api.patch(`/masters/me/locations/${id}`, data),
+  delete: (id: number) => api.delete(`/masters/me/locations/${id}`),
+};
+
 // ── Superadmin ──
 export const superadminApi = {
   dashboard: () => api.get('/superadmin/dashboard'),
-  masters: (params?: Record<string, string>) =>
+  masters: (params?: Record<string, string | undefined>) =>
     api.get('/superadmin/masters', { params }),
   healthChecks: () => api.post('/superadmin/health-checks'),
   auditLog: (params?: Record<string, string>) =>
     api.get('/superadmin/audit-log', { params }),
+  finance: () => api.get('/superadmin/finance'),
+  tickets: (params?: Record<string, string | undefined>) =>
+    api.get('/superadmin/tickets', { params }),
+  escalateTicket: (id: number) =>
+    api.post(`/superadmin/tickets/${id}/escalate`),
+  settings: () => api.get('/superadmin/settings'),
+  growth: () => api.get('/superadmin/growth'),
 };

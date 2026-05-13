@@ -186,3 +186,89 @@ async def get_master_qr_public(
         media_type="image/png",
         headers={"Content-Disposition": f"attachment; filename=qr_{slug}.png"},
     )
+
+
+# ── Локации (мультикабинет) ────────────────────────────────
+
+@router.get("/me/locations")
+async def get_my_locations(
+    user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Список локаций мастера."""
+    service = MasterService(db)
+    master = await service.get_by_identity(int(user["sub"]))
+    if not master:
+        raise HTTPException(status_code=404, detail="Master not found")
+    locations = await service.get_locations(master.id)
+    return [
+        {
+            "id": loc.id,
+            "name": loc.name,
+            "address": loc.address,
+            "latitude": loc.latitude,
+            "longitude": loc.longitude,
+            "is_default": loc.is_default,
+            "is_active": loc.is_active,
+        }
+        for loc in locations
+    ]
+
+
+@router.post("/me/locations", status_code=201)
+async def create_location(
+    body: dict,
+    user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Создать локацию."""
+    service = MasterService(db)
+    master = await service.get_by_identity(int(user["sub"]))
+    if not master:
+        raise HTTPException(status_code=404, detail="Master not found")
+    loc = await service.create_location(master.id, body)
+    await db.commit()
+    return {
+        "id": loc.id,
+        "name": loc.name,
+        "address": loc.address,
+        "latitude": loc.latitude,
+        "longitude": loc.longitude,
+        "is_default": loc.is_default,
+        "is_active": loc.is_active,
+    }
+
+
+@router.patch("/me/locations/{location_id}")
+async def update_location(
+    location_id: int,
+    body: dict,
+    user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Обновить локацию."""
+    service = MasterService(db)
+    master = await service.get_by_identity(int(user["sub"]))
+    if not master:
+        raise HTTPException(status_code=404, detail="Master not found")
+    loc = await service.update_location(master.id, location_id, body)
+    if not loc:
+        raise HTTPException(status_code=404, detail="Location not found")
+    await db.commit()
+    return {"id": loc.id, "updated": True}
+
+
+@router.delete("/me/locations/{location_id}", status_code=204)
+async def delete_location(
+    location_id: int,
+    user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Удалить локацию."""
+    service = MasterService(db)
+    master = await service.get_by_identity(int(user["sub"]))
+    if not master:
+        raise HTTPException(status_code=404, detail="Master not found")
+    deleted = await service.delete_location(master.id, location_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Location not found")
