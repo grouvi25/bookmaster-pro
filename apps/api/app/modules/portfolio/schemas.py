@@ -1,8 +1,10 @@
 """Portfolio schemas."""
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, computed_field
 from typing import Optional
 from datetime import datetime
+
+from app.core.config import settings
 
 
 class WorkPhotoCreate(BaseModel):
@@ -29,3 +31,8 @@ class WorkPhotoOut(BaseModel):
     is_portfolio: bool
     sort_order: int
     created_at: datetime
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def image_url(self) -> str:
+        return f"{settings.S3_PUBLIC_URL}/{self.s3_key}"

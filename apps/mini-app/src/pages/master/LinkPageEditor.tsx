@@ -123,7 +123,7 @@ export default function LinkPageEditor() {
   if (!master) return <div className="p-5 text-center text-tg-hint">Профиль не найден</div>;
 
   const servicesList: Service[] = toArray<Service>(services);
-  const portfolioItems: PortfolioItem[] = toArray<PortfolioItem>(portfolio?.items);
+  const portfolioItems: PortfolioItem[] = toArray<PortfolioItem>(portfolio);
   const previewPath = `/p/${master.slug}`;
 
   return (
