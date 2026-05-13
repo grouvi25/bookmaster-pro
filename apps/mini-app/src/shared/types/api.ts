@@ -82,6 +82,9 @@ export interface MasterProfile {
   rating_count: number;
   total_clients: number;
   total_appointments: number;
+  noshow_deposit_amount: number;
+  noshow_prepay_percent: number;
+  is_portfolio: boolean;
 }
 
 /** Платёж */
@@ -180,6 +183,9 @@ export interface LoyaltyTransaction {
 /** Портфолио */
 export interface PortfolioItem {
   id: number;
+  s3_key: string;
   image_url: string;
-  description: string | null;
+  caption: string | null;
+  is_portfolio: boolean;
+  sort_order: number;
 }
