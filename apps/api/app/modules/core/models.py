@@ -33,7 +33,7 @@ class FeatureFlags(Base, TimestampMixin):
     promo_enabled = Column(Boolean, default=False)
     loyalty_enabled = Column(Boolean, default=False)
     client_subscriptions = Column(Boolean, default=False)
-    waitlist_enabled = Column(Boolean, default=True)
+    waitlist_enabled = Column(Boolean, default=False)
     analytics_enabled = Column(Boolean, default=False)
     ai_advisor = Column(Boolean, default=False)
     ai_client_bot = Column(Boolean, default=False)
@@ -44,7 +44,7 @@ class FeatureFlags(Base, TimestampMixin):
     widget_enabled = Column(Boolean, default=False)
     consultations_enabled = Column(Boolean, default=False)
     multi_location = Column(Boolean, default=False)
-    reviews_enabled = Column(Boolean, default=True)
+    reviews_enabled = Column(Boolean, default=False)
     broadcast_enabled = Column(Boolean, default=False)
 
     # Лимиты
