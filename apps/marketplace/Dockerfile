@@ -5,7 +5,7 @@ COPY apps/marketplace/package.json apps/marketplace/pnpm-lock.yaml* ./
 RUN npm install
 COPY apps/marketplace/ .
 
-ARG NEXT_PUBLIC_TG_BOT_USERNAME=BookMasterProBot
+ARG NEXT_PUBLIC_TG_BOT_USERNAME
 ENV NEXT_PUBLIC_TG_BOT_USERNAME=$NEXT_PUBLIC_TG_BOT_USERNAME
 
 RUN npm run build

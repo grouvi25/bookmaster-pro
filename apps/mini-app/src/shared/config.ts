@@ -1,4 +1,4 @@
-export const BOT_USERNAME = import.meta.env.VITE_TG_BOT_USERNAME || 'BookMasterProBot';
+export const BOT_USERNAME = import.meta.env.VITE_TG_BOT_USERNAME;
 export const APP_URL = import.meta.env.VITE_APP_URL || window.location.origin;
 
 export function botLink(startParam?: string): string {

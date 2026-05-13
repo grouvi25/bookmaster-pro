@@ -78,6 +78,10 @@ services:
     build:
       context: ..
       dockerfile: apps/mini-app/Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL:-https://api.freelance-gid.online}
+        VITE_TG_BOT_USERNAME: ${VITE_TG_BOT_USERNAME}
+        VITE_APP_URL: ${VITE_APP_URL:-https://app.freelance-gid.online}
     ports:
       - "127.0.0.1:5173:5173"
     networks: [bookmaster]
