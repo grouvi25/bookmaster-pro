@@ -1,9 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { mastersApi, servicesApi, reviewsApi, loyaltyApi } from '@/api/endpoints';
+import { mastersApi, servicesApi, reviewsApi, loyaltyApi, subscriptionsApi } from '@/api/endpoints';
 import { useBookingStore } from '@/stores/booking';
 import Loading from '@/components/common/Loading';
-import { User, Star } from 'lucide-react';
+import { User, Star, Package } from 'lucide-react';
+import { toast } from '@/shared/ui/Toast';
 import type { Service } from '@/shared/types/api';
 
 interface Review {
@@ -11,6 +12,14 @@ interface Review {
   client_name: string;
   rating: number;
   text: string | null;
+}
+
+interface SubPackage {
+  id: number;
+  service_id: number | null;
+  total_visits: number;
+  price: number;
+  is_active: boolean;
 }
 
 interface MasterProfileProps {
@@ -43,6 +52,30 @@ export default function MasterProfile({ slug }: MasterProfileProps) {
     queryFn: () => loyaltyApi.getBalance(master.id).then((r) => r.data),
     enabled: !!master?.id,
   });
+
+  const { data: packages } = useQuery<SubPackage[]>({
+    queryKey: ['subscription-packages', master?.id],
+    queryFn: () => subscriptionsApi.packages(master.id).then((r) => r.data),
+    enabled: !!master?.id,
+  });
+
+  const handleBuyPackage = async (pkg: SubPackage) => {
+    try {
+      const resp = await subscriptionsApi.create({
+        master_id: master.id,
+        service_id: pkg.service_id ?? undefined,
+        total_visits: pkg.total_visits,
+        price: pkg.price,
+      });
+      if (resp.data?.confirmation_url) {
+        window.location.href = resp.data.confirmation_url;
+      } else {
+        toast.success('Абонемент оформлен');
+      }
+    } catch {
+      toast.error('Ошибка оформления абонемента');
+    }
+  };
 
   if (isLoading) return <Loading />;
   if (!master) return <div className="p-4 text-center text-tg-hint">Мастер не найден</div>;
@@ -115,6 +148,38 @@ export default function MasterProfile({ slug }: MasterProfileProps) {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Subscription Packages */}
+      {packages && packages.length > 0 && (
+        <div className="px-4 mt-6">
+          <h2 className="font-bold text-lg mb-3 flex items-center gap-1.5">
+            <Package className="w-5 h-5 text-brand-500" />
+            Абонементы
+          </h2>
+          <div className="flex flex-col gap-2">
+            {packages.filter(p => p.is_active).map((pkg) => {
+              const svc = (services as Service[])?.find(s => s.id === pkg.service_id);
+              return (
+                <div
+                  key={pkg.id}
+                  className="flex items-center justify-between p-3.5 bg-brand-500/5 border border-brand-500/20 rounded-2xl"
+                >
+                  <div>
+                    <div className="font-medium text-sm">{svc?.name || 'Любая услуга'}</div>
+                    <div className="text-xs text-tg-hint">{pkg.total_visits} визитов</div>
+                  </div>
+                  <button
+                    onClick={() => handleBuyPackage(pkg)}
+                    className="bg-brand-500 text-white text-xs font-bold px-4 py-2 rounded-xl"
+                  >
+                    {Number(pkg.price).toLocaleString('ru')} ₽
+                  </button>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}

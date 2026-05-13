@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.auth import get_current_user
 from app.core.database import get_db
 from app.modules.masters.service import MasterService
+from app.modules.masters.models import Master
 from app.modules.clients.models import Client
 from app.modules.payments.schemas import (
     CreatePaymentRequest,
@@ -200,13 +201,20 @@ async def refund_payment(
 
 @router.get("/subscription-packages")
 async def get_subscription_packages(
+    master_id: int | None = None,
     user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """Список шаблонов абонементов мастера (хранятся в JSON)."""
-    master = await MasterService(db).get_by_identity(int(user["sub"]))
+    """Список шаблонов абонементов мастера (хранятся в JSON).
+    Если master_id — вернуть пакеты конкретного мастера (для клиента).
+    Без master_id — пакеты текущего мастера.
+    """
+    if master_id:
+        master = await db.get(Master, master_id)
+    else:
+        master = await MasterService(db).get_by_identity(int(user["sub"]))
     if not master:
-        raise HTTPException(status_code=403, detail="Not a master")
+        raise HTTPException(status_code=404, detail="Master not found")
 
     packages = master.link_page_links or []
     pkg_list = []

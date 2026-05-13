@@ -16,6 +16,8 @@ interface MasterProfilePayload {
   link_page_enabled?: boolean;
   link_page_theme?: string;
   link_page_links?: { url: string; label?: string }[];
+  noshow_deposit_amount?: number;
+  noshow_prepay_percent?: number;
 }
 
 interface SchedulePayload {
@@ -238,6 +240,8 @@ export const subscriptionsApi = {
   list: () => api.get('/payments/client-subscriptions'),
   create: (data: ClientSubscriptionPayload) =>
     api.post('/payments/client-subscription', data),
+  packages: (masterId: number) =>
+    api.get('/payments/subscription-packages', { params: { master_id: masterId } }),
 };
 
 // ── Promo ──
