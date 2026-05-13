@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import { superadminApi } from '@/api/endpoints';
+import { useAuthStore } from '@/stores/auth';
 import { toArray } from '@/shared/lib/normalize';
 import Loading from '@/components/common/Loading';
 import PageHeader from '@/shared/ui/PageHeader';
@@ -12,6 +14,7 @@ import SearchInput from '@/shared/ui/SearchInput';
 import {
   BarChart3, Users, Activity, ScrollText,
   DollarSign, MessageSquare, Settings, TrendingUp,
+  UserCircle, Wrench, ArrowRightLeft,
 } from 'lucide-react';
 import type { MasterProfile, AuditLogEntry, SupportTicket } from '@/shared/types/api';
 
@@ -30,10 +33,38 @@ const TABS: { key: Tab; label: string; Icon: typeof BarChart3 }[] = [
 
 export default function SuperadminPanel() {
   const [tab, setTab] = useState<Tab>('dashboard');
+  const navigate = useNavigate();
+  const { setAuth, token } = useAuthStore();
+
+  const switchToRole = (targetRole: 'master' | 'client') => {
+    if (token) {
+      localStorage.setItem('sa_original_role', 'superadmin');
+      setAuth(token, targetRole);
+      navigate(targetRole === 'master' ? '/master' : '/');
+    }
+  };
 
   return (
-    <div className="p-5 animate-fade-in">
+    <div className="p-5 pb-24 animate-fade-in">
       <PageHeader title="Суперадмин" />
+
+      {/* Role switcher */}
+      <div className="flex gap-2 mb-4">
+        <button
+          onClick={() => switchToRole('master')}
+          className="flex-1 flex items-center justify-center gap-2 p-3 bg-brand-500/10 text-brand-600 rounded-2xl text-sm font-medium active:scale-[0.97] transition-all"
+        >
+          <Wrench className="w-4 h-4" />
+          Режим мастера
+        </button>
+        <button
+          onClick={() => switchToRole('client')}
+          className="flex-1 flex items-center justify-center gap-2 p-3 bg-blue-500/10 text-blue-600 rounded-2xl text-sm font-medium active:scale-[0.97] transition-all"
+        >
+          <UserCircle className="w-4 h-4" />
+          Режим клиента
+        </button>
+      </div>
 
       <div className="mb-5">
         <ChipTabs tabs={TABS} active={tab} onChange={setTab} />
@@ -48,6 +79,29 @@ export default function SuperadminPanel() {
       {tab === 'settings' && <SettingsTab />}
       {tab === 'growth' && <GrowthTab />}
     </div>
+  );
+}
+
+/** Floating button to return to superadmin from master/client view */
+export function SuperadminReturnButton() {
+  const navigate = useNavigate();
+  const { role, token, setAuth } = useAuthStore();
+
+  const wasSuperadmin = localStorage.getItem('sa_original_role') === 'superadmin';
+  if (role === 'superadmin' || !token || !wasSuperadmin) return null;
+
+  return (
+    <button
+      onClick={() => {
+        localStorage.removeItem('sa_original_role');
+        setAuth(token, 'superadmin');
+        navigate('/superadmin');
+      }}
+      className="fixed top-4 right-4 z-[100] flex items-center gap-1.5 px-3 py-2 bg-red-500 text-white rounded-full text-xs font-semibold shadow-lg active:scale-95 transition-all"
+    >
+      <ArrowRightLeft className="w-3.5 h-3.5" />
+      Суперадмин
+    </button>
   );
 }
 

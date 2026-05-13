@@ -44,6 +44,7 @@ import LoyaltyHistory from '@/pages/client/LoyaltyHistory';
 import ClientSubscriptions from '@/pages/client/Subscriptions';
 import WaitlistJoin from '@/pages/client/WaitlistJoin';
 import ReviewForm from '@/pages/client/ReviewForm';
+import NearbyMasters from '@/pages/client/NearbyMasters';
 
 // Специальные страницы
 import LinkPage from '@/pages/LinkPage';
@@ -51,6 +52,7 @@ import EmbedPage from '@/pages/EmbedPage';
 import NpsPopup from '@/components/NpsPopup';
 import ModeratorPanel from '@/pages/moderator/ModeratorPanel';
 import SuperadminPanel from '@/pages/superadmin/SuperadminPanel';
+import { SuperadminReturnButton } from '@/pages/superadmin/SuperadminPanel';
 
 import Loading from '@/components/common/Loading';
 import Register from '@/pages/Register';
@@ -211,6 +213,7 @@ function AppRouter() {
         <Route path="/loyalty/:masterId" element={<LoyaltyHistory />} />
         <Route path="/subscriptions" element={<ClientSubscriptions />} />
         <Route path="/review/:appointmentId" element={<ReviewForm />} />
+        <Route path="/nearby" element={<NearbyMasters />} />
 
         {/* Мастерские роуты — только для master и superadmin */}
         <Route path="/master" element={<RequireAuth allowedRoles={['master', 'superadmin']}><Dashboard /></RequireAuth>} />
@@ -252,6 +255,9 @@ function AppRouter() {
 
       {/* TabBar для мастеров */}
       {isMaster && <TabBar />}
+
+      {/* Кнопка возврата в суперадминку */}
+      <SuperadminReturnButton />
 
       {/* NPS опрос после визита */}
       <NpsPopup />
