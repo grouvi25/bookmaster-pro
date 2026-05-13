@@ -9,8 +9,17 @@ import SearchInput from '@/shared/ui/SearchInput';
 import EmptyState from '@/shared/ui/EmptyState';
 import { User, X, ChevronRight } from 'lucide-react';
 import type { ClientCRM } from '@/shared/types/api';
+import FeatureGate from '@/shared/ui/FeatureGate';
 
 export default function Clients() {
+  return (
+    <FeatureGate flag="crm_enabled">
+      <ClientsList />
+    </FeatureGate>
+  );
+}
+
+function ClientsList() {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [selectedId, setSelectedId] = useState<number | null>(null);

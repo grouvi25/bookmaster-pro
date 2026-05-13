@@ -8,7 +8,9 @@ RUN npm ci
 COPY apps/mini-app/ .
 
 ARG VITE_API_URL=https://api.freelance-gid.online
+ARG VITE_TG_BOT_USERNAME=BookMasterProBot
 ENV VITE_API_URL=$VITE_API_URL
+ENV VITE_TG_BOT_USERNAME=$VITE_TG_BOT_USERNAME
 
 RUN npm run build
 

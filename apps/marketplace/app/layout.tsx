@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import './globals.css';
 
+const BOT_USERNAME = process.env.NEXT_PUBLIC_TG_BOT_USERNAME || 'BookMasterProBot';
+
 export const metadata: Metadata = {
   title: 'BookMaster Pro — онлайн-запись к мастерам',
   description:
@@ -43,7 +45,7 @@ function Header() {
             Найти мастера
           </a>
           <a
-            href="https://t.me/BookMasterProBot"
+            href={`https://t.me/${BOT_USERNAME}`}
             target="_blank"
             className="bg-blue-600 text-white px-4 py-2 rounded-xl hover:bg-blue-700 transition-colors font-medium"
           >

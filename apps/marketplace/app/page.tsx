@@ -2,6 +2,8 @@ import Link from 'next/link';
 import { Suspense } from 'react';
 import FeaturedMasters from '@/components/FeaturedMasters';
 
+const BOT_USERNAME = process.env.NEXT_PUBLIC_TG_BOT_USERNAME || 'BookMasterProBot';
+
 const CATEGORIES = [
   { name: 'Маникюр/педикюр', slug: 'manicure', icon: '\ud83d\udc85' },
   { name: 'Брови и ресницы', slug: 'brows', icon: '\u2728' },
@@ -98,7 +100,7 @@ export default function HomePage() {
             Получите онлайн-запись, CRM, напоминания и AI-ассистента
           </p>
           <a
-            href="https://t.me/BookMasterProBot"
+            href={`https://t.me/${BOT_USERNAME}`}
             target="_blank"
             className="inline-block bg-white text-blue-600 px-8 py-4 rounded-2xl font-bold text-lg hover:shadow-lg transition-all"
           >
