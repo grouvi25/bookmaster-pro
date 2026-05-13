@@ -123,6 +123,11 @@ function AnalyticsSection({ onBack }: { onBack: () => void }) {
     queryFn: () => analyticsApi.revenue({ period: '30d' }).then((r) => r.data),
   });
 
+  const { data: funnel } = useQuery({
+    queryKey: ['analytics-funnel'],
+    queryFn: () => analyticsApi.funnel({ days: '30' }).then((r) => r.data),
+  });
+
   if (isLoading) return <StatGridSkeleton count={4} />;
 
   return (
@@ -136,6 +141,17 @@ function AnalyticsSection({ onBack }: { onBack: () => void }) {
         <StatCard label="Клиентов" value={data?.unique_clients ?? 0} />
         <StatCard label="Средний чек" value={`${(data?.avg_check ?? 0).toLocaleString('ru')} ₽`} />
       </div>
+
+      {funnel && (
+        <>
+          <h3 className="font-semibold text-sm mb-2">Воронка записей</h3>
+          <div className="grid grid-cols-3 gap-2 mb-4">
+            <StatCard label="Завершённые" value={funnel.completed ?? 0} />
+            <StatCard label="Отмены" value={funnel.cancelled ?? 0} />
+            <StatCard label="No-show" value={funnel.no_show ?? 0} />
+          </div>
+        </>
+      )}
     </div>
   );
 }

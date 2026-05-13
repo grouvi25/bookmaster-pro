@@ -65,6 +65,7 @@ async def get_current_survey(
         "score": survey.score,
         "comment": survey.comment,
         "status": survey.status,
+        "should_show": survey.status == "pending",
     }
 
 

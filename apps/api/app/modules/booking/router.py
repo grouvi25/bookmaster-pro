@@ -16,6 +16,7 @@ from app.modules.booking.schemas import (
     BookingStatusUpdate,
     DaySlots,
     TimeSlot,
+    AvailableDatesOut,
     BlockedSlotCreate,
     BlockedSlotOut,
 )
@@ -28,6 +29,29 @@ router = APIRouter()
 
 
 # ── Слоты ──────────────────────────────────────────────────
+
+@router.get("/available-dates", response_model=AvailableDatesOut)
+async def get_available_dates(
+    master_id: int = Query(...),
+    service_id: int = Query(...),
+    days_ahead: int = Query(30),
+    location_id: Optional[int] = Query(None),
+    db: AsyncSession = Depends(get_db),
+):
+    """Получить список дат с доступными слотами на ближайшие N дней."""
+    from datetime import timedelta as td
+    slot_service = SlotService(db)
+    available = []
+    today = date.today()
+    for offset in range(days_ahead):
+        d = today + td(days=offset)
+        slots = await slot_service.get_available_slots(
+            master_id, d, service_id, location_id
+        )
+        if any(s["available"] for s in slots):
+            available.append(d)
+    return AvailableDatesOut(dates=available)
+
 
 @router.get("/slots/{master_id}", response_model=DaySlots)
 async def get_slots(

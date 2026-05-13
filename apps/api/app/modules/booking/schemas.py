@@ -58,6 +58,10 @@ class BookingStatusUpdate(BaseModel):
     price_final: Optional[int] = None
 
 
+class AvailableDatesOut(BaseModel):
+    dates: List[date]
+
+
 class BlockedSlotCreate(BaseModel):
     date_from: date
     date_to: date
