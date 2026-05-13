@@ -186,13 +186,13 @@ function AppRouter() {
         <Route
           path="/"
           element={
-            isNewUser ? (
-              <Navigate to="/register" replace />
-            ) : role === 'superadmin' ? (
+            role === 'superadmin' ? (
               <Navigate to="/superadmin" replace />
             ) : isMaster ? (
               <Navigate to="/master" replace />
-            ) : hasTelegramContext && !role ? (
+            ) : role === 'client' ? (
+              <HomePage />
+            ) : isNewUser || (hasTelegramContext && !role) ? (
               <Navigate to="/register" replace />
             ) : (
               <HomePage />
