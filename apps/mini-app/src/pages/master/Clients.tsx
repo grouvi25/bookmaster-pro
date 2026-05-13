@@ -13,6 +13,7 @@ import type { ClientCRM } from '@/shared/types/api';
 export default function Clients() {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
+  const [selectedId, setSelectedId] = useState<number | null>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ['clients', search],
@@ -22,7 +23,6 @@ export default function Clients() {
   if (isLoading) return <div className="p-5"><ListSkeleton count={5} /></div>;
 
   const clients = toArray<ClientCRM>(data);
-  const [selectedId, setSelectedId] = useState<number | null>(null);
   const selected = clients.find((c) => (c.client_id ?? c.id) === selectedId);
 
   return (
