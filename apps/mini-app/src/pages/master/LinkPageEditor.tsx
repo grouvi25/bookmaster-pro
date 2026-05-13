@@ -10,9 +10,10 @@ import SectionBack from '@/shared/ui/SectionBack';
 import { toast } from '@/shared/ui/Toast';
 import {
   Link2, Eye, Copy, Plus, Trash2,
-  User, Image,
+  User, Image, QrCode, Download,
 } from 'lucide-react';
 import type { Service, PortfolioItem } from '@/shared/types/api';
+import { BOT_USERNAME, botLink } from '@/shared/config';
 
 interface SocialLink {
   url: string;
@@ -82,7 +83,7 @@ export default function LinkPageEditor() {
 
   const copyLink = () => {
     if (master?.slug) {
-      const url = `https://t.me/BookMasterProBot?start=m_${master.slug}`;
+      const url = botLink(`m_${master.slug}`);
       navigator.clipboard.writeText(url);
       toast.success('Ссылка скопирована');
     }
@@ -109,7 +110,7 @@ export default function LinkPageEditor() {
             <Link2 className="w-5 h-5 text-brand-500" />
           </div>
           <div className="flex-1 min-w-0">
-            <div className="text-sm font-medium truncate">t.me/BookMasterProBot?start=m_{master.slug}</div>
+            <div className="text-sm font-medium truncate">t.me/{BOT_USERNAME}?start=m_{master.slug}</div>
             <div className="text-xs text-tg-hint">Ваша ссылка для клиентов</div>
           </div>
         </div>
@@ -124,6 +125,36 @@ export default function LinkPageEditor() {
             className="flex-1"
           >
             <Eye className="w-3.5 h-3.5" /> Предпросмотр
+          </Button>
+        </div>
+      </Card>
+
+      {/* QR Code */}
+      <Card className="mb-4">
+        <div className="flex items-center gap-2 mb-3">
+          <QrCode className="w-5 h-5 text-brand-500" />
+          <span className="font-medium text-sm">QR-код для клиентов</span>
+        </div>
+        <div className="flex flex-col items-center">
+          <img
+            src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(botLink(`m_${master.slug}`))}`}
+            alt="QR код"
+            className="w-40 h-40 rounded-xl mb-3"
+          />
+          <p className="text-xs text-tg-hint text-center mb-3">
+            Распечатайте и разместите в кабинете — клиенты смогут записаться, отсканировав код
+          </p>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => {
+              const link = document.createElement('a');
+              link.href = `https://api.qrserver.com/v1/create-qr-code/?size=600x600&data=${encodeURIComponent(botLink(`m_${master.slug}`))}` ;
+              link.download = `qr-${master.slug}.png`;
+              link.click();
+            }}
+          >
+            <Download className="w-3.5 h-3.5" /> Скачать QR
           </Button>
         </div>
       </Card>

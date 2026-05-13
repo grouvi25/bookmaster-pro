@@ -16,6 +16,7 @@ import {
   MapPin, Megaphone,
 } from 'lucide-react';
 import type { Service, SupportTicket, MasterProfile } from '@/shared/types/api';
+import { useFeatureFlag } from '@/hooks/useFeatureFlag';
 
 type SettingsTab = 'main' | 'analytics' | 'services' | 'profile' | 'support';
 
@@ -43,15 +44,20 @@ export default function Settings() {
 
 function SettingsMain({ onNavigate }: { onNavigate: (tab: SettingsTab) => void }) {
   const navigate = useNavigate();
+  const analyticsEnabled = useFeatureFlag('analytics_enabled');
+  const broadcastEnabled = useFeatureFlag('broadcast_enabled');
+  const locationsEnabled = useFeatureFlag('locations_enabled');
 
   return (
     <div className="flex flex-col gap-2">
-      <MenuItem
-        Icon={BarChart3}
-        label="Аналитика"
-        description="Статистика и отчёты"
-        onClick={() => onNavigate('analytics')}
-      />
+      {analyticsEnabled && (
+        <MenuItem
+          Icon={BarChart3}
+          label="Аналитика"
+          description="Статистика и отчёты"
+          onClick={() => onNavigate('analytics')}
+        />
+      )}
       <MenuItem
         Icon={ClipboardList}
         label="Мои услуги"
@@ -87,22 +93,26 @@ function SettingsMain({ onNavigate }: { onNavigate: (tab: SettingsTab) => void }
         iconBg="bg-amber-500/10"
         iconColor="text-accent-orange"
       />
-      <MenuItem
-        Icon={Megaphone}
-        label="Рассылки"
-        description="Рассылки по сегментам"
-        onClick={() => navigate('/master/broadcast')}
-        iconBg="bg-accent-purple/10"
-        iconColor="text-accent-purple"
-      />
-      <MenuItem
-        Icon={MapPin}
-        label="Локации"
-        description="Управление адресами"
-        onClick={() => navigate('/master/locations')}
-        iconBg="bg-accent-emerald/10"
-        iconColor="text-accent-emerald"
-      />
+      {broadcastEnabled && (
+        <MenuItem
+          Icon={Megaphone}
+          label="Рассылки"
+          description="Рассылки по сегментам"
+          onClick={() => navigate('/master/broadcast')}
+          iconBg="bg-accent-purple/10"
+          iconColor="text-accent-purple"
+        />
+      )}
+      {locationsEnabled && (
+        <MenuItem
+          Icon={MapPin}
+          label="Локации"
+          description="Управление адресами"
+          onClick={() => navigate('/master/locations')}
+          iconBg="bg-accent-emerald/10"
+          iconColor="text-accent-emerald"
+        />
+      )}
     </div>
   );
 }

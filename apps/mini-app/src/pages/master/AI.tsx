@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { aiApi } from '@/api/endpoints';
 import { SendHorizontal } from 'lucide-react';
+import FeatureGate from '@/shared/ui/FeatureGate';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -8,6 +9,14 @@ interface Message {
 }
 
 export default function AIAssistant() {
+  return (
+    <FeatureGate flag="ai_advisor">
+      <AIChat />
+    </FeatureGate>
+  );
+}
+
+function AIChat() {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
