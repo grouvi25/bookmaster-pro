@@ -85,17 +85,24 @@ export default function LinkPage() {
       </div>
 
       {/* Social links */}
-      {master.link_page_links?.length > 0 && (
-        <div className="flex justify-center gap-3 px-4 mb-6">
-          {master.link_page_links.map((link: { url: string; icon?: string }, i: number) => (
+      {master.link_page_links?.filter((l: Record<string, unknown>) => !l._type && l.url).length > 0 && (
+        <div className="flex flex-col items-center gap-2 px-4 mb-6 max-w-md mx-auto">
+          {master.link_page_links
+            .filter((l: Record<string, unknown>) => !l._type && l.url)
+            .map((link: { url: string; label?: string }, i: number) => (
             <a
               key={i}
               href={link.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-10 h-10 bg-tg-secondary shadow-card rounded-xl flex items-center justify-center hover:scale-110 transition-transform"
+              className="w-full flex items-center gap-3 p-3 bg-surface-elevated shadow-card rounded-2xl hover:scale-[1.02] transition-transform"
             >
-              <ExternalLink className="w-4 h-4 text-gray-500" />
+              <div className="w-10 h-10 bg-tg-secondary rounded-xl flex items-center justify-center shrink-0">
+                <ExternalLink className="w-4 h-4 text-gray-500" />
+              </div>
+              <span className="text-sm font-medium text-tg-text truncate">
+                {link.label || new URL(link.url).hostname.replace('www.', '')}
+              </span>
             </a>
           ))}
         </div>
