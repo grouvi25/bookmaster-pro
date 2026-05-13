@@ -15,9 +15,26 @@ from app.modules.clients.models import Client
 from app.modules.core.models import FeatureFlags
 
 
+_TRANSLIT = {
+    "а": "a", "б": "b", "в": "v", "г": "g", "д": "d", "е": "e", "ё": "yo",
+    "ж": "zh", "з": "z", "и": "i", "й": "y", "к": "k", "л": "l", "м": "m",
+    "н": "n", "о": "o", "п": "p", "р": "r", "с": "s", "т": "t", "у": "u",
+    "ф": "f", "х": "kh", "ц": "ts", "ч": "ch", "ш": "sh", "щ": "shch",
+    "ъ": "", "ы": "y", "ь": "", "э": "e", "ю": "yu", "я": "ya",
+}
+
+
+def _transliterate(text: str) -> str:
+    result = []
+    for ch in text.lower():
+        result.append(_TRANSLIT.get(ch, ch))
+    return "".join(result)
+
+
 def generate_slug(display_name: str, identity_id: int) -> str:
-    slug = re.sub(r"[^a-zA-Zа-яА-ЯёЁ0-9\s-]", "", display_name)
-    slug = re.sub(r"\s+", "-", slug.strip()).lower()
+    slug = _transliterate(display_name)
+    slug = re.sub(r"[^a-z0-9\s-]", "", slug)
+    slug = re.sub(r"\s+", "-", slug.strip())
     if not slug:
         slug = "master"
     return f"{slug}-{identity_id}"
