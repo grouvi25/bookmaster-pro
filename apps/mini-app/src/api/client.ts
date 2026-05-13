@@ -8,6 +8,11 @@ const api = axios.create({
 });
 
 api.interceptors.request.use((config) => {
+  // Ensure trailing slash to avoid 307 redirects from FastAPI
+  if (config.url && !config.url.endsWith('/') && !config.url.includes('?')) {
+    config.url += '/';
+  }
+
   const initData = PlatformAdapter.getInitData();
   if (initData) {
     config.headers['X-Init-Data'] = initData;
