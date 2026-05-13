@@ -15,8 +15,8 @@ POINTS_EXPIRY_MONTHS = 12
 POINTS_EXPIRY_WARN_DAYS = 30
 
 TIER_THRESHOLDS = {
-    "vip": 5000,
-    "regular": 1000,
+    "vip": 2001,
+    "regular": 501,
 }
 
 TIER_CASHBACK_PERCENT = {

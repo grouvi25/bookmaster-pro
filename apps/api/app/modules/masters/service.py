@@ -83,3 +83,63 @@ class MasterService:
 
         await self.db.flush()
         return new_templates
+
+    # ── Локации (мультикабинет) ────────────────────────────
+
+    async def get_locations(self, master_id: int) -> list:
+        from app.modules.masters.models import MasterLocation
+        result = await self.db.execute(
+            select(MasterLocation)
+            .where(MasterLocation.master_id == master_id)
+            .order_by(MasterLocation.is_default.desc(), MasterLocation.id)
+        )
+        return list(result.scalars().all())
+
+    async def create_location(self, master_id: int, data: dict):
+        from app.modules.masters.models import MasterLocation
+        loc = MasterLocation(
+            master_id=master_id,
+            name=data.get("name", ""),
+            address=data.get("address"),
+            latitude=data.get("latitude"),
+            longitude=data.get("longitude"),
+            is_default=data.get("is_default", False),
+            is_active=data.get("is_active", True),
+        )
+        self.db.add(loc)
+        await self.db.flush()
+        return loc
+
+    async def update_location(
+        self, master_id: int, location_id: int, data: dict
+    ):
+        from app.modules.masters.models import MasterLocation
+        result = await self.db.execute(
+            select(MasterLocation).where(
+                MasterLocation.id == location_id,
+                MasterLocation.master_id == master_id,
+            )
+        )
+        loc = result.scalar_one_or_none()
+        if not loc:
+            return None
+        for key in ("name", "address", "latitude", "longitude", "is_default", "is_active"):
+            if key in data:
+                setattr(loc, key, data[key])
+        await self.db.flush()
+        return loc
+
+    async def delete_location(self, master_id: int, location_id: int) -> bool:
+        from app.modules.masters.models import MasterLocation
+        result = await self.db.execute(
+            select(MasterLocation).where(
+                MasterLocation.id == location_id,
+                MasterLocation.master_id == master_id,
+            )
+        )
+        loc = result.scalar_one_or_none()
+        if not loc:
+            return False
+        await self.db.delete(loc)
+        await self.db.flush()
+        return True

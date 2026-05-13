@@ -28,6 +28,8 @@ import AIAssistant from '@/pages/master/AI';
 import Settings from '@/pages/master/Settings';
 import Consultations from '@/pages/master/Consultations';
 import LoyaltySettings from '@/pages/master/LoyaltySettings';
+import Broadcast from '@/pages/master/Broadcast';
+import Locations from '@/pages/master/Locations';
 import TabBar from '@/components/common/TabBar';
 
 // Клиентские дополнительные экраны
@@ -172,6 +174,8 @@ function AppRouter() {
         <Route path="/master/clients/:clientId" element={<RequireAuth allowedRoles={['master', 'superadmin']}><ClientDetail /></RequireAuth>} />
         <Route path="/master/consultations" element={<RequireAuth allowedRoles={['master', 'superadmin']}><Consultations /></RequireAuth>} />
         <Route path="/master/loyalty-settings" element={<RequireAuth allowedRoles={['master', 'superadmin']}><LoyaltySettings /></RequireAuth>} />
+        <Route path="/master/broadcast" element={<RequireAuth allowedRoles={['master', 'superadmin']}><Broadcast /></RequireAuth>} />
+        <Route path="/master/locations" element={<RequireAuth allowedRoles={['master', 'superadmin']}><Locations /></RequireAuth>} />
 
         {/* Публичная страница-линк (TapLink) */}
         <Route path="/p/:slug" element={<LinkPage />} />
