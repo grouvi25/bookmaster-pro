@@ -1,0 +1,66 @@
+"""
+Feature Flags router — /api/v1/feature-flags
+Возвращает текущие флаги для авторизованного мастера.
+"""
+
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.auth import get_current_user
+from app.core.database import get_db
+from app.modules.core.models import FeatureFlags
+from app.modules.masters.service import MasterService
+
+router = APIRouter()
+
+
+@router.get("")
+async def get_feature_flags(
+    user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Получить feature flags для текущего мастера."""
+    master = await MasterService(db).get_by_identity(int(user["sub"]))
+    if not master:
+        raise HTTPException(status_code=403, detail="Not a master")
+
+    result = await db.execute(
+        select(FeatureFlags).where(FeatureFlags.master_id == master.id)
+    )
+    flags = result.scalar_one_or_none()
+
+    if not flags:
+        return {
+            "tariff_plan": master.current_plan or "start",
+            "ai_advisor": False,
+            "ai_voice": False,
+            "ai_content": False,
+            "crm_enabled": False,
+            "broadcast_enabled": False,
+            "loyalty_enabled": False,
+            "subscriptions_enabled": False,
+            "consultations_enabled": False,
+            "portfolio_enabled": False,
+            "locations_enabled": False,
+            "analytics_enabled": False,
+            "waitlist_enabled": False,
+            "custom_branding": False,
+        }
+
+    return {
+        "tariff_plan": master.current_plan or "start",
+        "ai_advisor": flags.ai_advisor,
+        "ai_voice": flags.ai_voice,
+        "ai_content": flags.ai_advisor,
+        "crm_enabled": flags.crm_basic or flags.crm_advanced,
+        "broadcast_enabled": flags.broadcast_enabled,
+        "loyalty_enabled": flags.loyalty_enabled,
+        "subscriptions_enabled": flags.client_subscriptions,
+        "consultations_enabled": flags.consultations_enabled,
+        "portfolio_enabled": flags.portfolio_enabled,
+        "locations_enabled": flags.multi_location,
+        "analytics_enabled": flags.analytics_enabled,
+        "waitlist_enabled": flags.waitlist_enabled,
+        "custom_branding": flags.widget_enabled,
+    }

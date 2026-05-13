@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { PlatformAdapter } from '@/platform/platform-adapter';
 import { useAuthStore } from '@/stores/auth';
 import { useBookingStore } from '@/stores/booking';
@@ -30,11 +30,15 @@ import Consultations from '@/pages/master/Consultations';
 import LoyaltySettings from '@/pages/master/LoyaltySettings';
 import Broadcast from '@/pages/master/Broadcast';
 import Locations from '@/pages/master/Locations';
+import Billing from '@/pages/master/Billing';
+import LinkPageEditor from '@/pages/master/LinkPageEditor';
 import TabBar from '@/components/common/TabBar';
 
 // Клиентские дополнительные экраны
 import LoyaltyHistory from '@/pages/client/LoyaltyHistory';
 import ClientSubscriptions from '@/pages/client/Subscriptions';
+import WaitlistJoin from '@/pages/client/WaitlistJoin';
+import ReviewForm from '@/pages/client/ReviewForm';
 
 // Специальные страницы
 import LinkPage from '@/pages/LinkPage';
@@ -109,6 +113,8 @@ function AppRouter() {
           navigate('/master');
         } else if (startParam.startsWith('review_')) {
           navigate(`/review/${startParam.slice(7)}`);
+        } else if (startParam === 'waitlist') {
+          navigate('/book/waitlist');
         } else if (startParam === 'billing') {
           navigate('/billing');
         } else if (startParam.startsWith('ref_')) {
@@ -160,8 +166,10 @@ function AppRouter() {
         <Route path="/book/confirm" element={<Confirm />} />
         <Route path="/book/success" element={<BookingSuccess />} />
         <Route path="/bookings" element={<MyBookings />} />
+        <Route path="/book/waitlist" element={<WaitlistJoin />} />
         <Route path="/loyalty/:masterId" element={<LoyaltyHistory />} />
         <Route path="/subscriptions" element={<ClientSubscriptions />} />
+        <Route path="/review/:appointmentId" element={<ReviewForm />} />
 
         {/* Мастерские роуты — только для master и superadmin */}
         <Route path="/master" element={<RequireAuth allowedRoles={['master', 'superadmin']}><Dashboard /></RequireAuth>} />
@@ -176,6 +184,8 @@ function AppRouter() {
         <Route path="/master/loyalty-settings" element={<RequireAuth allowedRoles={['master', 'superadmin']}><LoyaltySettings /></RequireAuth>} />
         <Route path="/master/broadcast" element={<RequireAuth allowedRoles={['master', 'superadmin']}><Broadcast /></RequireAuth>} />
         <Route path="/master/locations" element={<RequireAuth allowedRoles={['master', 'superadmin']}><Locations /></RequireAuth>} />
+        <Route path="/billing" element={<RequireAuth allowedRoles={['master', 'superadmin']}><Billing /></RequireAuth>} />
+        <Route path="/link-page/edit" element={<RequireAuth allowedRoles={['master', 'superadmin']}><LinkPageEditor /></RequireAuth>} />
 
         {/* Публичная страница-линк (TapLink) */}
         <Route path="/p/:slug" element={<LinkPage />} />
@@ -194,7 +204,7 @@ function AppRouter() {
 }
 
 function MasterProfileRoute() {
-  const slug = window.location.pathname.split('/m/')[1]?.split('/')[0] || '';
+  const { slug = '' } = useParams<{ slug: string }>();
   return <MasterProfile slug={slug} />;
 }
 

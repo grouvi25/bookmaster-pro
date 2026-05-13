@@ -6,6 +6,7 @@ import uuid
 import logging
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, WebSocket, WebSocketDisconnect
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
@@ -181,11 +182,18 @@ async def client_message(
     db: AsyncSession = Depends(get_db),
 ):
     """AI отвечает клиенту от имени мастера (для ботов)."""
-    # TODO: проверка что у мастера включён ai_client_bot
+    from app.modules.core.models import FeatureFlags
+    flags_result = await db.execute(
+        select(FeatureFlags).where(FeatureFlags.master_id == req.master_id)
+    )
+    flags = flags_result.scalar_one_or_none()
+    if not flags or not flags.ai_client_bot:
+        raise HTTPException(status_code=403, detail="AI client bot не включён для этого мастера")
+
     service = AIService(db)
     response = await service.answer_client(
         master_id=req.master_id,
-        client_id=0,  # TODO: получить из auth
+        client_id=req.client_id or 0,
         client_message=req.message,
     )
     return AIClientMessageResponse(response=response)

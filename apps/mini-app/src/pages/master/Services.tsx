@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { servicesApi } from '@/api/endpoints';
+import { toArray } from '@/shared/lib/normalize';
 import Loading from '@/components/common/Loading';
 import Button from '@/shared/ui/Button';
 import Card from '@/shared/ui/Card';
@@ -122,7 +123,7 @@ export default function Services() {
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
   );
 
-  const services: ServiceItem[] = localOrder ?? (Array.isArray(data) ? data : data?.items ?? []);
+  const services: ServiceItem[] = localOrder ?? toArray<ServiceItem>(data);
 
   const handleDragEnd = useCallback(
     async (event: DragEndEvent) => {

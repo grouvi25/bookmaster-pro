@@ -600,10 +600,27 @@ class AIService:
 
     async def get_tokens_info(self, master_id: int) -> dict:
         flags = await self.db.get(FeatureFlags, master_id)
+
+        used_this_month = 0
+        try:
+            from app.modules.ai.models import AIConversation
+            from sqlalchemy import func
+            from datetime import datetime
+            month_start = datetime.utcnow().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+            result = await self.db.execute(
+                select(func.coalesce(func.sum(AIConversation.tokens_used), 0)).where(
+                    AIConversation.master_id == master_id,
+                    AIConversation.created_at >= month_start,
+                )
+            )
+            used_this_month = result.scalar() or 0
+        except Exception:
+            pass
+
         return {
             "ai_enabled": flags.ai_advisor if flags else False,
             "ai_client_bot": flags.ai_client_bot if flags else False,
             "ai_voice": flags.ai_voice if flags else False,
             "tokens_monthly_limit": flags.ai_tokens_monthly if flags else 0,
-            "tokens_used_this_month": 0,  # TODO: подсчёт из AIConversation
+            "tokens_used_this_month": used_this_month,
         }
