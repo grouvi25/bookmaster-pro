@@ -51,6 +51,7 @@ class AIIndexResponse(BaseModel):
 class AIClientMessageRequest(BaseModel):
     master_id: int
     message: str = Field(..., max_length=2000)
+    client_id: Optional[int] = None
 
 
 class AIClientMessageResponse(BaseModel):

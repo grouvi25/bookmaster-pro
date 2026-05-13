@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { clientsApi } from '@/api/endpoints';
+import { toArray } from '@/shared/lib/normalize';
 import Loading from '@/components/common/Loading';
 import { User, X, Search, ChevronRight } from 'lucide-react';
 
@@ -16,7 +17,7 @@ export default function Clients() {
 
   if (isLoading) return <Loading />;
 
-  const clients = data?.items || [];
+  const clients = toArray(data);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const selected = clients.find(
     (c: Record<string, unknown>) => c.id === selectedId
@@ -89,11 +90,11 @@ export default function Clients() {
             </div>
           )}
 
-          {selected.notes && (
+          {selected.notes ? (
             <p className="text-xs text-tg-hint mt-2">
-              {selected.notes as string}
+              {String(selected.notes)}
             </p>
-          )}
+          ) : null}
 
           <button
             onClick={() => navigate(`/master/clients/${selectedId}`)}
