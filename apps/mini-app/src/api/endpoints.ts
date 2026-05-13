@@ -303,6 +303,8 @@ export const aiApi = {
     api.post('/ai/content', data),
   templates: () => api.get('/ai/templates'),
   tokens: () => api.get('/ai/tokens'),
+  voiceDiary: (data: { transcript: string; client_id?: number; appointment_id?: number }) =>
+    api.post('/ai/voice-diary', data),
 };
 
 // ── Portfolio ──
@@ -402,6 +404,20 @@ export const blockedSlotsApi = {
   create: (data: { date_from: string; date_to: string; time_from?: string; time_to?: string; reason?: string }) =>
     api.post('/booking/blocked', data),
   delete: (id: number) => api.delete(`/booking/blocked/${id}`),
+};
+
+// ── Moderation ──
+export const moderationApi = {
+  queue: (params?: Record<string, string | undefined>) =>
+    api.get('/support/tickets/queue', { params }),
+  resolve: (id: number) => api.post(`/support/tickets/${id}/resolve`),
+  reply: (id: number, text: string) =>
+    api.post(`/support/tickets/${id}/reply`, { text }),
+  messages: (id: number) => api.get(`/support/tickets/${id}/messages`),
+  masterVerify: (masterId: number) =>
+    api.post(`/superadmin/masters/${masterId}/verify`),
+  mastersList: (params?: Record<string, string | undefined>) =>
+    api.get('/superadmin/masters', { params }),
 };
 
 // ── Superadmin ──

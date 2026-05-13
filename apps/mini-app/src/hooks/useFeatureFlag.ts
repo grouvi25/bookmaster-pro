@@ -17,6 +17,8 @@ export interface FeatureFlags {
   analytics_enabled: boolean;
   waitlist_enabled: boolean;
   custom_branding: boolean;
+  widget_enabled: boolean;
+  client_subscriptions: boolean;
 }
 
 const FREE_FLAGS: FeatureFlags = {
@@ -34,6 +36,8 @@ const FREE_FLAGS: FeatureFlags = {
   analytics_enabled: false,
   waitlist_enabled: false,
   custom_branding: false,
+  widget_enabled: false,
+  client_subscriptions: false,
 };
 
 export function useFeatureFlags() {
@@ -63,6 +67,8 @@ export function useFeatureFlags() {
       analytics_enabled: true,
       waitlist_enabled: true,
       custom_branding: true,
+      widget_enabled: true,
+      client_subscriptions: true,
     };
     return { flags: allEnabled, isLoading: false };
   }

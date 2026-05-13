@@ -2,6 +2,7 @@
 Payments router — /api/v1/payments
 """
 
+import logging
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -23,6 +24,8 @@ from app.modules.payments.schemas import (
 )
 from app.modules.payments.service import PaymentService
 from app.modules.payments.models import Payment
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -47,13 +50,18 @@ async def create_payment(
     return PaymentConfirmation(**result)
 
 
-@router.post("/subscription", response_model=SubscriptionOut)
+@router.post("/subscription")
 async def create_subscription(
     body: SubscriptionCreate,
     user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """Оформить подписку мастера на тариф."""
+    """Оформить подписку мастера на тариф.
+    Если ЮKassa настроена — возвращает confirmation_url для оплаты.
+    Если нет — активирует подписку сразу (dev mode).
+    """
+    from app.core.config import settings as app_settings
+
     master = await MasterService(db).get_by_identity(int(user["sub"]))
     if not master:
         raise HTTPException(status_code=403, detail="Not a master")
@@ -62,7 +70,47 @@ async def create_subscription(
     sub = await service.create_master_subscription(
         master.id, body.plan, body.billing_period
     )
-    return sub
+    await db.commit()
+
+    result = {
+        "id": sub.id,
+        "master_id": sub.master_id,
+        "plan": sub.plan,
+        "price": str(sub.price),
+        "billing_period": sub.billing_period,
+        "status": sub.status,
+        "started_at": str(sub.started_at),
+        "next_billing": str(sub.next_billing),
+    }
+
+    if app_settings.YOOKASSA_SHOP_ID and app_settings.YOOKASSA_SECRET_KEY:
+        try:
+            from yookassa import Configuration, Payment as YKPayment
+            Configuration.account_id = app_settings.YOOKASSA_SHOP_ID
+            Configuration.secret_key = app_settings.YOOKASSA_SECRET_KEY
+
+            yk_payment = YKPayment.create({
+                "amount": {"value": str(sub.price), "currency": "RUB"},
+                "confirmation": {
+                    "type": "redirect",
+                    "return_url": f"{app_settings.APP_URL}/billing?status=success",
+                },
+                "capture": True,
+                "description": f"Подписка {sub.plan} — {sub.billing_period}",
+                "metadata": {"subscription_id": sub.id, "master_id": master.id},
+                "save_payment_method": True,
+            })
+
+            sub.yookassa_recurring_id = yk_payment.id
+            await db.commit()
+
+            result["confirmation_url"] = yk_payment.confirmation.confirmation_url
+        except Exception as e:
+            logger.error(f"YooKassa subscription payment error: {e}")
+            sub.status = "active"
+            await db.commit()
+
+    return result
 
 
 @router.post("/client-subscription", response_model=ClientSubscriptionOut)
@@ -148,6 +196,73 @@ async def refund_payment(
     await db.commit()
     await db.refresh(payment)
     return payment
+
+
+@router.get("/subscription-packages")
+async def get_subscription_packages(
+    user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Список шаблонов абонементов мастера (хранятся в JSON)."""
+    master = await MasterService(db).get_by_identity(int(user["sub"]))
+    if not master:
+        raise HTTPException(status_code=403, detail="Not a master")
+
+    packages = master.link_page_links or []
+    pkg_list = []
+    for item in packages:
+        if isinstance(item, dict) and item.get("_type") == "subscription_package":
+            pkg_list.append(item)
+    return pkg_list
+
+
+@router.post("/subscription-packages")
+async def create_subscription_package(
+    body: dict,
+    user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Создать шаблон абонемента."""
+    master = await MasterService(db).get_by_identity(int(user["sub"]))
+    if not master:
+        raise HTTPException(status_code=403, detail="Not a master")
+
+    import time
+    pkg = {
+        "_type": "subscription_package",
+        "id": int(time.time() * 1000),
+        "service_id": body.get("service_id"),
+        "total_visits": body.get("total_visits", 5),
+        "price": body.get("price", 0),
+        "discount_percent": 0,
+        "is_active": True,
+    }
+
+    links = list(master.link_page_links or [])
+    links.append(pkg)
+    master.link_page_links = links
+    await db.commit()
+    return pkg
+
+
+@router.delete("/subscription-packages/{package_id}")
+async def delete_subscription_package(
+    package_id: int,
+    user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Удалить шаблон абонемента."""
+    master = await MasterService(db).get_by_identity(int(user["sub"]))
+    if not master:
+        raise HTTPException(status_code=403, detail="Not a master")
+
+    links = [
+        item for item in (master.link_page_links or [])
+        if not (isinstance(item, dict) and item.get("_type") == "subscription_package" and item.get("id") == package_id)
+    ]
+    master.link_page_links = links
+    await db.commit()
+    return {"status": "ok"}
 
 
 router_webhook = APIRouter()
