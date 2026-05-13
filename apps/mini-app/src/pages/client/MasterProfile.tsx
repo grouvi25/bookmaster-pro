@@ -31,8 +31,9 @@ export default function MasterProfile({ slug }: MasterProfileProps) {
   });
 
   const { data: loyalty } = useQuery({
-    queryKey: ['loyalty'],
-    queryFn: () => loyaltyApi.getBalance().then((r) => r.data),
+    queryKey: ['loyalty', master?.id],
+    queryFn: () => loyaltyApi.getBalance(master.id).then((r) => r.data),
+    enabled: !!master?.id,
   });
 
   if (isLoading) return <Loading />;

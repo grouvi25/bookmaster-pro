@@ -21,11 +21,18 @@ import MyBookings from '@/pages/client/MyBookings';
 import Dashboard from '@/pages/master/Dashboard';
 import Schedule from '@/pages/master/Schedule';
 import Clients from '@/pages/master/Clients';
+import ClientDetail from '@/pages/master/ClientDetail';
+import Services from '@/pages/master/Services';
 import Tools from '@/pages/master/Tools';
 import AIAssistant from '@/pages/master/AI';
 import Settings from '@/pages/master/Settings';
 import Consultations from '@/pages/master/Consultations';
+import LoyaltySettings from '@/pages/master/LoyaltySettings';
 import TabBar from '@/components/common/TabBar';
+
+// Клиентские дополнительные экраны
+import LoyaltyHistory from '@/pages/client/LoyaltyHistory';
+import ClientSubscriptions from '@/pages/client/Subscriptions';
 
 // Специальные страницы
 import LinkPage from '@/pages/LinkPage';
@@ -151,6 +158,8 @@ function AppRouter() {
         <Route path="/book/confirm" element={<Confirm />} />
         <Route path="/book/success" element={<BookingSuccess />} />
         <Route path="/bookings" element={<MyBookings />} />
+        <Route path="/loyalty/:masterId" element={<LoyaltyHistory />} />
+        <Route path="/subscriptions" element={<ClientSubscriptions />} />
 
         {/* Мастерские роуты — только для master и superadmin */}
         <Route path="/master" element={<RequireAuth allowedRoles={['master', 'superadmin']}><Dashboard /></RequireAuth>} />
@@ -159,7 +168,10 @@ function AppRouter() {
         <Route path="/master/tools" element={<RequireAuth allowedRoles={['master', 'superadmin']}><Tools /></RequireAuth>} />
         <Route path="/master/ai" element={<RequireAuth allowedRoles={['master', 'superadmin']}><AIAssistant /></RequireAuth>} />
         <Route path="/master/settings" element={<RequireAuth allowedRoles={['master', 'superadmin']}><Settings /></RequireAuth>} />
+        <Route path="/master/services" element={<RequireAuth allowedRoles={['master', 'superadmin']}><Services /></RequireAuth>} />
+        <Route path="/master/clients/:clientId" element={<RequireAuth allowedRoles={['master', 'superadmin']}><ClientDetail /></RequireAuth>} />
         <Route path="/master/consultations" element={<RequireAuth allowedRoles={['master', 'superadmin']}><Consultations /></RequireAuth>} />
+        <Route path="/master/loyalty-settings" element={<RequireAuth allowedRoles={['master', 'superadmin']}><LoyaltySettings /></RequireAuth>} />
 
         {/* Публичная страница-линк (TapLink) */}
         <Route path="/p/:slug" element={<LinkPage />} />
