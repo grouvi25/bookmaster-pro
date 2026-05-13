@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { Suspense } from 'react';
 import FeaturedMasters from '@/components/FeaturedMasters';
 
-const BOT_USERNAME = process.env.NEXT_PUBLIC_TG_BOT_USERNAME || 'BookMasterProBot';
+const BOT_USERNAME = process.env.NEXT_PUBLIC_TG_BOT_USERNAME ?? '';
 
 const CATEGORIES = [
   { name: 'Маникюр/педикюр', slug: 'manicure', icon: '\ud83d\udc85' },

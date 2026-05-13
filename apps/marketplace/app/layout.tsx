@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 
-const BOT_USERNAME = process.env.NEXT_PUBLIC_TG_BOT_USERNAME || 'BookMasterProBot';
+const BOT_USERNAME = process.env.NEXT_PUBLIC_TG_BOT_USERNAME ?? '';
 
 export const metadata: Metadata = {
   title: 'BookMaster Pro — онлайн-запись к мастерам',
