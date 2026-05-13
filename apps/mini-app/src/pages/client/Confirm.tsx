@@ -67,7 +67,7 @@ export default function Confirm() {
         master_id: store.masterId,
         service_id: store.serviceId,
         date: store.selectedDate,
-        time: store.selectedTime,
+        time_start: store.selectedTime,
         promo_code: store.promoCode || undefined,
         use_loyalty_points: paymentType === 'points',
         subscription_id: paymentType === 'subscription' ? activeSub?.id : undefined,

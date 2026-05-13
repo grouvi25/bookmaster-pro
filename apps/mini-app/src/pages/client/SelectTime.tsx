@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { bookingApi } from '@/api/endpoints';
@@ -9,6 +10,12 @@ import { Clock } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ru } from 'date-fns/locale';
 
+interface TimeSlot {
+  start: string;
+  end: string;
+  available: boolean;
+}
+
 export default function SelectTime() {
   const navigate = useNavigate();
   const { masterId, serviceId, selectedDate, selectedTime, setTime, serviceDuration } = useBookingStore();
@@ -16,41 +23,49 @@ export default function SelectTime() {
   const { data: slotsData, isLoading } = useQuery({
     queryKey: ['slots', masterId, selectedDate, serviceId],
     queryFn: () =>
-      bookingApi.getSlots(masterId!, selectedDate, serviceId!).then((r) => r.data),
+      bookingApi.getSlots(masterId!, selectedDate!, serviceId!).then((r) => r.data),
     enabled: !!masterId && !!selectedDate && !!serviceId,
   });
 
+  useEffect(() => {
+    if (!masterId || !serviceId || !selectedDate) {
+      navigate('/', { replace: true });
+    }
+  }, [masterId, serviceId, selectedDate, navigate]);
+
+  if (!masterId || !serviceId || !selectedDate) return null;
   if (isLoading) return <Loading />;
 
-  const slots: string[] = slotsData?.slots || [];
+  const rawSlots: TimeSlot[] = slotsData?.slots || [];
+  const slots = rawSlots.filter((s) => s.available);
 
-  const handleSelect = (time: string) => {
-    setTime(time);
+  const handleSelect = (slot: TimeSlot) => {
+    setTime(slot.start);
     navigate('/book/promo');
   };
 
-  const morningSlots = slots.filter((t) => parseInt(t) < 12);
-  const daySlots = slots.filter((t) => parseInt(t) >= 12 && parseInt(t) < 17);
-  const eveningSlots = slots.filter((t) => parseInt(t) >= 17);
+  const morningSlots = slots.filter((s) => parseInt(s.start) < 12);
+  const daySlots = slots.filter((s) => parseInt(s.start) >= 12 && parseInt(s.start) < 17);
+  const eveningSlots = slots.filter((s) => parseInt(s.start) >= 17);
 
-  const renderGroup = (title: string, groupSlots: string[]) => {
+  const renderGroup = (title: string, groupSlots: TimeSlot[]) => {
     if (groupSlots.length === 0) return null;
     return (
       <div className="mb-4">
         <p className="text-xs text-tg-hint mb-2 font-medium">{title}</p>
         <div className="grid grid-cols-4 gap-2">
-          {groupSlots.map((time) => (
+          {groupSlots.map((slot) => (
             <button
-              key={time}
-              onClick={() => handleSelect(time)}
+              key={slot.start}
+              onClick={() => handleSelect(slot)}
               className={clsx(
                 'py-2.5 rounded-xl font-medium text-sm transition-all active:scale-95',
-                selectedTime === time
+                selectedTime === slot.start
                   ? 'bg-brand-500 text-white shadow-button'
                   : 'bg-surface-elevated shadow-card text-tg-text'
               )}
             >
-              {time}
+              {slot.start}
             </button>
           ))}
         </div>
