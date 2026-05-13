@@ -77,10 +77,12 @@ class PlatformAdapterClass {
     if (this._platform === 'telegram') {
       const tg = (window as unknown as Record<string, { WebApp?: { initDataUnsafe?: { start_param?: string } } }>)
         .Telegram;
-      return tg?.WebApp?.initDataUnsafe?.start_param || '';
+      const tgParam = tg?.WebApp?.initDataUnsafe?.start_param || '';
+      if (tgParam) return tgParam;
     }
+    // Fallback: check URL query params (used by bot's WebAppInfo url)
     const params = new URLSearchParams(window.location.search);
-    return params.get('ref') || '';
+    return params.get('startParam') || params.get('ref') || '';
   }
 
   private getTelegramUser(): PlatformUser | null {
