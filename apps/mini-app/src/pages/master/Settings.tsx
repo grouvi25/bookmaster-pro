@@ -239,8 +239,8 @@ function ProfileSection({ onBack }: { onBack: () => void }) {
   if (isLoading) return <ListSkeleton count={3} />;
 
   const startEdit = () => {
-    setName(profile?.name || '');
-    setBio(profile?.bio || '');
+    setName(profile?.display_name || '');
+    setBio(profile?.description || '');
     setCity(profile?.city || '');
     setEditing(true);
   };
@@ -248,7 +248,7 @@ function ProfileSection({ onBack }: { onBack: () => void }) {
   const handleSave = async () => {
     setSaving(true);
     try {
-      await mastersApi.updateProfile({ name, bio, city });
+      await mastersApi.updateProfile({ display_name: name, description: bio, city });
       await queryClient.invalidateQueries({ queryKey: ['master-profile'] });
       toast.success('Профиль обновлён');
       setEditing(false);
@@ -281,7 +281,7 @@ function ProfileSection({ onBack }: { onBack: () => void }) {
             )}
           </div>
           <div>
-            <div className="font-bold">{profile?.name}</div>
+            <div className="font-bold">{profile?.display_name}</div>
             <div className="text-sm text-tg-hint">{profile?.specialization}</div>
           </div>
         </div>
@@ -310,8 +310,8 @@ function ProfileSection({ onBack }: { onBack: () => void }) {
           </div>
         ) : (
           <div className="flex flex-col gap-2 text-sm">
-            {profile?.bio && (
-              <p className="text-tg-text text-sm mb-2">{profile.bio}</p>
+            {profile?.description && (
+              <p className="text-tg-text text-sm mb-2">{profile.description}</p>
             )}
             <div className="flex justify-between">
               <span className="text-tg-hint">Slug</span>

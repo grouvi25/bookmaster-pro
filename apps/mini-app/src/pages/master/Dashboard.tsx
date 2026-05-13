@@ -42,7 +42,7 @@ export default function Dashboard() {
           {format(new Date(), 'EEEE, d MMMM', { locale: ru })}
         </p>
         <h1 className="text-2xl font-bold mt-1 tracking-tight">
-          Привет, {masterData?.name?.split(' ')[0] || 'Мастер'}
+          Привет, {masterData?.display_name?.split(' ')[0] || 'Мастер'}
         </h1>
       </div>
 
