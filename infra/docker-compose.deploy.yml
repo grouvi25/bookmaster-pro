@@ -52,7 +52,7 @@ services:
       db: { condition: service_healthy }
       redis: { condition: service_healthy }
     ports:
-      - "127.0.0.1:8000:8000"
+      - "127.0.0.1:8010:8000"
     networks: [bookmaster]
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
@@ -84,6 +84,18 @@ services:
         VITE_APP_URL: ${VITE_APP_URL:-https://app.freelance-gid.online}
     ports:
       - "127.0.0.1:5173:5173"
+    networks: [bookmaster]
+
+  bot-max:
+    <<: [*restart, *env]
+    container_name: bm_bot_max
+    build:
+      context: ..
+      dockerfile: apps/bot-max/Dockerfile
+    depends_on:
+      api: { condition: service_healthy }
+    ports:
+      - "127.0.0.1:8082:8082"
     networks: [bookmaster]
 
 volumes:

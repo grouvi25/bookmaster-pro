@@ -50,7 +50,7 @@ export async function generateMetadata({
 async function getMaster(slug: string) {
   try {
     const resp = await axios.get(
-      `${process.env.API_URL}/masters/${slug}/public`,
+      `${process.env.API_URL}/masters/${slug}`,
       { timeout: 5000 }
     );
     return resp.data;

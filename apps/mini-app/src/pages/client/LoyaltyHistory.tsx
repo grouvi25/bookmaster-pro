@@ -5,7 +5,7 @@ import Loading from '@/components/common/Loading';
 import Card from '@/shared/ui/Card';
 import SectionBack from '@/shared/ui/SectionBack';
 import EmptyState from '@/shared/ui/EmptyState';
-import { Star, TrendingUp, TrendingDown, Gift, History } from 'lucide-react';
+import { Star, TrendingUp, TrendingDown, Gift, History, Flame } from 'lucide-react';
 
 interface LoyaltyBalance {
   master_id: number;
@@ -13,6 +13,9 @@ interface LoyaltyBalance {
   balance: number;
   tier: string;
   total_earned: number;
+  streak_count?: number;
+  streak_threshold?: number;
+  streak_bonus?: number;
 }
 
 interface LoyaltyTx {
@@ -33,6 +36,7 @@ const TYPE_LABELS: Record<string, { label: string; icon: 'up' | 'down' | 'gift' 
   earn_review: { label: 'За отзыв', icon: 'up' },
   earn_birthday: { label: 'День рождения', icon: 'gift' },
   earn_referral: { label: 'Реферал', icon: 'gift' },
+  earn_streak: { label: 'Стрик-бонус', icon: 'gift' },
   spend: { label: 'Списание', icon: 'down' },
   expire: { label: 'Сгорание', icon: 'down' },
 };
@@ -70,26 +74,53 @@ export default function LoyaltyHistory() {
       <h1 className="text-2xl font-bold tracking-tight mb-5">Программа лояльности</h1>
 
       {balance && (
-        <Card className="mb-4">
-          <div className="flex items-center justify-between mb-3">
-            <div>
-              <div className="text-3xl font-bold">{balance.balance}</div>
-              <div className="text-sm text-tg-hint">доступных баллов</div>
-            </div>
-            <div className="text-right">
-              <div className={`flex items-center gap-1 font-medium ${tier.color}`}>
-                <Star className="w-4 h-4" />
-                {tier.label}
+        <>
+          <Card className="mb-4">
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <div className="text-3xl font-bold">{balance.balance}</div>
+                <div className="text-sm text-tg-hint">доступных баллов</div>
               </div>
-              <div className="text-xs text-tg-hint">кешбэк {tier.cashback}%</div>
+              <div className="text-right">
+                <div className={`flex items-center gap-1 font-medium ${tier.color}`}>
+                  <Star className="w-4 h-4" />
+                  {tier.label}
+                </div>
+                <div className="text-xs text-tg-hint">кешбэк {tier.cashback}%</div>
+              </div>
             </div>
-          </div>
-          <div className="bg-tg-secondary rounded-2xl p-2.5 text-center">
-            <span className="text-xs text-tg-hint">
-              Всего заработано: <span className="font-medium text-tg-text">{balance.total_earned}</span>
-            </span>
-          </div>
-        </Card>
+            <div className="bg-tg-secondary rounded-2xl p-2.5 text-center">
+              <span className="text-xs text-tg-hint">
+                Всего заработано: <span className="font-medium text-tg-text">{balance.total_earned}</span>
+              </span>
+            </div>
+          </Card>
+
+          {/* Streak */}
+          {balance.streak_threshold && (
+            <Card className="mb-4 !bg-orange-500/10 border border-orange-500/20">
+              <div className="flex items-center gap-3">
+                <Flame className="w-6 h-6 text-orange-500" />
+                <div className="flex-1">
+                  <div className="text-sm font-medium">
+                    Серия визитов: {balance.streak_count || 0}/{balance.streak_threshold}
+                  </div>
+                  <div className="text-xs text-tg-hint">
+                    {(balance.streak_count || 0) >= balance.streak_threshold
+                      ? `Стрик выполнен! +${balance.streak_bonus} баллов`
+                      : `Ещё ${balance.streak_threshold - (balance.streak_count || 0)} визит(а) до бонуса +${balance.streak_bonus}`}
+                  </div>
+                </div>
+              </div>
+              <div className="mt-2 w-full bg-orange-200/30 rounded-full h-1.5">
+                <div
+                  className="bg-orange-500 h-1.5 rounded-full transition-all"
+                  style={{ width: `${Math.min(((balance.streak_count || 0) / balance.streak_threshold) * 100, 100)}%` }}
+                />
+              </div>
+            </Card>
+          )}
+        </>
       )}
 
       <h2 className="font-bold text-sm mb-2">История баллов</h2>

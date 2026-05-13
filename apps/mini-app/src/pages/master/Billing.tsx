@@ -106,8 +106,14 @@ export default function Billing() {
   const subscribeMutation = useMutation({
     mutationFn: (data: { plan: string; billing_period: string }) =>
       billingApi.subscribe(data),
-    onSuccess: () => {
+    onSuccess: (resp) => {
+      const data = resp.data;
+      if (data.confirmation_url) {
+        window.location.href = data.confirmation_url;
+        return;
+      }
       queryClient.invalidateQueries({ queryKey: ['my-subscription'] });
+      queryClient.invalidateQueries({ queryKey: ['feature-flags'] });
       toast.success('Подписка оформлена!');
       setSelectedPlan(null);
     },
