@@ -191,7 +191,7 @@ export default function Confirm() {
                   onClick={() => setPaymentType(type)}
                   className={`flex items-center gap-3 p-3.5 rounded-2xl text-sm text-left transition-all duration-200 ${
                     paymentType === type
-                      ? 'bg-brand-50 border-2 border-brand-500 text-brand-700 shadow-card'
+                      ? 'bg-brand-500/10 border-2 border-brand-500 text-brand-700 shadow-card'
                       : 'bg-surface-elevated shadow-card border-2 border-transparent text-tg-text'
                   }`}
                 >

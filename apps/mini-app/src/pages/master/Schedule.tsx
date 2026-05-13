@@ -36,7 +36,7 @@ export default function Schedule() {
               className={clsx(
                 'px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200',
                 viewMode === mode
-                  ? 'bg-surface-elevated text-tg-text shadow-card'
+                  ? 'bg-tg-secondary text-tg-text shadow-card'
                   : 'text-tg-hint'
               )}
             >
@@ -81,8 +81,8 @@ export default function Schedule() {
                 isSelected
                   ? 'bg-brand-500 text-white shadow-button'
                   : isToday
-                    ? 'bg-brand-50 text-brand-600'
-                    : 'bg-surface-elevated shadow-card text-tg-text'
+                    ? 'bg-brand-500/10 text-brand-600'
+                    : 'bg-tg-secondary shadow-card text-tg-text'
               )}
             >
               <span className="text-2xs font-medium uppercase">
@@ -100,7 +100,7 @@ export default function Schedule() {
       </div>
 
       {bookings.length === 0 ? (
-        <div className="bg-surface-elevated shadow-card rounded-2xl p-8 text-center">
+        <div className="bg-tg-secondary shadow-card rounded-2xl p-8 text-center">
           <p className="text-sm text-tg-hint">Нет записей</p>
         </div>
       ) : (

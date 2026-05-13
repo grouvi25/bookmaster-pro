@@ -141,7 +141,7 @@ export default function ClientDetail() {
       {/* Header card */}
       <Card className="mb-4">
         <div className="flex items-center gap-3 mb-3">
-          <div className="w-14 h-14 bg-brand-50 rounded-full flex items-center justify-center overflow-hidden">
+          <div className="w-14 h-14 bg-brand-500/10 rounded-full flex items-center justify-center overflow-hidden">
             {client.avatar_url ? (
               <img src={client.avatar_url} alt="" className="w-full h-full object-cover rounded-full" />
             ) : (
@@ -216,7 +216,7 @@ export default function ClientDetail() {
           {client.tags.map((tag) => (
             <span
               key={tag}
-              className="bg-brand-50 text-brand-600 text-xs px-2 py-0.5 rounded-full"
+              className="bg-brand-500/10 text-brand-600 text-xs px-2 py-0.5 rounded-full"
             >
               {tag}
             </span>
