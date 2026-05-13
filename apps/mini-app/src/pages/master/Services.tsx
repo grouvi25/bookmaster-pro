@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { servicesApi } from '@/api/endpoints';
 import { toArray } from '@/shared/lib/normalize';
-import Loading from '@/components/common/Loading';
+import { ListSkeleton } from '@/shared/ui/Skeleton';
 import Button from '@/shared/ui/Button';
 import Card from '@/shared/ui/Card';
 import { toast } from '@/shared/ui/Toast';
@@ -209,16 +209,22 @@ export default function Services() {
   };
 
   const handleDelete = async (id: number) => {
+    const prev = queryClient.getQueryData(['my-services']);
+    queryClient.setQueryData(['my-services'], (old: unknown) => {
+      if (Array.isArray(old)) return old.filter((s: ServiceItem) => s.id !== id);
+      return old;
+    });
     try {
       await servicesApi.delete(id);
       await queryClient.invalidateQueries({ queryKey: ['my-services'] });
       toast.success('Услуга удалена');
     } catch {
+      queryClient.setQueryData(['my-services'], prev);
       toast.error('Ошибка при удалении');
     }
   };
 
-  if (isLoading) return <Loading />;
+  if (isLoading) return <ListSkeleton count={4} />;
 
   return (
     <div className="p-4 pb-20 animate-fade-in">

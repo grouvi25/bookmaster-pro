@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { bookingApi, mastersApi } from '@/api/endpoints';
 import { toArray } from '@/shared/lib/normalize';
-import Loading from '@/components/common/Loading';
+import { PageSkeleton } from '@/shared/ui/Skeleton';
 import Card from '@/shared/ui/Card';
 import StatCard from '@/shared/ui/StatCard';
 import EmptyState from '@/shared/ui/EmptyState';
@@ -28,7 +28,7 @@ export default function Dashboard() {
     queryFn: () => mastersApi.getStats().then((r) => r.data),
   });
 
-  if (isLoading) return <Loading />;
+  if (isLoading) return <PageSkeleton />;
 
   const bookings = toArray<Booking>(data);
   const confirmed = bookings.filter(
