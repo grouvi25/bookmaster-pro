@@ -15,8 +15,8 @@ export default function Settings() {
   const [tab, setTab] = useState<SettingsTab>('main');
 
   return (
-    <div className="p-4 pb-20 animate-fade-in">
-      <h1 className="text-xl font-bold mb-4">Настройки</h1>
+    <div className="p-5 pb-24 animate-fade-in">
+      <h1 className="text-2xl font-bold tracking-tight mb-5">Настройки</h1>
 
       {tab === 'main' ? (
         <SettingsMain onNavigate={setTab} />
@@ -48,14 +48,14 @@ function SettingsMain({ onNavigate }: { onNavigate: (tab: SettingsTab) => void }
         <button
           key={item.key}
           onClick={() => onNavigate(item.key)}
-          className="flex items-center gap-3 p-4 bg-tg-secondary rounded-xl text-left active:scale-[0.98] transition-transform"
+          className="flex items-center gap-3.5 p-4 bg-surface-elevated shadow-card rounded-2xl text-left active:scale-[0.98] transition-all duration-200"
         >
           <div className="w-10 h-10 bg-brand-50 rounded-xl flex items-center justify-center">
             <item.Icon className="w-5 h-5 text-brand-500" strokeWidth={1.8} />
           </div>
           <div className="flex-1">
-            <div className="font-medium text-sm">{item.label}</div>
-            <div className="text-xs text-tg-hint">{item.desc}</div>
+            <div className="font-semibold text-sm">{item.label}</div>
+            <div className="text-xs text-tg-hint mt-0.5">{item.desc}</div>
           </div>
           <ChevronRight className="w-4 h-4 text-tg-hint" />
         </button>
@@ -63,58 +63,58 @@ function SettingsMain({ onNavigate }: { onNavigate: (tab: SettingsTab) => void }
 
       <button
         onClick={() => navigate('/link-page/edit')}
-        className="flex items-center gap-3 p-4 bg-brand-50 rounded-xl text-left"
+        className="flex items-center gap-3.5 p-4 bg-brand-50 rounded-2xl text-left active:scale-[0.98] transition-all duration-200"
       >
-        <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center">
+        <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-card">
           <Link2 className="w-5 h-5 text-brand-500" strokeWidth={1.8} />
         </div>
         <div className="flex-1">
-          <div className="font-medium text-sm text-brand-700">
+          <div className="font-semibold text-sm text-brand-700">
             Моя страница-визитка
           </div>
-          <div className="text-xs text-brand-600">TapLink-аналог</div>
+          <div className="text-xs text-brand-500 mt-0.5">TapLink-аналог</div>
         </div>
         <ChevronRight className="w-4 h-4 text-brand-400" />
       </button>
 
       <button
         onClick={() => navigate('/billing')}
-        className="flex items-center gap-3 p-4 bg-tg-secondary rounded-xl text-left"
+        className="flex items-center gap-3.5 p-4 bg-surface-elevated shadow-card rounded-2xl text-left active:scale-[0.98] transition-all duration-200"
       >
-        <div className="w-10 h-10 bg-brand-50 rounded-xl flex items-center justify-center">
-          <CreditCard className="w-5 h-5 text-brand-500" strokeWidth={1.8} />
+        <div className="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center">
+          <CreditCard className="w-5 h-5 text-accent-orange" strokeWidth={1.8} />
         </div>
         <div className="flex-1">
-          <div className="font-medium text-sm">Тарифы и подписка</div>
-          <div className="text-xs text-tg-hint">Управление подпиской</div>
+          <div className="font-semibold text-sm">Тарифы и подписка</div>
+          <div className="text-xs text-tg-hint mt-0.5">Управление подпиской</div>
         </div>
         <ChevronRight className="w-4 h-4 text-tg-hint" />
       </button>
 
       <button
         onClick={() => navigate('/master/broadcast')}
-        className="flex items-center gap-3 p-4 bg-tg-secondary rounded-xl text-left"
+        className="flex items-center gap-3.5 p-4 bg-surface-elevated shadow-card rounded-2xl text-left active:scale-[0.98] transition-all duration-200"
       >
-        <div className="w-10 h-10 bg-brand-50 rounded-xl flex items-center justify-center">
-          <Megaphone className="w-5 h-5 text-brand-500" strokeWidth={1.8} />
+        <div className="w-10 h-10 bg-purple-50 rounded-xl flex items-center justify-center">
+          <Megaphone className="w-5 h-5 text-accent-purple" strokeWidth={1.8} />
         </div>
         <div className="flex-1">
-          <div className="font-medium text-sm">Рассылки</div>
-          <div className="text-xs text-tg-hint">Рассылки по сегментам клиентов</div>
+          <div className="font-semibold text-sm">Рассылки</div>
+          <div className="text-xs text-tg-hint mt-0.5">Рассылки по сегментам</div>
         </div>
         <ChevronRight className="w-4 h-4 text-tg-hint" />
       </button>
 
       <button
         onClick={() => navigate('/master/locations')}
-        className="flex items-center gap-3 p-4 bg-tg-secondary rounded-xl text-left"
+        className="flex items-center gap-3.5 p-4 bg-surface-elevated shadow-card rounded-2xl text-left active:scale-[0.98] transition-all duration-200"
       >
-        <div className="w-10 h-10 bg-brand-50 rounded-xl flex items-center justify-center">
-          <MapPin className="w-5 h-5 text-brand-500" strokeWidth={1.8} />
+        <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center">
+          <MapPin className="w-5 h-5 text-accent-emerald" strokeWidth={1.8} />
         </div>
         <div className="flex-1">
-          <div className="font-medium text-sm">Локации</div>
-          <div className="text-xs text-tg-hint">Управление адресами кабинетов</div>
+          <div className="font-semibold text-sm">Локации</div>
+          <div className="text-xs text-tg-hint mt-0.5">Управление адресами</div>
         </div>
         <ChevronRight className="w-4 h-4 text-tg-hint" />
       </button>
@@ -144,9 +144,9 @@ function AnalyticsSection({ onBack }: { onBack: () => void }) {
           { label: 'Клиентов', value: data?.unique_clients ?? 0 },
           { label: 'Средний чек', value: `${(data?.avg_check ?? 0).toLocaleString('ru')} \u20bd` },
         ].map((item) => (
-          <div key={item.label} className="bg-tg-secondary rounded-xl p-3">
+          <div key={item.label} className="bg-surface-elevated shadow-card rounded-2xl p-3.5">
             <div className="text-xl font-bold">{item.value}</div>
-            <div className="text-xs text-tg-hint">{item.label}</div>
+            <div className="text-2xs text-tg-hint mt-0.5">{item.label}</div>
           </div>
         ))}
       </div>
@@ -398,7 +398,7 @@ function SupportSection({ onBack }: { onBack: () => void }) {
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           placeholder="Опишите вашу проблему..."
-          className="w-full px-4 py-3 bg-tg-secondary rounded-xl text-sm outline-none resize-none h-24"
+          className="input-field resize-none h-24"
         />
         <Button onClick={handleSubmit} disabled={!message.trim()} fullWidth size="sm">
           <Send className="w-4 h-4" /> Отправить
@@ -412,7 +412,7 @@ function SupportSection({ onBack }: { onBack: () => void }) {
             {tickets.map((t: Record<string, unknown>) => (
               <div
                 key={t.id as number}
-                className="bg-tg-secondary rounded-xl p-3"
+                className="bg-surface-elevated shadow-card rounded-2xl p-3.5"
               >
                 <div className="flex justify-between text-sm">
                   <span className="font-medium">{t.subject as string}</span>

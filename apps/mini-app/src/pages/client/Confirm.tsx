@@ -119,10 +119,10 @@ export default function Confirm() {
   ];
 
   return (
-    <div className="p-4 pb-20 animate-slide-up">
+    <div className="p-5 pb-24 animate-slide-up">
       <BackButton to="/book/promo" />
-      <h1 className="text-xl font-bold mb-1">Подтверждение</h1>
-      <p className="text-tg-hint text-sm mb-4">Шаг 5 из 5</p>
+      <h1 className="text-2xl font-bold tracking-tight mb-1">Подтверждение</h1>
+      <p className="text-tg-hint text-sm mb-5">Шаг 5 из 5</p>
 
       <Card className="mb-4">
         <div className="flex flex-col gap-3 text-sm">
@@ -189,10 +189,10 @@ export default function Confirm() {
                 <button
                   key={type}
                   onClick={() => setPaymentType(type)}
-                  className={`flex items-center gap-3 p-3.5 rounded-xl text-sm text-left transition-all ${
+                  className={`flex items-center gap-3 p-3.5 rounded-2xl text-sm text-left transition-all duration-200 ${
                     paymentType === type
-                      ? 'bg-brand-50 border-2 border-brand-500 text-brand-700'
-                      : 'bg-tg-secondary border-2 border-transparent text-tg-text'
+                      ? 'bg-brand-50 border-2 border-brand-500 text-brand-700 shadow-card'
+                      : 'bg-surface-elevated shadow-card border-2 border-transparent text-tg-text'
                   }`}
                 >
                   <Icon className="w-4 h-4 flex-shrink-0" />

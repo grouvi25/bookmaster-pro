@@ -39,10 +39,10 @@ export default function LinkPage() {
   const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(appUrl)}`;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-brand-50 to-white">
+    <div className="min-h-screen bg-white">
       {/* Header */}
       <div className="pt-10 pb-6 px-6 text-center">
-        <div className="w-28 h-28 rounded-full bg-white shadow-lg mx-auto mb-4 flex items-center justify-center overflow-hidden">
+        <div className="w-28 h-28 rounded-3xl bg-brand-50 shadow-card-lg mx-auto mb-4 flex items-center justify-center overflow-hidden">
           {master.avatar_url ? (
             <img src={master.avatar_url} alt={master.name} className="w-full h-full object-cover" />
           ) : (
@@ -74,7 +74,7 @@ export default function LinkPage() {
               href={link.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-10 h-10 bg-white shadow rounded-full flex items-center justify-center hover:scale-110 transition-transform"
+              className="w-10 h-10 bg-tg-secondary shadow-card rounded-xl flex items-center justify-center hover:scale-110 transition-transform"
             >
               <ExternalLink className="w-4 h-4 text-gray-500" />
             </a>
@@ -90,7 +90,7 @@ export default function LinkPage() {
             {services.map((svc: Record<string, unknown>) => (
               <div
                 key={svc.id as number}
-                className="flex justify-between items-center p-3 bg-white rounded-xl shadow-sm"
+                className="flex justify-between items-center p-3.5 bg-surface-elevated shadow-card rounded-2xl"
               >
                 <div>
                   <div className="font-medium text-sm">{svc.name as string}</div>
@@ -130,7 +130,7 @@ export default function LinkPage() {
           <h2 className="font-bold text-lg mb-3 text-center">Отзывы</h2>
           <div className="flex flex-col gap-2 max-w-md mx-auto">
             {reviews.reviews.map((r: Record<string, unknown>) => (
-              <div key={r.id as number} className="bg-white rounded-xl shadow-sm p-3">
+              <div key={r.id as number} className="bg-surface-elevated shadow-card rounded-2xl p-3.5">
                 <div className="flex justify-between mb-1">
                   <span className="text-sm font-medium">{r.client_name as string}</span>
                   <div className="flex gap-0.5">
@@ -152,7 +152,7 @@ export default function LinkPage() {
       <div className="px-4 pb-8 text-center">
         <a
           href={appUrl}
-          className="inline-block w-full max-w-md bg-brand-600 text-white py-4 rounded-2xl font-bold text-lg hover:bg-brand-700 transition-colors shadow-lg"
+          className="inline-block w-full max-w-md bg-brand-500 text-white py-4 rounded-2xl font-bold text-lg shadow-button active:scale-[0.97] transition-all"
         >
           Записаться
         </a>

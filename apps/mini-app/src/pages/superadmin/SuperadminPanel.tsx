@@ -25,18 +25,16 @@ export default function SuperadminPanel() {
   ];
 
   return (
-    <div className="p-4 animate-fade-in">
-      <h1 className="text-xl font-bold mb-3">Суперадмин</h1>
+    <div className="p-5 animate-fade-in">
+      <h1 className="text-2xl font-bold tracking-tight mb-4">Суперадмин</h1>
 
-      <div className="flex gap-1 mb-4 overflow-x-auto">
+      <div className="flex gap-1.5 mb-5 overflow-x-auto pb-1">
         {tabs.map(({ key, label, Icon }) => (
           <button
             key={key}
             onClick={() => setTab(key)}
-            className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
-              tab === key
-                ? 'bg-tg-button text-tg-button-text'
-                : 'bg-tg-secondary text-tg-text'
+            className={`chip whitespace-nowrap ${
+              tab === key ? 'chip-active' : 'chip-inactive'
             }`}
           >
             <Icon className="w-3.5 h-3.5" />
@@ -77,9 +75,9 @@ function DashboardTab() {
         { label: 'Новых за неделю', value: stats.new_masters_week ?? 0 },
         { label: 'Тикетов открыто', value: stats.open_tickets ?? 0 },
       ].map((item) => (
-        <div key={item.label} className="bg-tg-secondary rounded-xl p-3">
+        <div key={item.label} className="bg-surface-elevated shadow-card rounded-2xl p-3.5">
           <div className="text-xl font-bold">{item.value}</div>
-          <div className="text-xs text-tg-hint">{item.label}</div>
+          <div className="text-2xs text-tg-hint mt-0.5">{item.label}</div>
         </div>
       ))}
     </div>
@@ -104,14 +102,14 @@ function MastersTab() {
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         placeholder="Поиск мастеров..."
-        className="w-full px-4 py-2.5 bg-tg-secondary rounded-xl text-sm outline-none mb-3"
+        className="input-field mb-3"
       />
 
       <div className="flex flex-col gap-2">
         {masters.map((m: Record<string, unknown>) => (
           <div
             key={m.id as number}
-            className="bg-tg-secondary rounded-xl p-3 flex justify-between items-center"
+            className="bg-surface-elevated shadow-card rounded-2xl p-3.5 flex justify-between items-center"
           >
             <div>
               <div className="font-medium text-sm">{m.name as string}</div>
@@ -143,7 +141,7 @@ function HealthTab() {
       <button
         onClick={() => mutation.mutate()}
         disabled={mutation.isPending}
-        className="w-full bg-tg-button text-tg-button-text py-3 rounded-xl font-medium mb-4 disabled:opacity-50"
+        className="w-full bg-brand-500 text-white py-3 rounded-2xl font-semibold shadow-button mb-4 disabled:opacity-40 active:scale-[0.97] transition-all"
       >
         {mutation.isPending ? 'Проверка...' : 'Запустить проверку здоровья'}
       </button>
@@ -154,7 +152,7 @@ function HealthTab() {
             ([service, status]) => (
               <div
                 key={service}
-                className="bg-tg-secondary rounded-xl p-3 flex justify-between"
+                className="bg-surface-elevated shadow-card rounded-2xl p-3.5 flex justify-between"
               >
                 <span className="text-sm font-medium">{service}</span>
                 <span
@@ -189,7 +187,7 @@ function AuditTab() {
         <p className="text-tg-hint text-center py-4">Нет записей</p>
       ) : (
         logs.map((log: Record<string, unknown>, i: number) => (
-          <div key={i} className="bg-tg-secondary rounded-xl p-3">
+          <div key={i} className="bg-surface-elevated shadow-card rounded-2xl p-3.5">
             <div className="flex justify-between text-sm">
               <span className="font-medium">{log.action as string}</span>
               <span className="text-xs text-tg-hint">{log.created_at as string}</span>
@@ -225,15 +223,15 @@ function FinanceTab() {
           { label: 'Транзакций', value: f.transaction_count ?? 0 },
           { label: 'Прогноз 3м', value: `${(f.mrr_forecast_3m ?? 0).toLocaleString('ru')} \u20bd` },
         ].map((item) => (
-          <div key={item.label} className="bg-tg-secondary rounded-xl p-3">
+          <div key={item.label} className="bg-surface-elevated shadow-card rounded-2xl p-3.5">
             <div className="text-lg font-bold">{item.value}</div>
-            <div className="text-xs text-tg-hint">{item.label}</div>
+            <div className="text-2xs text-tg-hint mt-0.5">{item.label}</div>
           </div>
         ))}
       </div>
 
       {f.revenue_by_day && f.revenue_by_day.length > 0 && (
-        <div className="bg-tg-secondary rounded-xl p-3">
+        <div className="bg-surface-elevated shadow-card rounded-2xl p-3.5">
           <h3 className="text-sm font-medium mb-2">Выручка по дням</h3>
           <div className="flex flex-col gap-1 max-h-60 overflow-y-auto">
             {(f.revenue_by_day as Array<{date: string; revenue: number; count: number}>).map(
@@ -274,8 +272,8 @@ function TicketsTab() {
           <button
             key={s}
             onClick={() => setStatusFilter(s)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium ${
-              statusFilter === s ? 'bg-tg-button text-tg-button-text' : 'bg-tg-secondary text-tg-text'
+            className={`chip ${
+              statusFilter === s ? 'chip-active' : 'chip-inactive'
             }`}
           >
             {s || 'Все'}
@@ -290,7 +288,7 @@ function TicketsTab() {
           <p className="text-tg-hint text-center py-4">Нет тикетов</p>
         ) : (
           tickets.map((t: Record<string, unknown>) => (
-            <div key={t.id as number} className="bg-tg-secondary rounded-xl p-3">
+            <div key={t.id as number} className="bg-surface-elevated shadow-card rounded-2xl p-3.5">
               <div className="flex justify-between items-start">
                 <div>
                   <div className="text-sm font-medium">#{t.id as number}: {t.subject as string}</div>
@@ -337,8 +335,8 @@ function SettingsTab() {
 
   return (
     <div>
-      <div className="bg-tg-secondary rounded-xl p-4 mb-3">
-        <h3 className="text-sm font-medium mb-2">Тарифы</h3>
+      <div className="bg-surface-elevated shadow-card rounded-2xl p-4 mb-3">
+        <h3 className="text-sm font-semibold mb-2">Тарифы</h3>
         <div className="flex flex-col gap-1">
           {Object.entries(s.plan_prices || {}).map(([plan, price]) => (
             <div key={plan} className="flex justify-between text-xs">
@@ -349,8 +347,8 @@ function SettingsTab() {
         </div>
       </div>
 
-      <div className="bg-tg-secondary rounded-xl p-4 mb-3">
-        <h3 className="text-sm font-medium mb-2">Система</h3>
+      <div className="bg-surface-elevated shadow-card rounded-2xl p-4 mb-3">
+        <h3 className="text-sm font-semibold mb-2">Система</h3>
         <div className="flex flex-col gap-1 text-xs">
           <div className="flex justify-between">
             <span className="text-tg-hint">AI-провайдер</span>
@@ -392,15 +390,15 @@ function GrowthTab() {
           { label: 'Новых мастеров', value: g.total_new_masters ?? 0 },
           { label: 'Конверсия', value: `${g.conversion_rate ?? 0}%` },
         ].map((item) => (
-          <div key={item.label} className="bg-tg-secondary rounded-xl p-3">
+          <div key={item.label} className="bg-surface-elevated shadow-card rounded-2xl p-3.5">
             <div className="text-lg font-bold">{item.value}</div>
-            <div className="text-xs text-tg-hint">{item.label}</div>
+            <div className="text-2xs text-tg-hint mt-0.5">{item.label}</div>
           </div>
         ))}
       </div>
 
       {g.masters_by_week && g.masters_by_week.length > 0 && (
-        <div className="bg-tg-secondary rounded-xl p-3 mb-3">
+        <div className="bg-surface-elevated shadow-card rounded-2xl p-3.5 mb-3">
           <h3 className="text-sm font-medium mb-2">Мастера по неделям</h3>
           <div className="flex flex-col gap-1">
             {(g.masters_by_week as Array<{week: string; count: number}>).map(
@@ -416,8 +414,8 @@ function GrowthTab() {
       )}
 
       {g.retention_cohorts && (
-        <div className="bg-tg-secondary rounded-xl p-3 mb-3">
-          <h3 className="text-sm font-medium mb-2">Retention (активные мастера)</h3>
+        <div className="bg-surface-elevated shadow-card rounded-2xl p-3.5 mb-3">
+          <h3 className="text-sm font-semibold mb-2">Retention (активные мастера)</h3>
           <div className="flex flex-col gap-1">
             {(g.retention_cohorts as Array<{month_offset: number; active_masters: number}>).map(
               (c: {month_offset: number; active_masters: number}) => (
@@ -432,8 +430,8 @@ function GrowthTab() {
       )}
 
       {g.revenue_by_plan && Object.keys(g.revenue_by_plan).length > 0 && (
-        <div className="bg-tg-secondary rounded-xl p-3">
-          <h3 className="text-sm font-medium mb-2">Revenue по тарифам</h3>
+        <div className="bg-surface-elevated shadow-card rounded-2xl p-3.5">
+          <h3 className="text-sm font-semibold mb-2">Revenue по тарифам</h3>
           <div className="flex flex-col gap-1">
             {Object.entries(g.revenue_by_plan as Record<string, number>).map(([plan, rev]) => (
               <div key={plan} className="flex justify-between text-xs">

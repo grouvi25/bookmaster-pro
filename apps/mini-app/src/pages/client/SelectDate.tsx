@@ -57,27 +57,27 @@ export default function SelectDate() {
   const today = startOfDay(new Date());
 
   return (
-    <div className="p-4 pb-20 animate-slide-up">
+    <div className="p-5 pb-24 animate-slide-up">
       <BackButton to="/book/service" />
-      <h1 className="text-xl font-bold mb-1">Выберите дату</h1>
-      <p className="text-tg-hint text-sm mb-4">Шаг 2 из 5</p>
+      <h1 className="text-2xl font-bold tracking-tight mb-1">Выберите дату</h1>
+      <p className="text-tg-hint text-sm mb-5">Шаг 2 из 5</p>
 
       {/* Month navigation */}
       <div className="flex items-center justify-between mb-4">
         <button
           onClick={() => setViewMonth(subMonths(viewMonth, 1))}
-          className="p-2 rounded-lg active:bg-tg-secondary"
+          className="w-8 h-8 rounded-xl bg-tg-secondary flex items-center justify-center active:scale-90 transition-transform"
         >
-          <ChevronLeft className="w-5 h-5 text-tg-hint" />
+          <ChevronLeft className="w-4 h-4 text-tg-hint" />
         </button>
         <h2 className="text-base font-semibold capitalize">
           {format(viewMonth, 'LLLL yyyy', { locale: ru })}
         </h2>
         <button
           onClick={() => setViewMonth(addMonths(viewMonth, 1))}
-          className="p-2 rounded-lg active:bg-tg-secondary"
+          className="w-8 h-8 rounded-xl bg-tg-secondary flex items-center justify-center active:scale-90 transition-transform"
         >
-          <ChevronRight className="w-5 h-5 text-tg-hint" />
+          <ChevronRight className="w-4 h-4 text-tg-hint" />
         </button>
       </div>
 
@@ -109,7 +109,7 @@ export default function SelectDate() {
               className={clsx(
                 'aspect-square flex items-center justify-center rounded-xl text-sm font-medium transition-all',
                 selected
-                  ? 'bg-tg-button text-tg-button-text shadow-sm'
+                  ? 'bg-brand-500 text-white shadow-button'
                   : available && !past
                     ? 'text-tg-text active:scale-90 hover:bg-tg-secondary'
                     : 'text-gray-300'

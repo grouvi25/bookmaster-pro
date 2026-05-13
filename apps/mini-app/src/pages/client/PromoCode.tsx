@@ -47,10 +47,10 @@ export default function PromoCode() {
     : servicePrice;
 
   return (
-    <div className="p-4 pb-20 animate-slide-up">
+    <div className="p-5 pb-24 animate-slide-up">
       <BackButton to="/book/time" />
-      <h1 className="text-xl font-bold mb-1">Промокод и баллы</h1>
-      <p className="text-tg-hint text-sm mb-4">Шаг 4 из 5</p>
+      <h1 className="text-2xl font-bold tracking-tight mb-1">Промокод и баллы</h1>
+      <p className="text-tg-hint text-sm mb-5">Шаг 4 из 5</p>
 
       {/* Promo code */}
       <Card className="mb-3">
@@ -64,7 +64,7 @@ export default function PromoCode() {
             value={code}
             onChange={(e) => setCode(e.target.value.toUpperCase())}
             placeholder="Введите промокод"
-            className="flex-1 px-4 py-3 bg-tg-bg rounded-xl text-tg-text outline-none text-sm border border-transparent focus:border-brand-500"
+            className="input-field"
           />
           <Button
             onClick={handleValidate}
@@ -105,7 +105,7 @@ export default function PromoCode() {
       )}
 
       {/* Summary */}
-      <div className="bg-tg-secondary rounded-xl p-4 mb-6">
+      <div className="bg-surface-elevated shadow-card rounded-2xl p-4 mb-6">
         <div className="flex justify-between text-sm">
           <span className="text-tg-hint">Стоимость</span>
           <span>{servicePrice.toLocaleString('ru')} \u20bd</span>
