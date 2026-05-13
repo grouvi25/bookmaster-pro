@@ -48,7 +48,7 @@ export default function Locations() {
           <p className="text-tg-hint text-center py-8">Нет локаций</p>
         ) : (
           locations.map((loc) => (
-            <div key={loc.id} className="bg-tg-secondary rounded-xl p-4 flex justify-between items-center">
+            <div key={loc.id} className="bg-surface-elevated shadow-card rounded-2xl p-4 flex justify-between items-center">
               <div className="flex items-start gap-3">
                 <MapPin className="w-5 h-5 text-tg-link mt-0.5 flex-shrink-0" />
                 <div>
@@ -95,14 +95,14 @@ function CreateLocation({ onClose }: { onClose: () => void }) {
   });
 
   return (
-    <div className="bg-tg-secondary rounded-xl p-4 mb-4">
-      <h3 className="text-sm font-medium mb-3">Новая локация</h3>
+    <div className="bg-surface-elevated shadow-card-lg rounded-2xl p-4 mb-5">
+      <h3 className="text-sm font-semibold mb-3">Новая локация</h3>
 
       <input
         value={name}
         onChange={(e) => setName(e.target.value)}
         placeholder="Название"
-        className="w-full px-3 py-2 bg-tg-bg rounded-lg text-sm outline-none mb-2"
+        className="input-field mb-2"
       />
 
       <input

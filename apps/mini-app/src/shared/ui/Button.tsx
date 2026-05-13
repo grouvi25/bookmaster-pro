@@ -20,21 +20,21 @@ export default function Button({
 }: Props) {
   const base = clsx(
     'inline-flex items-center justify-center gap-2 font-semibold',
-    'rounded-2xl transition-all duration-150 active:scale-95',
-    'disabled:opacity-50 disabled:pointer-events-none',
+    'rounded-2xl transition-all duration-200 active:scale-[0.97]',
+    'disabled:opacity-40 disabled:pointer-events-none',
     {
       'w-full': fullWidth,
-      'px-3 py-2 text-sm': size === 'sm',
-      'px-4 py-3.5 text-base': size === 'md',
-      'px-6 py-4 text-lg': size === 'lg',
+      'px-4 py-2 text-sm': size === 'sm',
+      'px-5 py-3.5 text-[15px]': size === 'md',
+      'px-6 py-4 text-base': size === 'lg',
     }
   );
 
   const variants = {
-    primary: 'bg-tg-button text-tg-button-text',
-    secondary: 'bg-tg-secondary text-tg-text border border-gray-200',
-    ghost: 'bg-transparent text-tg-link hover:bg-tg-secondary',
-    danger: 'bg-red-500 text-white',
+    primary: 'bg-tg-button text-tg-button-text shadow-button',
+    secondary: 'bg-tg-secondary text-tg-text',
+    ghost: 'bg-transparent text-tg-link active:bg-tg-secondary',
+    danger: 'bg-accent-red text-white shadow-sm',
   };
 
   return (

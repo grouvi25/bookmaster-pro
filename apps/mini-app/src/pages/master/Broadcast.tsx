@@ -31,12 +31,12 @@ export default function Broadcast() {
   }>;
 
   return (
-    <div className="p-4 animate-fade-in">
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-xl font-bold">Рассылки</h1>
+    <div className="p-5 animate-fade-in">
+      <div className="flex justify-between items-center mb-5">
+        <h1 className="text-2xl font-bold tracking-tight">Рассылки</h1>
         <button
           onClick={() => setShowCreate(!showCreate)}
-          className="flex items-center gap-1.5 bg-tg-button text-tg-button-text px-3 py-2 rounded-xl text-sm font-medium"
+          className="flex items-center gap-1.5 bg-brand-500 text-white px-3.5 py-2 rounded-xl text-sm font-semibold shadow-button active:scale-[0.97] transition-all"
         >
           <Plus className="w-4 h-4" />
           Новая
@@ -50,7 +50,7 @@ export default function Broadcast() {
           <p className="text-tg-hint text-center py-8">Нет рассылок</p>
         ) : (
           broadcasts.map((b) => (
-            <div key={b.id} className="bg-tg-secondary rounded-xl p-4">
+            <div key={b.id} className="bg-surface-elevated shadow-card rounded-2xl p-4">
               <div className="flex justify-between items-start mb-2">
                 <div>
                   <h3 className="font-medium text-sm">{b.title}</h3>
@@ -121,14 +121,14 @@ function CreateBroadcast({ onClose }: { onClose: () => void }) {
   });
 
   return (
-    <div className="bg-tg-secondary rounded-xl p-4 mb-4">
-      <h3 className="text-sm font-medium mb-3">Новая рассылка</h3>
+    <div className="bg-surface-elevated shadow-card-lg rounded-2xl p-4 mb-5">
+      <h3 className="text-sm font-semibold mb-3">Новая рассылка</h3>
 
       <input
         value={title}
         onChange={(e) => setTitle(e.target.value)}
         placeholder="Заголовок"
-        className="w-full px-3 py-2 bg-tg-bg rounded-lg text-sm outline-none mb-2"
+        className="input-field mb-2"
       />
 
       <textarea
@@ -136,14 +136,14 @@ function CreateBroadcast({ onClose }: { onClose: () => void }) {
         onChange={(e) => setText(e.target.value)}
         placeholder="Текст рассылки"
         rows={3}
-        className="w-full px-3 py-2 bg-tg-bg rounded-lg text-sm outline-none mb-2 resize-none"
+        className="input-field mb-2 resize-none"
       />
 
       <input
         value={tags}
         onChange={(e) => setTags(e.target.value)}
         placeholder="Фильтр по тегам (через запятую)"
-        className="w-full px-3 py-2 bg-tg-bg rounded-lg text-sm outline-none mb-3"
+        className="input-field mb-3"
       />
 
       <div className="flex gap-2">

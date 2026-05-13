@@ -59,7 +59,7 @@ export default function LoyaltySettings() {
         </h2>
         <div className="flex flex-col gap-3">
           {Object.entries(settings.tiers).map(([key, tier]) => (
-            <div key={key} className="flex items-center justify-between bg-tg-secondary rounded-xl p-3">
+            <div key={key} className="flex items-center justify-between bg-surface-elevated shadow-card rounded-2xl p-3.5">
               <div className="flex items-center gap-2">
                 <span className="text-lg">{TIER_ICONS[key] ?? '🏷'}</span>
                 <div>

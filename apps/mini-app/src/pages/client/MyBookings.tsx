@@ -52,20 +52,18 @@ export default function MyBookings() {
   };
 
   return (
-    <div className="p-4 pb-20 animate-fade-in">
+    <div className="p-5 pb-24 animate-fade-in">
       <BackButton to="/" />
-      <h1 className="text-xl font-bold mb-4">Мои записи</h1>
+      <h1 className="text-2xl font-bold tracking-tight mb-5">Мои записи</h1>
 
-      <div className="flex gap-2 mb-4">
+      <div className="flex gap-2 mb-5">
         {TABS.map(tab => (
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
             className={clsx(
-              'px-4 py-2 rounded-lg text-sm font-medium transition-colors',
-              activeTab === tab.key
-                ? 'bg-tg-button text-tg-button-text'
-                : 'bg-tg-secondary text-tg-text'
+              'chip',
+              activeTab === tab.key ? 'chip-active' : 'chip-inactive'
             )}
           >
             {tab.label}

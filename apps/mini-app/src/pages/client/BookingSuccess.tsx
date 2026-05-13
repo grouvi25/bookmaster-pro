@@ -19,15 +19,15 @@ export default function BookingSuccess() {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-6 animate-bounce-in">
-      <div className="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mb-4">
-        <CircleCheck className="w-8 h-8 text-green-500" strokeWidth={1.8} />
+      <div className="w-20 h-20 bg-emerald-50 rounded-3xl flex items-center justify-center mb-5 shadow-card-lg">
+        <CircleCheck className="w-10 h-10 text-accent-emerald" strokeWidth={1.8} />
       </div>
-      <h1 className="text-2xl font-bold mb-2 text-tg-text">Вы записаны!</h1>
+      <h1 className="text-2xl font-bold tracking-tight mb-2 text-tg-text">Вы записаны!</h1>
       <p className="text-tg-hint text-center mb-6">
         Напоминание придёт автоматически
       </p>
 
-      <div className="w-full bg-tg-secondary rounded-2xl p-4 mb-6">
+      <div className="w-full bg-surface-elevated shadow-card-lg rounded-2xl p-4 mb-6">
         <div className="flex flex-col gap-2 text-sm">
           <div className="flex justify-between">
             <span className="text-tg-hint">Мастер</span>
@@ -51,7 +51,7 @@ export default function BookingSuccess() {
       <div className="flex flex-col gap-2 w-full">
         <button
           onClick={() => navigate('/bookings')}
-          className="w-full bg-tg-button text-tg-button-text py-3.5 rounded-xl font-bold"
+          className="w-full bg-brand-500 text-white py-3.5 rounded-2xl font-bold shadow-button active:scale-[0.97] transition-all"
         >
           Мои записи
         </button>

@@ -56,7 +56,7 @@ export default function LoyaltyHistory() {
   const tier = balance ? TIER_CONFIG[balance.tier] ?? TIER_CONFIG.new : TIER_CONFIG.new;
 
   return (
-    <div className="p-4 pb-20 animate-fade-in">
+    <div className="p-5 pb-24 animate-fade-in">
       <button
         onClick={() => navigate(-1)}
         className="flex items-center gap-0.5 text-tg-link text-sm mb-3"
@@ -64,7 +64,7 @@ export default function LoyaltyHistory() {
         <ChevronLeft className="w-4 h-4" /> Назад
       </button>
 
-      <h1 className="text-xl font-bold mb-4">Программа лояльности</h1>
+      <h1 className="text-2xl font-bold tracking-tight mb-5">Программа лояльности</h1>
 
       {balance && (
         <Card className="mb-4">
@@ -81,7 +81,7 @@ export default function LoyaltyHistory() {
               <div className="text-xs text-tg-hint">кешбэк {tier.cashback}%</div>
             </div>
           </div>
-          <div className="bg-tg-secondary rounded-lg p-2 text-center">
+          <div className="bg-tg-secondary rounded-2xl p-2.5 text-center">
             <span className="text-xs text-tg-hint">
               Всего заработано: <span className="font-medium text-tg-text">{balance.total_earned}</span>
             </span>
