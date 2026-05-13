@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { bookingApi } from '@/api/endpoints';
 import { toArray } from '@/shared/lib/normalize';
-import Loading from '@/components/common/Loading';
+import { ListSkeleton } from '@/shared/ui/Skeleton';
 import PageHeader from '@/shared/ui/PageHeader';
 import StatusBadge from '@/shared/ui/StatusBadge';
 import { format, addDays, startOfWeek } from 'date-fns';
@@ -32,7 +32,7 @@ export default function Schedule() {
       bookingApi.masterBookings({ date: selectedDate }).then((r) => r.data),
   });
 
-  if (isLoading) return <Loading />;
+  if (isLoading) return <div className="p-5"><ListSkeleton count={5} /></div>;
 
   const bookings = toArray<Booking>(data);
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
