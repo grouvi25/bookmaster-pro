@@ -5,29 +5,46 @@ import { toArray } from '@/shared/lib/normalize';
 import BackButton from '@/components/common/BackButton';
 import Loading from '@/components/common/Loading';
 import Card from '@/shared/ui/Card';
+import EmptyState from '@/shared/ui/EmptyState';
+import StatusBadge from '@/shared/ui/StatusBadge';
 import { toast } from '@/shared/ui/Toast';
 import { format, parseISO } from 'date-fns';
 import { ru } from 'date-fns/locale';
-import clsx from 'clsx';
 import { CalendarDays, Clock, User, XCircle } from 'lucide-react';
+import type { Booking } from '@/shared/types/api';
 
-const STATUS_MAP: Record<string, { label: string; color: string }> = {
-  confirmed: { label: 'Подтверждена', color: 'text-green-600 bg-green-500/15' },
-  paid: { label: 'Оплачена', color: 'text-green-600 bg-green-500/15' },
-  pending: { label: 'Ожидает', color: 'text-yellow-600 bg-yellow-500/15' },
-  completed: { label: 'Завершена', color: 'text-tg-hint bg-tg-secondary' },
-  cancelled: { label: 'Отменена', color: 'text-red-500 bg-red-500/15' },
-  no_show: { label: 'Не пришёл', color: 'text-red-600 bg-red-500/15' },
+const STATUS_VARIANT: Record<string, 'success' | 'warning' | 'danger' | 'neutral'> = {
+  confirmed: 'success',
+  paid: 'success',
+  pending: 'warning',
+  completed: 'neutral',
+  cancelled: 'danger',
+  cancelled_by_client: 'danger',
+  cancelled_by_master: 'danger',
+  no_show: 'danger',
+};
+
+const STATUS_LABEL: Record<string, string> = {
+  confirmed: 'Подтверждена',
+  paid: 'Оплачена',
+  pending: 'Ожидает',
+  completed: 'Завершена',
+  cancelled: 'Отменена',
+  cancelled_by_client: 'Отменена',
+  cancelled_by_master: 'Отменена',
+  no_show: 'Не пришёл',
 };
 
 const TABS = [
   { key: 'upcoming', label: 'Предстоящие' },
   { key: 'past', label: 'Прошедшие' },
-];
+] as const;
+
+const UPCOMING_STATUSES = ['confirmed', 'paid', 'pending'];
 
 export default function MyBookings() {
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState('upcoming');
+  const [activeTab, setActiveTab] = useState<'upcoming' | 'past'>('upcoming');
 
   const { data, isLoading } = useQuery({
     queryKey: ['my-bookings'],
@@ -36,11 +53,10 @@ export default function MyBookings() {
 
   if (isLoading) return <Loading />;
 
-  const bookings = toArray(data);
-  const upcomingStatuses = ['confirmed', 'paid', 'pending'];
+  const bookings = toArray<Booking>(data);
   const filtered = activeTab === 'upcoming'
-    ? bookings.filter((b: Record<string, unknown>) => upcomingStatuses.includes(b.status as string))
-    : bookings.filter((b: Record<string, unknown>) => !upcomingStatuses.includes(b.status as string));
+    ? bookings.filter((b) => UPCOMING_STATUSES.includes(b.status))
+    : bookings.filter((b) => !UPCOMING_STATUSES.includes(b.status));
 
   const handleCancel = async (id: number) => {
     try {
@@ -62,10 +78,7 @@ export default function MyBookings() {
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
-            className={clsx(
-              'chip',
-              activeTab === tab.key ? 'chip-active' : 'chip-inactive'
-            )}
+            className={`chip ${activeTab === tab.key ? 'chip-active' : 'chip-inactive'}`}
           >
             {tab.label}
           </button>
@@ -73,40 +86,38 @@ export default function MyBookings() {
       </div>
 
       {filtered.length === 0 ? (
-        <div className="text-center py-12">
-          <CalendarDays className="w-10 h-10 text-tg-hint mx-auto mb-3" strokeWidth={1.5} />
-          <p className="text-tg-hint text-sm">
-            {activeTab === 'upcoming' ? 'Нет предстоящих записей' : 'Нет прошедших записей'}
-          </p>
-        </div>
+        <EmptyState
+          Icon={CalendarDays}
+          title={activeTab === 'upcoming' ? 'Нет предстоящих записей' : 'Нет прошедших записей'}
+        />
       ) : (
         <div className="flex flex-col gap-3">
-          {filtered.map((b: Record<string, unknown>) => {
-            const status = STATUS_MAP[b.status as string] || STATUS_MAP.pending;
-            const canCancel = ['confirmed', 'paid', 'pending'].includes(b.status as string);
+          {filtered.map((b) => {
+            const canCancel = UPCOMING_STATUSES.includes(b.status);
             return (
-              <Card key={b.id as number}>
+              <Card key={b.id}>
                 <div className="flex justify-between items-start mb-2">
                   <div>
-                    <div className="font-medium text-sm">{b.service_name as string}</div>
+                    <div className="font-medium text-sm">{b.service_name}</div>
                     <div className="text-xs text-tg-hint mt-0.5 flex items-center gap-1">
                       <User className="w-3 h-3" />
-                      {b.master_name as string}
+                      {b.client_name}
                     </div>
                   </div>
-                  <span className={clsx('text-xs px-2 py-1 rounded-lg font-medium', status.color)}>
-                    {status.label}
-                  </span>
+                  <StatusBadge
+                    label={STATUS_LABEL[b.status] || b.status}
+                    variant={STATUS_VARIANT[b.status] || 'neutral'}
+                  />
                 </div>
                 <div className="flex items-center gap-2 text-sm text-tg-hint">
                   <CalendarDays className="w-3.5 h-3.5" />
-                  {b.date ? format(parseISO(b.date as string), 'd MMM, EEE', { locale: ru }) : ''}
+                  {b.date ? format(parseISO(b.date), 'd MMM, EEE', { locale: ru }) : ''}
                   <Clock className="w-3.5 h-3.5 ml-1" />
-                  {b.time as string} &middot; {b.duration_min as number} мин
+                  {b.time} &middot; {b.duration_min} мин
                 </div>
                 {canCancel && (
                   <button
-                    onClick={() => handleCancel(b.id as number)}
+                    onClick={() => handleCancel(b.id)}
                     className="flex items-center gap-1 mt-2 text-xs text-red-500"
                   >
                     <XCircle className="w-3.5 h-3.5" />

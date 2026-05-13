@@ -4,6 +4,14 @@ import { mastersApi, servicesApi, reviewsApi, loyaltyApi } from '@/api/endpoints
 import { useBookingStore } from '@/stores/booking';
 import Loading from '@/components/common/Loading';
 import { User, Star } from 'lucide-react';
+import type { Service } from '@/shared/types/api';
+
+interface Review {
+  id: number;
+  client_name: string;
+  rating: number;
+  text: string | null;
+}
 
 interface MasterProfileProps {
   slug: string;
@@ -89,20 +97,20 @@ export default function MasterProfile({ slug }: MasterProfileProps) {
         <div className="px-4 mt-6">
           <h2 className="font-bold text-lg mb-3">Услуги</h2>
           <div className="flex flex-col gap-2">
-            {services.map((svc: Record<string, unknown>) => (
+            {(services as Service[]).map((svc) => (
               <div
-                key={svc.id as number}
+                key={svc.id}
                 className="flex justify-between items-center p-3.5 bg-surface-elevated shadow-card rounded-2xl"
               >
                 <div>
-                  <div className="font-medium text-sm">{String(svc.name)}</div>
-                  <div className="text-xs text-tg-hint">{Number(svc.duration_min)} мин</div>
+                  <div className="font-medium text-sm">{svc.name}</div>
+                  <div className="text-xs text-tg-hint">{svc.duration_min} мин</div>
                 </div>
                 <div className="font-semibold text-brand-600 text-sm">
                   {svc.price
-                    ? `${Number(svc.price).toLocaleString('ru')} \u20bd`
-                    : svc.price_from
-                      ? `от ${Number(svc.price_from).toLocaleString('ru')} \u20bd`
+                    ? `${Number(svc.price).toLocaleString('ru')} ₽`
+                    : svc.price_max
+                      ? `от ${Number(svc.price_max).toLocaleString('ru')} ₽`
                       : 'Дог.'}
                 </div>
               </div>
@@ -116,18 +124,18 @@ export default function MasterProfile({ slug }: MasterProfileProps) {
         <div className="px-4 mt-6">
           <h2 className="font-bold text-lg mb-3">Отзывы</h2>
           <div className="flex flex-col gap-3">
-            {reviews.reviews.slice(0, 3).map((r: Record<string, unknown>) => (
-              <div key={r.id as number} className="bg-surface-elevated shadow-card rounded-2xl p-3.5">
+            {(reviews.reviews as Review[]).slice(0, 3).map((r) => (
+              <div key={r.id} className="bg-surface-elevated shadow-card rounded-2xl p-3.5">
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-sm font-medium">{r.client_name as string}</span>
+                  <span className="text-sm font-medium">{r.client_name}</span>
                   <div className="flex gap-0.5">
-                    {Array.from({ length: r.rating as number }).map((_, i) => (
+                    {Array.from({ length: r.rating }).map((_, i) => (
                       <Star key={i} className="w-3 h-3 text-yellow-400 fill-yellow-400" />
                     ))}
                   </div>
                 </div>
                 {r.text ? (
-                  <p className="text-xs text-tg-hint leading-relaxed">{String(r.text)}</p>
+                  <p className="text-xs text-tg-hint leading-relaxed">{r.text}</p>
                 ) : null}
               </div>
             ))}

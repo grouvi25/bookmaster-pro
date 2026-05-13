@@ -6,13 +6,14 @@ import { useBookingStore } from '@/stores/booking';
 import BackButton from '@/components/common/BackButton';
 import Loading from '@/components/common/Loading';
 import { Clock, ChevronRight } from 'lucide-react';
+import type { Service } from '@/shared/types/api';
 
 export default function SelectService() {
   const navigate = useNavigate();
   const { masterId, setService } = useBookingStore();
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
-  const { data: services, isLoading } = useQuery({
+  const { data: services, isLoading } = useQuery<Service[]>({
     queryKey: ['services', masterId],
     queryFn: () => servicesApi.list(masterId!).then((r) => r.data),
     enabled: !!masterId,
@@ -20,22 +21,18 @@ export default function SelectService() {
 
   if (isLoading) return <Loading />;
 
-  const handleSelect = (svc: Record<string, unknown>) => {
-    setService(
-      svc.id as number,
-      svc.name as string,
-      Number(svc.price || svc.price_from || 0),
-      svc.duration_min as number
-    );
+  const handleSelect = (svc: Service) => {
+    setService(svc.id, svc.name, svc.price, svc.duration_min);
     navigate('/book/date');
   };
 
+  const allServices = services || [];
   const categories: string[] = Array.from(new Set(
-    (services || []).map((s: Record<string, unknown>) => String((s.category as string) || 'Основные'))
+    allServices.map((s) => s.category || 'Основные')
   ));
   const filteredServices = activeCategory
-    ? (services || []).filter((s: Record<string, unknown>) => ((s.category as string) || 'Основные') === activeCategory)
-    : services || [];
+    ? allServices.filter((s) => (s.category || 'Основные') === activeCategory)
+    : allServices;
 
   return (
     <div className="p-5 pb-24 animate-slide-up">
@@ -53,7 +50,7 @@ export default function SelectService() {
           >
             Все
           </button>
-          {categories.map((cat: string) => (
+          {categories.map((cat) => (
             <button
               key={cat}
               onClick={() => setActiveCategory(cat)}
@@ -68,25 +65,25 @@ export default function SelectService() {
       )}
 
       <div className="flex flex-col gap-2">
-        {filteredServices.map((svc: Record<string, unknown>) => (
+        {filteredServices.map((svc) => (
           <button
-            key={svc.id as number}
+            key={svc.id}
             onClick={() => handleSelect(svc)}
             className="flex items-center p-4 bg-surface-elevated shadow-card rounded-2xl text-left active:scale-[0.98] transition-all duration-200"
           >
             <div className="flex-1 min-w-0">
-              <div className="font-medium text-tg-text">{String(svc.name)}</div>
+              <div className="font-medium text-tg-text">{svc.name}</div>
               <div className="text-xs text-tg-hint mt-0.5 flex items-center gap-1">
                 <Clock className="w-3 h-3" />
-                {Number(svc.duration_min)} мин
-                {svc.description ? ` \u00b7 ${String(svc.description)}` : null}
+                {svc.duration_min} мин
+                {svc.description ? ` · ${svc.description}` : null}
               </div>
             </div>
             <div className="font-bold text-brand-600 ml-3 text-sm whitespace-nowrap">
               {svc.price
-                ? `${Number(svc.price).toLocaleString('ru')} \u20bd`
-                : svc.price_from
-                  ? `от ${Number(svc.price_from).toLocaleString('ru')} \u20bd`
+                ? `${Number(svc.price).toLocaleString('ru')} ₽`
+                : svc.price_max
+                  ? `от ${Number(svc.price_max).toLocaleString('ru')} ₽`
                   : 'Дог.'}
             </div>
             <ChevronRight className="w-4 h-4 text-tg-hint ml-2 flex-shrink-0" />
