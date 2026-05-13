@@ -48,7 +48,7 @@ export default function MasterProfile({ slug }: MasterProfileProps) {
   if (!master) return <div className="p-4 text-center text-tg-hint">Мастер не найден</div>;
 
   const handleBook = () => {
-    setMaster(slug, master.id, master.name);
+    setMaster(slug, master.id, master.display_name);
     navigate('/book/service');
   };
 
@@ -58,12 +58,12 @@ export default function MasterProfile({ slug }: MasterProfileProps) {
       <div className="bg-brand-500/10 p-6 text-center">
         <div className="w-24 h-24 rounded-3xl bg-tg-bg shadow-card-lg mx-auto mb-3 flex items-center justify-center overflow-hidden">
           {master.avatar_url ? (
-            <img src={master.avatar_url} alt={master.name} className="w-full h-full object-cover" />
+            <img src={master.avatar_url} alt={master.display_name} className="w-full h-full object-cover" />
           ) : (
             <User className="w-10 h-10 text-brand-300" strokeWidth={1.5} />
           )}
         </div>
-        <h1 className="text-xl font-bold text-tg-text">{master.name}</h1>
+        <h1 className="text-xl font-bold text-tg-text">{master.display_name}</h1>
         <p className="text-tg-hint text-sm mt-1">
           {master.specialization}
           {master.city && ` \u00b7 ${master.city}`}
@@ -86,9 +86,9 @@ export default function MasterProfile({ slug }: MasterProfileProps) {
       )}
 
       {/* Bio */}
-      {master.bio && (
+      {master.description && (
         <div className="px-4 mt-4">
-          <p className="text-sm text-tg-text leading-relaxed">{master.bio}</p>
+          <p className="text-sm text-tg-text leading-relaxed">{master.description}</p>
         </div>
       )}
 

@@ -62,17 +62,26 @@ export interface ClientCRM {
 /** Мастер (публичный профиль) */
 export interface MasterProfile {
   id: number;
-  name: string;
+  display_name: string;
   slug: string;
-  specialization: string;
-  city: string | null;
-  bio: string | null;
+  specialization: string | null;
+  description: string | null;
   avatar_url: string | null;
-  rating_avg: number | null;
+  cover_url: string | null;
+  phone: string | null;
+  city: string | null;
+  address: string | null;
+  accept_online_payment: boolean;
+  buffer_minutes: number;
+  link_page_enabled: boolean;
+  link_page_theme: string;
+  link_page_links: { url: string; label?: string }[];
+  current_plan: string;
+  is_verified: boolean;
+  rating_avg: number;
   rating_count: number;
-  current_plan?: string;
-  tariff_plan?: string;
-  is_active?: boolean;
+  total_clients: number;
+  total_appointments: number;
 }
 
 /** Платёж */

@@ -3,12 +3,19 @@ import api from './client';
 // ── Payload types ──
 
 interface MasterProfilePayload {
-  name?: string;
-  bio?: string;
+  display_name?: string;
+  description?: string;
   city?: string;
   specialization?: string;
   avatar_url?: string;
-  social_links?: { url: string; label?: string }[];
+  cover_url?: string;
+  phone?: string;
+  address?: string;
+  accept_online_payment?: boolean;
+  buffer_minutes?: number;
+  link_page_enabled?: boolean;
+  link_page_theme?: string;
+  link_page_links?: { url: string; label?: string }[];
 }
 
 interface SchedulePayload {
@@ -165,10 +172,10 @@ export const authApi = {
 
 // ── Masters ──
 export const mastersApi = {
-  getPublic: (slug: string) => api.get(`/masters/${slug}/public`),
+  getPublic: (slug: string) => api.get(`/masters/${slug}`),
   getProfile: () => api.get('/masters/me'),
   updateProfile: (data: MasterProfilePayload) =>
-    api.put('/masters/me', data),
+    api.patch('/masters/me', data),
   getSchedule: (params?: Record<string, string>) =>
     api.get('/masters/me/schedule', { params }),
   updateSchedule: (data: SchedulePayload) =>
