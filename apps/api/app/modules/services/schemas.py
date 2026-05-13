@@ -4,7 +4,7 @@ Services schemas.
 
 from typing import Optional, List
 
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
 
 class ServiceCreate(BaseModel):
@@ -48,6 +48,16 @@ class ServiceOut(BaseModel):
     is_consultation: bool = False
     consultation_url: Optional[str] = None
     sort_order: int = 0
+
+    @field_validator("is_active", "is_online", "is_consultation", mode="before")
+    @classmethod
+    def _bool_none(cls, v: object) -> bool:
+        return bool(v) if v is not None else False
+
+    @field_validator("sort_order", mode="before")
+    @classmethod
+    def _int_none(cls, v: object) -> int:
+        return int(v) if v is not None else 0
 
     model_config = {"from_attributes": True}
 
