@@ -19,10 +19,10 @@ from app.modules.core.models import FeatureFlags
 logger = logging.getLogger(__name__)
 
 PLAN_PRICES = {
-    "start": Decimal("0"),
-    "basic": Decimal("490"),
-    "pro": Decimal("990"),
-    "pro_ai": Decimal("1990"),
+    "start": Decimal("590"),
+    "basic": Decimal("990"),
+    "pro": Decimal("1990"),
+    "pro_ai": Decimal("2990"),
     "business": Decimal("4990"),
 }
 
@@ -235,78 +235,131 @@ class PaymentService:
             flags = FeatureFlags(master_id=master_id)
             self.db.add(flags)
 
-        # Тарифная матрица
+        # Тарифная матрица (согласно ТЗ раздел 14)
         if plan == "start":
             flags.max_bookings_per_month = 30
             flags.max_services = 3
-            flags.commission_rate_bp = 700
+            flags.commission_rate_bp = 700  # 7%
+            flags.booking_enabled = True
             flags.crm_basic = False
+            flags.crm_advanced = False
             flags.promo_enabled = False
             flags.loyalty_enabled = False
+            flags.client_subscriptions = False
+            flags.waitlist_enabled = False
             flags.analytics_enabled = False
             flags.ai_advisor = False
+            flags.ai_client_bot = False
+            flags.ai_voice = False
+            flags.ai_tokens_monthly = 0
+            flags.portfolio_enabled = False
+            flags.marketplace_enabled = False
+            flags.marketplace_featured = False
+            flags.widget_enabled = False
+            flags.consultations_enabled = False
+            flags.multi_location = False
+            flags.max_locations = 1
+            flags.reviews_enabled = False
+            flags.broadcast_enabled = False
         elif plan == "basic":
-            flags.max_bookings_per_month = 100
+            flags.max_bookings_per_month = 150
             flags.max_services = 10
-            flags.commission_rate_bp = 500
+            flags.commission_rate_bp = 700  # 7%
+            flags.booking_enabled = True
             flags.crm_basic = True
+            flags.crm_advanced = False
             flags.promo_enabled = True
             flags.loyalty_enabled = False
-            flags.analytics_enabled = True
+            flags.client_subscriptions = False
+            flags.waitlist_enabled = True
+            flags.analytics_enabled = False
             flags.ai_advisor = False
+            flags.ai_client_bot = False
+            flags.ai_voice = False
+            flags.ai_tokens_monthly = 0
+            flags.portfolio_enabled = False
+            flags.marketplace_enabled = True
+            flags.marketplace_featured = False
+            flags.widget_enabled = True
+            flags.consultations_enabled = False
+            flags.multi_location = False
+            flags.max_locations = 1
             flags.reviews_enabled = True
+            flags.broadcast_enabled = False
         elif plan == "pro":
-            flags.max_bookings_per_month = 500
-            flags.max_services = 50
-            flags.commission_rate_bp = 350
+            flags.max_bookings_per_month = 999999  # ∞
+            flags.max_services = 999999
+            flags.commission_rate_bp = 600  # 6%
+            flags.booking_enabled = True
             flags.crm_basic = True
             flags.crm_advanced = True
             flags.promo_enabled = True
             flags.loyalty_enabled = True
             flags.client_subscriptions = True
+            flags.waitlist_enabled = True
             flags.analytics_enabled = True
+            flags.ai_advisor = True
+            flags.ai_client_bot = False
+            flags.ai_voice = False
+            flags.ai_tokens_monthly = 200000
             flags.portfolio_enabled = True
             flags.marketplace_enabled = True
+            flags.marketplace_featured = False
             flags.widget_enabled = True
+            flags.consultations_enabled = True
+            flags.multi_location = True
+            flags.max_locations = 2
+            flags.reviews_enabled = True
             flags.broadcast_enabled = True
         elif plan == "pro_ai":
-            flags.max_bookings_per_month = 500
-            flags.max_services = 50
-            flags.commission_rate_bp = 350
+            flags.max_bookings_per_month = 999999  # ∞
+            flags.max_services = 999999
+            flags.commission_rate_bp = 550  # 5.5%
+            flags.booking_enabled = True
             flags.crm_basic = True
             flags.crm_advanced = True
             flags.promo_enabled = True
             flags.loyalty_enabled = True
             flags.client_subscriptions = True
+            flags.waitlist_enabled = True
             flags.analytics_enabled = True
             flags.ai_advisor = True
             flags.ai_client_bot = True
             flags.ai_voice = True
-            flags.ai_tokens_monthly = 100000
+            flags.ai_tokens_monthly = 1000000
             flags.portfolio_enabled = True
             flags.marketplace_enabled = True
+            flags.marketplace_featured = False
             flags.widget_enabled = True
+            flags.consultations_enabled = True
+            flags.multi_location = True
+            flags.max_locations = 3
+            flags.reviews_enabled = True
             flags.broadcast_enabled = True
         elif plan == "business":
-            flags.max_bookings_per_month = 999999
-            flags.max_services = 999
-            flags.commission_rate_bp = 200
+            flags.max_bookings_per_month = 999999  # ∞
+            flags.max_services = 999999
+            flags.commission_rate_bp = 500  # 5%
+            flags.booking_enabled = True
             flags.crm_basic = True
             flags.crm_advanced = True
             flags.promo_enabled = True
             flags.loyalty_enabled = True
             flags.client_subscriptions = True
+            flags.waitlist_enabled = True
             flags.analytics_enabled = True
             flags.ai_advisor = True
             flags.ai_client_bot = True
             flags.ai_voice = True
-            flags.ai_tokens_monthly = 500000
+            flags.ai_tokens_monthly = 3000000
             flags.portfolio_enabled = True
             flags.marketplace_enabled = True
             flags.marketplace_featured = True
             flags.widget_enabled = True
-            flags.multi_location = True
             flags.consultations_enabled = True
+            flags.multi_location = True
+            flags.max_locations = 999999  # ∞
+            flags.reviews_enabled = True
             flags.broadcast_enabled = True
 
         await self.db.flush()

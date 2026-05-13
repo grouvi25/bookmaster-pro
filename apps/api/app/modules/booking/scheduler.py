@@ -11,10 +11,14 @@ from datetime import datetime, timedelta, timezone
 
 from sqlalchemy import select, func
 
+from app.core.config import settings
 from app.core.database import async_session_factory
 from app.modules.booking.models import Appointment, AppointmentStatus
+from app.modules.notifications.service import NotificationService
 
 logger = logging.getLogger(__name__)
+
+notify = NotificationService
 
 
 async def remind_24h():
@@ -36,13 +40,26 @@ async def remind_24h():
         )
         appointments = result.scalars().all()
 
+        sent = 0
         for appt in appointments:
-            # TODO: Отправить уведомление через бота
+            time_str = appt.time_start.strftime("%H:%M") if appt.time_start else "?"
+            date_str = appt.date.strftime("%d.%m") if appt.date else "завтра"
+            text = (
+                f"🔔 Напоминание: у вас запись {date_str} в {time_str}.\n"
+                f"Если планы изменились — отмените заранее."
+            )
+            ok = await notify.send_by_client_id(
+                db, appt.client_id, text,
+                button_text="Мои записи",
+                button_url=f"{settings.APP_URL}?startParam=my_bookings",
+            )
+            if ok:
+                sent += 1
             logger.info(
                 f"24h reminder: appointment #{appt.id}, "
-                f"client_id={appt.client_id}, master_id={appt.master_id}"
+                f"client_id={appt.client_id}, sent={ok}"
             )
-        logger.info(f"24h reminders sent: {len(list(appointments))}")
+        logger.info(f"24h reminders sent: {sent}/{len(appointments)}")
 
 
 async def remind_2h():
@@ -64,20 +81,33 @@ async def remind_2h():
         )
         appointments = result.scalars().all()
 
+        sent = 0
         for appt in appointments:
+            time_str = appt.time_start.strftime("%H:%M") if appt.time_start else "?"
+            text = (
+                f"⏰ Через 2 часа у вас запись в {time_str}.\n"
+                f"Ждём вас!"
+            )
+            ok = await notify.send_by_client_id(
+                db, appt.client_id, text,
+                button_text="Подробнее",
+                button_url=f"{settings.APP_URL}?startParam=my_bookings",
+            )
+            if ok:
+                sent += 1
             logger.info(
                 f"2h reminder: appointment #{appt.id}, "
-                f"client_id={appt.client_id}"
+                f"client_id={appt.client_id}, sent={ok}"
             )
-        logger.info(f"2h reminders sent: {len(list(appointments))}")
+        logger.info(f"2h reminders sent: {sent}/{len(appointments)}")
 
 
 async def cleanup_pending():
     """
-    Автоотмена pending-записей, не подтверждённых в течение 30 минут.
+    Автоотмена pending-записей, не подтверждённых в течение SLOT_RESERVE_MINUTES (5 мин по ТЗ).
     """
     async with async_session_factory() as db:
-        cutoff = datetime.now(timezone.utc) - timedelta(minutes=30)
+        cutoff = datetime.now(timezone.utc) - timedelta(minutes=settings.SLOT_RESERVE_MINUTES)
 
         result = await db.execute(
             select(Appointment).where(
@@ -144,8 +174,13 @@ async def admin_daily():
                 t = a.time_start.strftime("%H:%M") if a.time_start else "?"
                 lines.append(f"  • {t} — {a.client_name or 'Клиент'}")
 
-            # TODO: отправить через бота
-            logger.info(f"Daily schedule for master {master_id}: {count} appointments")
+            message = "\n".join(lines)
+            ok = await notify.send_by_master_id(
+                db, master_id, message,
+                button_text="Открыть расписание",
+                button_url=f"{settings.APP_URL}?startParam=dashboard",
+            )
+            logger.info(f"Daily schedule for master {master_id}: {count} appointments, sent={ok}")
 
         logger.info(f"admin_daily: notified {len(masters_today)} masters")
 
@@ -199,7 +234,16 @@ async def birthday_promo():
                     acc.balance += master.loyalty_birthday_bonus
                     acc.total_earned += master.loyalty_birthday_bonus
 
-                # TODO: отправить поздравление через бота
+                text = (
+                    f"🎂 {master.name or 'Ваш мастер'} поздравляет вас "
+                    f"с наступающим днём рождения!\n"
+                    f"Вам начислено {master.loyalty_birthday_bonus} бонусных баллов 🎁"
+                )
+                await notify.send_by_client_id(
+                    db, client.id, text,
+                    button_text="Записаться",
+                    button_url=f"{settings.APP_URL}?startParam=m_{master.slug}" if master.slug else None,
+                )
                 logger.info(
                     f"Birthday bonus {master.loyalty_birthday_bonus} pts "
                     f"for client {client.id} from master {link.master_id}"
@@ -228,15 +272,30 @@ async def reactivation():
         )
         inactive_links = result.scalars().all()
 
+        sent = 0
         for link in inactive_links:
             days_inactive = (datetime.now(timezone.utc).date() - link.last_visit_date).days
-            # TODO: AI-генерация персонализированного сообщения + отправка через бота
+            from app.modules.masters.models import Master
+            master = await db.get(Master, link.master_id)
+            master_name = master.name if master else "Ваш мастер"
+            text = (
+                f"💫 {master_name} давно вас не видел(а)!\n"
+                f"Прошло уже {days_inactive} дней. "
+                f"Запишитесь — для вас всегда найдётся время!"
+            )
+            ok = await notify.send_by_client_id(
+                db, link.client_id, text,
+                button_text="Записаться",
+                button_url=f"{settings.APP_URL}?startParam=m_{master.slug}" if master and master.slug else None,
+            )
+            if ok:
+                sent += 1
             logger.info(
                 f"Reactivation: client {link.client_id} -> master {link.master_id}, "
-                f"inactive {days_inactive} days"
+                f"inactive {days_inactive} days, sent={ok}"
             )
 
-        logger.info(f"reactivation: {len(inactive_links)} inactive clients found")
+        logger.info(f"reactivation: {sent}/{len(inactive_links)} reactivation messages sent")
 
 
 async def post_visit_review():
@@ -268,10 +327,18 @@ async def post_visit_review():
             if existing.scalar_one_or_none():
                 continue
 
-            # TODO: отправить через бота просьбу оставить отзыв
+            text = (
+                "⭐ Как прошёл визит? Оставьте отзыв — "
+                "это поможет мастеру стать лучше и другим клиентам сделать выбор!"
+            )
+            ok = await notify.send_by_client_id(
+                db, appt.client_id, text,
+                button_text="Оставить отзыв",
+                button_url=f"{settings.APP_URL}?startParam=review_{appt.id}",
+            )
             logger.info(
                 f"Review request: appointment {appt.id}, "
-                f"client {appt.client_id}"
+                f"client {appt.client_id}, sent={ok}"
             )
 
         logger.info(f"post_visit_review: {len(completed)} review requests")
@@ -284,7 +351,6 @@ async def billing_reminder():
     """
     async with async_session_factory() as db:
         from app.modules.payments.models import MasterSubscription
-        from app.modules.masters.models import Master
 
         target_date = datetime.now(timezone.utc).date() + timedelta(days=3)
 
@@ -296,15 +362,26 @@ async def billing_reminder():
         )
         subs = result.scalars().all()
 
+        sent = 0
         for sub in subs:
-            await db.get(Master, sub.master_id)
-            # TODO: отправить напоминание через бота
+            text = (
+                f"💳 Напоминание: через 3 дня будет списание "
+                f"за тариф «{sub.plan}».\n"
+                f"Убедитесь, что карта привязана и на ней достаточно средств."
+            )
+            ok = await notify.send_by_master_id(
+                db, sub.master_id, text,
+                button_text="Управление тарифом",
+                button_url=f"{settings.APP_URL}?startParam=billing",
+            )
+            if ok:
+                sent += 1
             logger.info(
                 f"Billing reminder: master {sub.master_id}, "
-                f"plan={sub.plan}, next_billing={sub.next_billing}"
+                f"plan={sub.plan}, next_billing={sub.next_billing}, sent={ok}"
             )
 
-        logger.info(f"billing_reminder: {len(subs)} reminders sent")
+        logger.info(f"billing_reminder: {sent}/{len(subs)} reminders sent")
 
 
 async def ai_reindex():

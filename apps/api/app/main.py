@@ -120,7 +120,7 @@ async def startup():
     # Фаза 1: напоминания и очистка
     scheduler.add_job(remind_24h, "interval", hours=1, id="remind_24h")
     scheduler.add_job(remind_2h, "interval", minutes=30, id="remind_2h")
-    scheduler.add_job(cleanup_pending, "interval", minutes=10, id="cleanup_pending")
+    scheduler.add_job(cleanup_pending, "interval", minutes=1, id="cleanup_pending")
 
     # Фаза 3: расширенные задачи
     scheduler.add_job(admin_daily, "cron", hour=9, minute=0, id="admin_daily")

@@ -43,6 +43,73 @@ class NotificationService:
         return False
 
     @staticmethod
+    async def send_by_client_id(
+        db,
+        client_id: int,
+        text: str,
+        button_text: Optional[str] = None,
+        button_url: Optional[str] = None,
+    ) -> bool:
+        """Отправить уведомление клиенту по client_id (через его identity)."""
+        from app.modules.clients.models import Client
+        from app.modules.auth.models import Identity
+        from sqlalchemy import select
+
+        result = await db.execute(
+            select(Client).where(Client.id == client_id)
+        )
+        client = result.scalar_one_or_none()
+        if not client:
+            return False
+
+        result = await db.execute(
+            select(Identity).where(Identity.id == client.identity_id)
+        )
+        identity = result.scalar_one_or_none()
+        if not identity:
+            return False
+
+        return await NotificationService.send_to_client(
+            platform=identity.platform,
+            platform_id=identity.platform_id,
+            text=text,
+            button_text=button_text,
+            button_url=button_url,
+        )
+
+    @staticmethod
+    async def send_by_master_id(
+        db,
+        master_id: int,
+        text: str,
+        button_text: Optional[str] = None,
+        button_url: Optional[str] = None,
+    ) -> bool:
+        """Отправить уведомление мастеру по master_id."""
+        from app.modules.masters.models import Master
+        from app.modules.auth.models import Identity
+        from sqlalchemy import select
+
+        master = await db.get(Master, master_id)
+        if not master:
+            return False
+
+        result = await db.execute(
+            select(Identity).where(Identity.id == master.identity_id)
+        )
+        identity = result.scalar_one_or_none()
+        if not identity:
+            return False
+
+        return await NotificationService.send_to_client(
+            platform=identity.platform,
+            platform_id=identity.platform_id,
+            text=text,
+            button_text=button_text,
+            button_url=button_url,
+        )
+
+    @staticmethod
     async def send_to_master(
         master,
         text: str,
@@ -50,11 +117,11 @@ class NotificationService:
         button_url: Optional[str] = None,
     ) -> bool:
         """Отправить уведомление мастеру (нужна его identity)."""
-        from app.core.database import AsyncSessionLocal
+        from app.core.database import async_session_factory
         from app.modules.auth.models import Identity
         from sqlalchemy import select
 
-        async with AsyncSessionLocal() as db:
+        async with async_session_factory() as db:
             result = await db.execute(
                 select(Identity).where(Identity.id == master.identity_id)
             )

@@ -37,6 +37,51 @@ services:
       timeout: 5s
       retries: 5
 
+  # ── API ──────────────────────────────────────────────────
+  api:
+    build:
+      context: ..
+      dockerfile: apps/api/Dockerfile
+    container_name: bookmaster_api
+    restart: unless-stopped
+    env_file: ../.env
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # ── SCHEDULER ───────────────────────────────────────────
+  scheduler:
+    build:
+      context: ..
+      dockerfile: apps/api/Dockerfile
+    container_name: bookmaster_scheduler
+    restart: unless-stopped
+    command: ["python", "-m", "app.scheduler_runner"]
+    env_file: ../.env
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # ── NGINX ───────────────────────────────────────────────
+  nginx:
+    image: nginx:alpine
+    container_name: bookmaster_nginx
+    restart: unless-stopped
+    volumes:
+      - ./nginx/nginx.prod.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - api
+
   # ── TELEGRAM BOT ─────────────────────────────────────────
   bot-tg:
     build:
