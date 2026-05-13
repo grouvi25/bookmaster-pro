@@ -4,7 +4,7 @@ import { mastersApi, servicesApi, reviewsApi, portfolioApi } from '@/api/endpoin
 import Loading from '@/components/common/Loading';
 import { User, Star, ExternalLink } from 'lucide-react';
 import type { Service, PortfolioItem } from '@/shared/types/api';
-import { botLink } from '@/shared/config';
+import { pageUrl, botLink } from '@/shared/config';
 
 interface Review {
   id: number;
@@ -44,8 +44,9 @@ export default function LinkPage() {
   if (isLoading) return <Loading />;
   if (!master) return <div className="p-8 text-center text-tg-hint">Мастер не найден</div>;
 
-  const appUrl = botLink(`m_${slug}`);
-  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(appUrl)}`;
+  const publicUrl = pageUrl(slug!);
+  const bookUrl = botLink(`m_${slug}`);
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(publicUrl)}`;
 
   return (
     <div className="min-h-screen bg-tg-bg">
@@ -160,7 +161,7 @@ export default function LinkPage() {
       {/* CTA + QR */}
       <div className="px-4 pb-8 text-center">
         <a
-          href={appUrl}
+          href={bookUrl}
           className="inline-block w-full max-w-md bg-brand-500 text-white py-4 rounded-2xl font-bold text-lg shadow-button active:scale-[0.97] transition-all"
         >
           Записаться
