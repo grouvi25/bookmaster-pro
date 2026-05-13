@@ -20,11 +20,11 @@ from app.core.config import settings
 logger = logging.getLogger(__name__)
 
 PLAN_PRICES = {
-    "start": 0,
-    "basic": 490,
-    "pro": 990,
-    "pro_ai": 1490,
-    "business": 2490,
+    "start": 590,
+    "basic": 990,
+    "pro": 1990,
+    "pro_ai": 2990,
+    "business": 4990,
 }
 
 
