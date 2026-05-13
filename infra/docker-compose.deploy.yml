@@ -86,18 +86,6 @@ services:
       - "127.0.0.1:5173:5173"
     networks: [bookmaster]
 
-  scheduler:
-    <<: [*restart, *env]
-    container_name: bm_scheduler
-    build:
-      context: ..
-      dockerfile: apps/api/Dockerfile
-    command: ["python", "-m", "app.scheduler_runner"]
-    depends_on:
-      db: { condition: service_healthy }
-      redis: { condition: service_healthy }
-    networks: [bookmaster]
-
   bot-max:
     <<: [*restart, *env]
     container_name: bm_bot_max
