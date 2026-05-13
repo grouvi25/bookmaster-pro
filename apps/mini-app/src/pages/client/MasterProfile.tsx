@@ -47,8 +47,8 @@ export default function MasterProfile({ slug }: MasterProfileProps) {
   return (
     <div className="pb-24 animate-fade-in">
       {/* Header */}
-      <div className="bg-brand-50 p-6 text-center">
-        <div className="w-24 h-24 rounded-3xl bg-white shadow-card-lg mx-auto mb-3 flex items-center justify-center overflow-hidden">
+      <div className="bg-brand-500/10 p-6 text-center">
+        <div className="w-24 h-24 rounded-3xl bg-tg-bg shadow-card-lg mx-auto mb-3 flex items-center justify-center overflow-hidden">
           {master.avatar_url ? (
             <img src={master.avatar_url} alt={master.name} className="w-full h-full object-cover" />
           ) : (
@@ -71,7 +71,7 @@ export default function MasterProfile({ slug }: MasterProfileProps) {
 
       {/* Loyalty points */}
       {loyalty?.balance > 0 && (
-        <div className="mx-4 mt-4 p-3.5 bg-brand-50 rounded-2xl flex items-center justify-between">
+        <div className="mx-4 mt-4 p-3.5 bg-brand-500/10 rounded-2xl flex items-center justify-between">
           <span className="text-sm text-brand-700">Баллы лояльности</span>
           <span className="font-bold text-brand-600">{loyalty.balance} баллов</span>
         </div>

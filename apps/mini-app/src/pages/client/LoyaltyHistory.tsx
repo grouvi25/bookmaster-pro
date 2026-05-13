@@ -102,7 +102,7 @@ export default function LoyaltyHistory() {
               <Card key={tx.id} className="flex items-center gap-3">
                 <div
                   className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                    isPositive ? 'bg-green-50' : 'bg-red-50'
+                    isPositive ? 'bg-green-500/15' : 'bg-red-500/15'
                   }`}
                 >
                   {config.icon === 'gift' ? (

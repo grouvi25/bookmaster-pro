@@ -11,12 +11,12 @@ import clsx from 'clsx';
 import { CalendarDays, Clock, User, XCircle } from 'lucide-react';
 
 const STATUS_MAP: Record<string, { label: string; color: string }> = {
-  confirmed: { label: 'Подтверждена', color: 'text-green-600 bg-green-50' },
-  paid: { label: 'Оплачена', color: 'text-green-600 bg-green-50' },
-  pending: { label: 'Ожидает', color: 'text-yellow-600 bg-yellow-50' },
-  completed: { label: 'Завершена', color: 'text-gray-500 bg-gray-100' },
-  cancelled: { label: 'Отменена', color: 'text-red-500 bg-red-50' },
-  no_show: { label: 'Не пришёл', color: 'text-red-600 bg-red-50' },
+  confirmed: { label: 'Подтверждена', color: 'text-green-600 bg-green-500/15' },
+  paid: { label: 'Оплачена', color: 'text-green-600 bg-green-500/15' },
+  pending: { label: 'Ожидает', color: 'text-yellow-600 bg-yellow-500/15' },
+  completed: { label: 'Завершена', color: 'text-tg-hint bg-tg-secondary' },
+  cancelled: { label: 'Отменена', color: 'text-red-500 bg-red-500/15' },
+  no_show: { label: 'Не пришёл', color: 'text-red-600 bg-red-500/15' },
 };
 
 const TABS = [
