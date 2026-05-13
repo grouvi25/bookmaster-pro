@@ -45,8 +45,8 @@ export default function LinkPageEditor() {
 
   useEffect(() => {
     if (master) {
-      setBio(master.bio || '');
-      setSocialLinks(master.social_links || []);
+      setBio(master.description || '');
+      setSocialLinks(master.link_page_links || []);
     }
   }, [master]);
 
@@ -54,8 +54,8 @@ export default function LinkPageEditor() {
     setSaving(true);
     try {
       await mastersApi.updateProfile({
-        bio,
-        social_links: socialLinks.filter((l) => l.url.trim()),
+        description: bio,
+        link_page_links: socialLinks.filter((l) => l.url.trim()),
       });
       queryClient.invalidateQueries({ queryKey: ['master-profile'] });
       toast.success('Страница обновлена');
@@ -139,7 +139,7 @@ export default function LinkPageEditor() {
             )}
           </div>
           <div>
-            <div className="font-bold">{master.name}</div>
+            <div className="font-bold">{master.display_name}</div>
             <div className="text-xs text-tg-hint">{master.specialization} · {master.city}</div>
           </div>
         </div>

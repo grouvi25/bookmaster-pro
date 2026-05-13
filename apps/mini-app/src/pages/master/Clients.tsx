@@ -23,7 +23,7 @@ export default function Clients() {
 
   const clients = toArray<ClientCRM>(data);
   const [selectedId, setSelectedId] = useState<number | null>(null);
-  const selected = clients.find((c) => c.id === selectedId);
+  const selected = clients.find((c) => (c.client_id ?? c.id) === selectedId);
 
   return (
     <div className="p-5 pb-24 animate-fade-in">
@@ -105,8 +105,8 @@ export default function Clients() {
         <div className="flex flex-col gap-1">
           {clients.map((c) => (
             <button
-              key={c.id}
-              onClick={() => setSelectedId(c.id)}
+              key={c.client_id ?? c.id}
+              onClick={() => setSelectedId(c.client_id ?? c.id)}
               className="flex items-center gap-3 p-3.5 bg-surface-elevated shadow-card rounded-2xl text-left active:scale-[0.98] transition-all duration-200"
             >
               <div className="w-10 h-10 bg-brand-500/10 rounded-xl flex items-center justify-center">
