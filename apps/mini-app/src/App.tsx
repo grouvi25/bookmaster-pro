@@ -7,6 +7,9 @@ import { authApi } from '@/api/endpoints';
 import { ShieldAlert, CalendarDays } from 'lucide-react';
 import { ToastContainer } from '@/shared/ui/Toast';
 
+// Layouts
+import ClientLayout from '@/layouts/ClientLayout';
+
 // Клиентские экраны
 import MasterProfile from '@/pages/client/MasterProfile';
 import SelectService from '@/pages/client/SelectService';
@@ -16,6 +19,8 @@ import PromoCode from '@/pages/client/PromoCode';
 import Confirm from '@/pages/client/Confirm';
 import BookingSuccess from '@/pages/client/BookingSuccess';
 import MyBookings from '@/pages/client/MyBookings';
+import ClientLoyalty from '@/pages/client/ClientLoyalty';
+import ClientProfile from '@/pages/client/ClientProfile';
 
 // Мастерские экраны
 import Dashboard from '@/pages/master/Dashboard';
@@ -191,7 +196,7 @@ function AppRouter() {
             ) : isMaster ? (
               <Navigate to="/master" replace />
             ) : role === 'client' ? (
-              <HomePage />
+              <Navigate to="/client" replace />
             ) : isNewUser || (hasTelegramContext && !role) ? (
               <Navigate to="/register" replace />
             ) : (
@@ -200,7 +205,15 @@ function AppRouter() {
           }
         />
 
-        {/* Клиентские роуты — запись к мастеру (публичные, не требуют auth) */}
+        {/* Клиентский layout с tab bar */}
+        <Route element={<ClientLayout />}>
+          <Route path="/client" element={<MyBookings hideBack />} />
+          <Route path="/client/nearby" element={<NearbyMasters />} />
+          <Route path="/client/loyalty" element={<ClientLoyalty />} />
+          <Route path="/client/profile" element={<ClientProfile />} />
+        </Route>
+
+        {/* Клиентские роуты — запись к мастеру (без tab bar) */}
         <Route path="/m/:slug" element={<MasterProfileRoute />} />
         <Route path="/book/service" element={<SelectService />} />
         <Route path="/book/date" element={<SelectDate />} />
@@ -271,10 +284,6 @@ function MasterProfileRoute() {
 }
 
 function HomePage() {
-  const { role } = useAuthStore();
-  if (role === 'client') {
-    return <MyBookings hideBack />;
-  }
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-tg-bg text-tg-text p-6 animate-fade-in">
       <CalendarDays className="w-12 h-12 text-brand-500 mb-4" strokeWidth={1.5} />

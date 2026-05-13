@@ -50,7 +50,7 @@ export default function BookingSuccess() {
 
       <div className="flex flex-col gap-2 w-full">
         <button
-          onClick={() => navigate('/bookings')}
+          onClick={() => navigate('/client')}
           className="w-full bg-brand-500 text-white py-3.5 rounded-2xl font-bold shadow-button active:scale-[0.97] transition-all"
         >
           Мои записи
