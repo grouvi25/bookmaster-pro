@@ -47,15 +47,23 @@ export function useFeatureFlags() {
     staleTime: 60_000,
   });
 
-  // Superadmin gets all features
   if (role === 'superadmin') {
-    const allEnabled = { ...FREE_FLAGS };
-    for (const key of Object.keys(allEnabled)) {
-      if (typeof allEnabled[key as keyof FeatureFlags] === 'boolean') {
-        (allEnabled as Record<string, unknown>)[key] = true;
-      }
-    }
-    allEnabled.tariff_plan = 'business';
+    const allEnabled: FeatureFlags = {
+      tariff_plan: 'business',
+      ai_advisor: true,
+      ai_voice: true,
+      ai_content: true,
+      crm_enabled: true,
+      broadcast_enabled: true,
+      loyalty_enabled: true,
+      subscriptions_enabled: true,
+      consultations_enabled: true,
+      portfolio_enabled: true,
+      locations_enabled: true,
+      analytics_enabled: true,
+      waitlist_enabled: true,
+      custom_branding: true,
+    };
     return { flags: allEnabled, isLoading: false };
   }
 

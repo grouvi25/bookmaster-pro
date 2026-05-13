@@ -176,7 +176,14 @@ export default function Services() {
     }
     setFormLoading(true);
     try {
-      const payload: Record<string, unknown> = {
+      const payload: {
+        name: string;
+        price: number;
+        duration_min: number;
+        price_max?: number;
+        category?: string;
+        description?: string;
+      } = {
         name: formName.trim(),
         price: formPrice ? Number(formPrice) : 0,
         duration_min: Number(formDuration) || 60,
