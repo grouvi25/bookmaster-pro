@@ -4,7 +4,7 @@ Masters schemas.
 
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
 
 class MasterProfileOut(BaseModel):
@@ -31,6 +31,37 @@ class MasterProfileOut(BaseModel):
     rating_count: int = 0
     total_clients: int = 0
     total_appointments: int = 0
+
+    @field_validator(
+        "accept_online_payment", "link_page_enabled", "is_verified",
+        mode="before",
+    )
+    @classmethod
+    def _bool_none(cls, v: object) -> bool:
+        return bool(v) if v is not None else False
+
+    @field_validator(
+        "buffer_minutes", "rating_count", "total_clients", "total_appointments",
+        mode="before",
+    )
+    @classmethod
+    def _int_none(cls, v: object) -> int:
+        return int(v) if v is not None else 0
+
+    @field_validator("link_page_theme", "current_plan", mode="before")
+    @classmethod
+    def _str_none(cls, v: object) -> str:
+        return str(v) if v is not None else "default"
+
+    @field_validator("link_page_links", mode="before")
+    @classmethod
+    def _list_none(cls, v: object) -> list:
+        return list(v) if v is not None else []
+
+    @field_validator("rating_avg", mode="before")
+    @classmethod
+    def _float_none(cls, v: object) -> float:
+        return float(v) if v is not None else 0.0
 
     model_config = {"from_attributes": True}
 
