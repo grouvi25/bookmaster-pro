@@ -41,7 +41,7 @@ interface BookingPayload {
   master_id: number | null;
   service_id: number | null;
   date: string;
-  time: string;
+  time_start: string;
   client_name?: string;
   client_phone?: string;
   promo_code?: string;

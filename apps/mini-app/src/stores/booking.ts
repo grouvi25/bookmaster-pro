@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
 
 interface BookingState {
   masterSlug: string;
@@ -39,14 +40,22 @@ const initialState = {
   usePoints: false,
 };
 
-export const useBookingStore = create<BookingState>((set) => ({
-  ...initialState,
-  setMaster: (slug, id, name) => set({ masterSlug: slug, masterId: id, masterName: name }),
-  setService: (id, name, price, duration) =>
-    set({ serviceId: id, serviceName: name, servicePrice: price, serviceDuration: duration }),
-  setDate: (date) => set({ selectedDate: date }),
-  setTime: (time) => set({ selectedTime: time }),
-  setPromo: (code, discount) => set({ promoCode: code, discount }),
-  setUsePoints: (use, points) => set({ usePoints: use, loyaltyPoints: points }),
-  reset: () => set(initialState),
-}));
+export const useBookingStore = create<BookingState>()(
+  persist(
+    (set) => ({
+      ...initialState,
+      setMaster: (slug, id, name) => set({ masterSlug: slug, masterId: id, masterName: name }),
+      setService: (id, name, price, duration) =>
+        set({ serviceId: id, serviceName: name, servicePrice: price, serviceDuration: duration }),
+      setDate: (date) => set({ selectedDate: date }),
+      setTime: (time) => set({ selectedTime: time }),
+      setPromo: (code, discount) => set({ promoCode: code, discount }),
+      setUsePoints: (use, points) => set({ usePoints: use, loyaltyPoints: points }),
+      reset: () => set(initialState),
+    }),
+    {
+      name: 'bm-booking',
+      storage: createJSONStorage(() => sessionStorage),
+    },
+  ),
+);
