@@ -1,13 +1,15 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { aiApi } from '@/api/endpoints';
+import { useAuthStore } from '@/stores/auth';
 import Button from '@/shared/ui/Button';
-import { SendHorizontal, Mic, MicOff, Sparkles } from 'lucide-react';
+import { SendHorizontal, Mic, MicOff, Sparkles, FileText } from 'lucide-react';
 import FeatureGate from '@/shared/ui/FeatureGate';
 
 interface Message {
   role: 'user' | 'assistant';
   content: string;
+  streaming?: boolean;
 }
 
 export default function AIAssistant() {
@@ -20,6 +22,7 @@ export default function AIAssistant() {
 
 function AIChat() {
   const navigate = useNavigate();
+  const { masterId } = useAuthStore();
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
@@ -39,6 +42,7 @@ function AIChat() {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const wsRef = useRef<WebSocket | null>(null);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({
@@ -47,13 +51,85 @@ function AIChat() {
     });
   }, [messages]);
 
-  const handleSend = async () => {
-    if (!input.trim() || loading) return;
-    const userMessage = input.trim();
-    setInput('');
-    setMessages((prev) => [...prev, { role: 'user', content: userMessage }]);
-    setLoading(true);
+  useEffect(() => {
+    return () => {
+      wsRef.current?.close();
+    };
+  }, []);
 
+  const sendViaWebSocket = useCallback(
+    (userMessage: string) => {
+      const wsUrl = `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/api/v1/ai/chat`;
+
+      const ws = new WebSocket(wsUrl);
+      wsRef.current = ws;
+
+      ws.onopen = () => {
+        ws.send(
+          JSON.stringify({
+            message: userMessage,
+            session_id: sessionId,
+            master_id: masterId,
+          })
+        );
+      };
+
+      let buffer = '';
+
+      ws.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+
+        if (data.error) {
+          setMessages((prev) => [
+            ...prev,
+            { role: 'assistant', content: data.error },
+          ]);
+          setLoading(false);
+          ws.close();
+          return;
+        }
+
+        if (data.session_id) {
+          setSessionId(data.session_id);
+        }
+
+        if (data.chunk) {
+          buffer += data.chunk;
+          setMessages((prev) => {
+            const last = prev[prev.length - 1];
+            if (last?.streaming) {
+              return [...prev.slice(0, -1), { role: 'assistant', content: buffer, streaming: true }];
+            }
+            return [...prev, { role: 'assistant', content: buffer, streaming: true }];
+          });
+        }
+
+        if (data.done) {
+          setMessages((prev) => {
+            const last = prev[prev.length - 1];
+            if (last?.streaming) {
+              return [...prev.slice(0, -1), { role: 'assistant', content: last.content }];
+            }
+            return prev;
+          });
+          setLoading(false);
+          ws.close();
+        }
+      };
+
+      ws.onerror = () => {
+        fallbackToHTTP(userMessage);
+        ws.close();
+      };
+
+      ws.onclose = () => {
+        wsRef.current = null;
+      };
+    },
+    [sessionId, masterId]
+  );
+
+  const fallbackToHTTP = async (userMessage: string) => {
     try {
       const resp = await aiApi.ask({
         message: userMessage,
@@ -62,10 +138,13 @@ function AIChat() {
       if (resp.data.session_id) {
         setSessionId(resp.data.session_id);
       }
-      setMessages((prev) => [
-        ...prev,
-        { role: 'assistant', content: resp.data.response || 'Нет ответа' },
-      ]);
+      setMessages((prev) => {
+        const last = prev[prev.length - 1];
+        if (last?.streaming) {
+          return [...prev.slice(0, -1), { role: 'assistant', content: resp.data.response || 'Нет ответа' }];
+        }
+        return [...prev, { role: 'assistant', content: resp.data.response || 'Нет ответа' }];
+      });
     } catch (err: unknown) {
       const errorMsg =
         (err as { response?: { status?: number } })?.response?.status === 403
@@ -78,6 +157,16 @@ function AIChat() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSend = async () => {
+    if (!input.trim() || loading) return;
+    const userMessage = input.trim();
+    setInput('');
+    setMessages((prev) => [...prev, { role: 'user', content: userMessage }]);
+    setLoading(true);
+
+    sendViaWebSocket(userMessage);
   };
 
   const startRecording = useCallback(async () => {
@@ -116,22 +205,15 @@ function AIChat() {
               updated[updated.length - 1] = { role: 'user', content: data.transcript };
               return updated;
             });
-            const aiResp = await aiApi.ask({
-              message: data.transcript,
-              session_id: sessionId,
-            });
-            if (aiResp.data.session_id) setSessionId(aiResp.data.session_id);
-            setMessages((prev) => [
-              ...prev,
-              { role: 'assistant', content: aiResp.data.response || 'Нет ответа' },
-            ]);
+            sendViaWebSocket(data.transcript);
+          } else {
+            setLoading(false);
           }
         } catch {
           setMessages((prev) => [
             ...prev,
             { role: 'assistant', content: 'Не удалось распознать голос.' },
           ]);
-        } finally {
           setLoading(false);
         }
       };
@@ -144,7 +226,7 @@ function AIChat() {
         { role: 'assistant', content: 'Нет доступа к микрофону.' },
       ]);
     }
-  }, [sessionId]);
+  }, [sendViaWebSocket]);
 
   const stopRecording = useCallback(() => {
     mediaRecorderRef.current?.stop();
@@ -156,15 +238,26 @@ function AIChat() {
       {/* Header */}
       <div className="px-4 py-2 flex items-center justify-between bg-surface-primary">
         <h1 className="text-lg font-bold">AI-ассистент</h1>
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={() => navigate('/master/ai/content')}
-          className="!text-xs"
-        >
-          <Sparkles className="w-3.5 h-3.5" />
-          Контент
-        </Button>
+        <div className="flex gap-1.5">
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => navigate('/master/ai/voice-diary')}
+            className="!text-xs"
+          >
+            <FileText className="w-3.5 h-3.5" />
+            Дневник
+          </Button>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => navigate('/master/ai/content')}
+            className="!text-xs"
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+            Контент
+          </Button>
+        </div>
       </div>
 
       {/* Messages */}
@@ -184,10 +277,13 @@ function AIChat() {
               }`}
             >
               {msg.content}
+              {msg.streaming && (
+                <span className="inline-block w-1.5 h-4 bg-brand-500 ml-0.5 animate-pulse" />
+              )}
             </div>
           </div>
         ))}
-        {loading && (
+        {loading && !messages[messages.length - 1]?.streaming && (
           <div className="mr-auto">
             <div className="bg-surface-elevated shadow-card rounded-2xl rounded-bl-lg px-4 py-3.5">
               <div className="flex gap-1.5">

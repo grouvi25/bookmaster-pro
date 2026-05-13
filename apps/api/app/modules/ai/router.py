@@ -219,3 +219,30 @@ async def get_tokens_info(
     """Информация о квоте AI-токенов мастера."""
     service = AIService(db)
     return await service.get_tokens_info(master.id)
+
+
+@router.get("/voice-diary/entries")
+async def get_voice_diary_entries(
+    limit: int = 50,
+    master: Master = Depends(require_feature("ai_advisor")),
+    db: AsyncSession = Depends(get_db),
+):
+    """Список голосовых заметок мастера."""
+    from app.modules.ai.models import VoiceSession
+    result = await db.execute(
+        select(VoiceSession)
+        .where(VoiceSession.master_id == master.id)
+        .order_by(VoiceSession.created_at.desc())
+        .limit(limit)
+    )
+    entries = result.scalars().all()
+    return [
+        {
+            "id": e.id,
+            "transcript": e.transcript,
+            "structured_notes": e.ai_response or "",
+            "client_name": None,
+            "created_at": e.created_at.isoformat() if e.created_at else None,
+        }
+        for e in entries
+    ]

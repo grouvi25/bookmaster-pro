@@ -13,7 +13,7 @@ import { toast } from '@/shared/ui/Toast';
 import {
   BarChart3, ClipboardList, User, MessageCircle,
   Link2, CreditCard, Star, Plus, Trash2, Send,
-  MapPin, Megaphone,
+  MapPin, Megaphone, Code, Package,
 } from 'lucide-react';
 import type { Service, SupportTicket, MasterProfile } from '@/shared/types/api';
 import { useFeatureFlag } from '@/hooks/useFeatureFlag';
@@ -47,6 +47,8 @@ function SettingsMain({ onNavigate }: { onNavigate: (tab: SettingsTab) => void }
   const analyticsEnabled = useFeatureFlag('analytics_enabled');
   const broadcastEnabled = useFeatureFlag('broadcast_enabled');
   const locationsEnabled = useFeatureFlag('locations_enabled');
+  const widgetEnabled = useFeatureFlag('widget_enabled');
+  const clientSubscriptions = useFeatureFlag('client_subscriptions');
 
   return (
     <div className="flex flex-col gap-2">
@@ -101,6 +103,26 @@ function SettingsMain({ onNavigate }: { onNavigate: (tab: SettingsTab) => void }
           onClick={() => navigate('/master/broadcast')}
           iconBg="bg-accent-purple/10"
           iconColor="text-accent-purple"
+        />
+      )}
+      {widgetEnabled && (
+        <MenuItem
+          Icon={Code}
+          label="Виджет для сайта"
+          description="Встройте запись на свой сайт"
+          onClick={() => navigate('/master/widget')}
+          iconBg="bg-blue-500/10"
+          iconColor="text-blue-500"
+        />
+      )}
+      {clientSubscriptions && (
+        <MenuItem
+          Icon={Package}
+          label="Абонементы"
+          description="Пакеты визитов для клиентов"
+          onClick={() => navigate('/master/subscription-packages')}
+          iconBg="bg-green-500/10"
+          iconColor="text-green-500"
         />
       )}
       {locationsEnabled && (
