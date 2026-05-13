@@ -17,6 +17,8 @@ const TARIFF_LABELS: Record<string, string> = {
   ai_voice: 'Профи+AI',
   ai_content: 'Профи',
   custom_branding: 'Бизнес',
+  widget_enabled: 'Бизнес',
+  client_subscriptions: 'Профи',
 };
 
 interface FeatureGateProps {

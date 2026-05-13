@@ -34,6 +34,9 @@ import Billing from '@/pages/master/Billing';
 import LinkPageEditor from '@/pages/master/LinkPageEditor';
 import BlockedSlots from '@/pages/master/BlockedSlots';
 import AIContentTools from '@/pages/master/AIContentTools';
+import VoiceDiary from '@/pages/master/VoiceDiary';
+import WidgetSettings from '@/pages/master/WidgetSettings';
+import SubscriptionPackages from '@/pages/master/SubscriptionPackages';
 import TabBar from '@/components/common/TabBar';
 
 // Клиентские дополнительные экраны
@@ -44,7 +47,9 @@ import ReviewForm from '@/pages/client/ReviewForm';
 
 // Специальные страницы
 import LinkPage from '@/pages/LinkPage';
+import EmbedPage from '@/pages/EmbedPage';
 import NpsPopup from '@/components/NpsPopup';
+import ModeratorPanel from '@/pages/moderator/ModeratorPanel';
 import SuperadminPanel from '@/pages/superadmin/SuperadminPanel';
 
 import Loading from '@/components/common/Loading';
@@ -224,9 +229,18 @@ function AppRouter() {
         <Route path="/link-page/edit" element={<RequireAuth allowedRoles={['master', 'superadmin']}><LinkPageEditor /></RequireAuth>} />
         <Route path="/master/blocked-slots" element={<RequireAuth allowedRoles={['master', 'superadmin']}><BlockedSlots /></RequireAuth>} />
         <Route path="/master/ai/content" element={<RequireAuth allowedRoles={['master', 'superadmin']}><AIContentTools /></RequireAuth>} />
+        <Route path="/master/ai/voice-diary" element={<RequireAuth allowedRoles={['master', 'superadmin']}><VoiceDiary /></RequireAuth>} />
+        <Route path="/master/widget" element={<RequireAuth allowedRoles={['master', 'superadmin']}><WidgetSettings /></RequireAuth>} />
+        <Route path="/master/subscription-packages" element={<RequireAuth allowedRoles={['master', 'superadmin']}><SubscriptionPackages /></RequireAuth>} />
 
         {/* Публичная страница-линк (TapLink) */}
         <Route path="/p/:slug" element={<LinkPage />} />
+
+        {/* Embed для iframe виджета */}
+        <Route path="/embed/:slug" element={<EmbedPage />} />
+
+        {/* Модератор — только moderator и superadmin */}
+        <Route path="/moderator" element={<RequireAuth allowedRoles={['moderator', 'superadmin']}><ModeratorPanel /></RequireAuth>} />
 
         {/* Суперадмин — только superadmin */}
         <Route path="/superadmin" element={<RequireAuth allowedRoles={['superadmin']}><SuperadminPanel /></RequireAuth>} />

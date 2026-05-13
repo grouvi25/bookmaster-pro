@@ -41,13 +41,36 @@ async def get_balance(
 
     service = LoyaltyService(db)
     account = await service.get_or_create_account(master_id, client.id)
-    return LoyaltyBalanceOut(
-        master_id=master_id,
-        client_id=client.id,
-        balance=account.balance,
-        tier=account.tier,
-        total_earned=account.total_earned,
+
+    # Streak: count consecutive completed appointments
+    from app.modules.booking.models import Appointment
+    result2 = await db.execute(
+        select(Appointment)
+        .where(
+            Appointment.master_id == master_id,
+            Appointment.client_id == client.id,
+        )
+        .order_by(Appointment.date.desc())
+        .limit(20)
     )
+    recent_appts = result2.scalars().all()
+    streak_count = 0
+    for appt in recent_appts:
+        if appt.status == "completed":
+            streak_count += 1
+        else:
+            break
+
+    return {
+        "master_id": master_id,
+        "client_id": client.id,
+        "balance": account.balance,
+        "tier": account.tier,
+        "total_earned": account.total_earned,
+        "streak_count": streak_count,
+        "streak_threshold": 3,
+        "streak_bonus": 100,
+    }
 
 
 @router.get("/history/{master_id}", response_model=List[LoyaltyTransactionOut])

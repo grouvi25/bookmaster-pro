@@ -139,6 +139,9 @@ class PaymentService:
     ) -> MasterSubscription:
         """Создать/обновить подписку мастера."""
         price = PLAN_PRICES.get(plan, Decimal("0"))
+        if billing_period == "yearly":
+            price = price * 12 * Decimal("0.8")
+        period_days = 365 if billing_period == "yearly" else 30
 
         subscription = MasterSubscription(
             master_id=master_id,
@@ -147,8 +150,11 @@ class PaymentService:
             billing_period=billing_period,
             status="active",
             started_at=date.today(),
-            next_billing=date.today() + timedelta(days=30),
+            next_billing=date.today() + timedelta(days=period_days),
         )
+
+        if settings.YOOKASSA_SHOP_ID and settings.YOOKASSA_SECRET_KEY:
+            subscription.status = "pending"
         self.db.add(subscription)
 
         # Обновляем тариф мастера
