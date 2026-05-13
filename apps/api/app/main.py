@@ -110,6 +110,7 @@ from app.modules.booking.scheduler import (
     remind_24h, remind_2h, cleanup_pending,
     admin_daily, birthday_promo, reactivation,
     post_visit_review, billing_reminder, ai_reindex,
+    loyalty_expire, loyalty_expiry_warn,
 )
 
 scheduler = AsyncIOScheduler()
@@ -130,5 +131,9 @@ async def startup():
     scheduler.add_job(billing_reminder, "cron", hour=10, minute=0, id="billing_reminder")
     scheduler.add_job(ai_reindex, "cron", hour=3, minute=0, id="ai_reindex")
 
+    # Лояльность: сгорание баллов и предупреждение
+    scheduler.add_job(loyalty_expire, "cron", hour=2, minute=0, id="loyalty_expire")
+    scheduler.add_job(loyalty_expiry_warn, "cron", hour=10, minute=30, id="loyalty_expiry_warn")
+
     scheduler.start()
-    logger.info("APScheduler started with 9 jobs")
+    logger.info("APScheduler started with 11 jobs")

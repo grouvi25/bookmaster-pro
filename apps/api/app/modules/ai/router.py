@@ -1,16 +1,18 @@
 """
-AI router — WebSocket чат, голосовой дневник, контент-мастер, клиентский бот.
+AI router — WebSocket чат, голосовой дневник, STT, контент-мастер, клиентский бот.
 """
 
 import uuid
+import logging
 
-from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, WebSocket, WebSocketDisconnect
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.auth import get_current_master
 from app.core.feature_flags import require_feature
 from app.modules.ai.service import AIService, CONTENT_TEMPLATES
+from app.modules.ai.providers import get_stt_provider
 from app.modules.ai.indexer import AIIndexer
 from app.modules.ai.schemas import (
     AIContentRequest,
@@ -24,8 +26,11 @@ from app.modules.ai.schemas import (
     AITemplateInfo,
     AIAskRequest,
     AIAskResponse,
+    AITranscribeResponse,
 )
 from app.modules.masters.models import Master
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -126,6 +131,30 @@ async def list_templates():
             required_params=custom_params,
         ))
     return result
+
+
+@router.post("/transcribe", response_model=AITranscribeResponse)
+async def transcribe_audio(
+    audio: UploadFile = File(...),
+    master: Master = Depends(require_feature("ai_voice")),
+):
+    """STT — распознавание голосового сообщения через Whisper API."""
+    max_size = 25 * 1024 * 1024  # 25 MB limit
+    audio_bytes = await audio.read()
+    if len(audio_bytes) > max_size:
+        raise HTTPException(status_code=413, detail="Audio file too large (max 25 MB)")
+
+    stt = get_stt_provider()
+    try:
+        transcript = await stt.transcribe(
+            audio_bytes=audio_bytes,
+            filename=audio.filename or "audio.ogg",
+        )
+    except Exception as e:
+        logger.error(f"STT transcription error: {e}")
+        raise HTTPException(status_code=500, detail="Ошибка распознавания речи")
+
+    return AITranscribeResponse(transcript=transcript)
 
 
 @router.post("/voice-diary", response_model=AIVoiceDiaryResponse)
