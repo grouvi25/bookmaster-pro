@@ -5,8 +5,6 @@ Payments router — /api/v1/payments
 import logging
 from typing import List
 
-logger = logging.getLogger(__name__)
-
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -26,6 +24,8 @@ from app.modules.payments.schemas import (
 )
 from app.modules.payments.service import PaymentService
 from app.modules.payments.models import Payment
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
