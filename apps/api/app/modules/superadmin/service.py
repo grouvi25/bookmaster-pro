@@ -268,3 +268,241 @@ class SuperadminService:
         )
         self.db.add(log)
         await self.db.flush()
+
+    # ── Финансы ──────────────────────────────────────────────
+
+    async def get_finance_dashboard(
+        self,
+        period_days: int = 30,
+    ) -> dict:
+        now = datetime.now(timezone.utc)
+        period_start = now - timedelta(days=period_days)
+
+        # Total revenue
+        rev_r = await self.db.execute(
+            select(func.coalesce(func.sum(Payment.amount_paid), 0)).where(
+                Payment.status == "succeeded",
+            )
+        )
+        total_revenue = float(rev_r.scalar() or 0)
+
+        # Revenue for period
+        period_rev_r = await self.db.execute(
+            select(func.coalesce(func.sum(Payment.amount_paid), 0)).where(
+                Payment.status == "succeeded",
+                Payment.created_at >= period_start,
+            )
+        )
+        period_revenue = float(period_rev_r.scalar() or 0)
+
+        # Refunds
+        refund_r = await self.db.execute(
+            select(func.coalesce(func.sum(Payment.amount_paid), 0)).where(
+                Payment.status == "refunded",
+            )
+        )
+        total_refunds = float(refund_r.scalar() or 0)
+
+        # Transaction count
+        tx_count_r = await self.db.execute(
+            select(func.count(Payment.id)).where(
+                Payment.status == "succeeded",
+                Payment.created_at >= period_start,
+            )
+        )
+        tx_count = int(tx_count_r.scalar() or 0)
+
+        # MRR
+        mrr_r = await self.db.execute(
+            select(func.coalesce(func.sum(MasterSubscription.price), 0)).where(
+                MasterSubscription.status == "active"
+            )
+        )
+        mrr = float(mrr_r.scalar() or 0)
+
+        # Revenue by day
+        by_day_r = await self.db.execute(
+            select(
+                func.date_trunc("day", Payment.created_at).label("day"),
+                func.sum(Payment.amount_paid),
+                func.count(Payment.id),
+            )
+            .where(
+                Payment.status == "succeeded",
+                Payment.created_at >= period_start,
+            )
+            .group_by("day")
+            .order_by("day")
+        )
+        revenue_by_day = [
+            {"date": str(r[0].date()) if r[0] else "", "revenue": float(r[1] or 0), "count": r[2]}
+            for r in by_day_r.all()
+        ]
+
+        return {
+            "total_revenue": total_revenue,
+            "period_revenue": period_revenue,
+            "total_refunds": total_refunds,
+            "transaction_count": tx_count,
+            "mrr": mrr,
+            "arr": mrr * 12,
+            "mrr_forecast_3m": mrr * 3,
+            "revenue_by_day": revenue_by_day,
+        }
+
+    # ── Тикеты ──────────────────────────────────────────────
+
+    async def get_tickets_queue(
+        self,
+        status_filter: Optional[str] = None,
+        page: int = 1,
+        per_page: int = 50,
+    ) -> dict:
+        from app.modules.support.models import SupportTicket
+
+        q = select(SupportTicket)
+        count_q = select(func.count(SupportTicket.id))
+
+        if status_filter:
+            q = q.where(SupportTicket.status == status_filter)
+            count_q = count_q.where(SupportTicket.status == status_filter)
+
+        q = q.order_by(SupportTicket.created_at.desc()).offset((page - 1) * per_page).limit(per_page)
+
+        result = await self.db.execute(q)
+        tickets = result.scalars().all()
+
+        total_r = await self.db.execute(count_q)
+        total = total_r.scalar() or 0
+
+        # SLA stats
+        open_r = await self.db.execute(
+            select(func.count(SupportTicket.id)).where(
+                SupportTicket.status.in_(["open", "in_progress"])
+            )
+        )
+        open_count = int(open_r.scalar() or 0)
+
+        return {
+            "tickets": [
+                {
+                    "id": t.id,
+                    "master_id": t.master_id,
+                    "subject": t.subject,
+                    "status": t.status,
+                    "priority": getattr(t, "priority", "normal"),
+                    "created_at": str(t.created_at),
+                }
+                for t in tickets
+            ],
+            "total": total,
+            "open_count": open_count,
+            "page": page,
+            "per_page": per_page,
+        }
+
+    async def escalate_ticket(self, ticket_id: int, admin_id: str) -> dict:
+        from app.modules.support.models import SupportTicket
+
+        ticket = await self.db.get(SupportTicket, ticket_id)
+        if not ticket:
+            return {"error": "not_found"}
+
+        ticket.status = "escalated"
+        await self.log_action(
+            admin_id=admin_id,
+            action="escalate_ticket",
+            entity_type="ticket",
+            entity_id=ticket_id,
+        )
+        await self.db.flush()
+        return {"id": ticket.id, "status": ticket.status}
+
+    # ── Настройки платформы ──────────────────────────────────
+
+    async def get_platform_settings(self) -> dict:
+        active_subs_r = await self.db.execute(
+            select(func.count(MasterSubscription.id)).where(
+                MasterSubscription.status == "active"
+            )
+        )
+        active_subs = int(active_subs_r.scalar() or 0)
+
+        return {
+            "plan_prices": PLAN_PRICES,
+            "active_subscriptions": active_subs,
+            "ai_provider": getattr(settings, "AI_DEFAULT_PROVIDER", "openai"),
+            "timezone": getattr(settings, "TIMEZONE", "Europe/Moscow"),
+            "environment": getattr(settings, "ENVIRONMENT", "production"),
+            "debug": getattr(settings, "DEBUG", False),
+        }
+
+    # ── Аналитика роста ──────────────────────────────────────
+
+    async def get_growth_analytics(self, period_days: int = 90) -> dict:
+        now = datetime.now(timezone.utc)
+        period_start = now - timedelta(days=period_days)
+
+        # Registration funnel: identities → masters
+        total_id_r = await self.db.execute(
+            select(func.count(Identity.id)).where(Identity.created_at >= period_start)
+        )
+        total_identities = int(total_id_r.scalar() or 0)
+
+        total_m_r = await self.db.execute(
+            select(func.count(Master.id)).where(Master.created_at >= period_start)
+        )
+        total_new_masters = int(total_m_r.scalar() or 0)
+
+        # Masters by week
+        by_week_r = await self.db.execute(
+            select(
+                func.date_trunc("week", Master.created_at).label("week"),
+                func.count(Master.id),
+            )
+            .where(Master.created_at >= period_start)
+            .group_by("week")
+            .order_by("week")
+        )
+        masters_by_week = [
+            {"week": str(r[0].date()) if r[0] else "", "count": r[1]}
+            for r in by_week_r.all()
+        ]
+
+        # Retention: masters with at least 1 appointment in each of the last 3 months
+        retention_months = []
+        for i in range(3):
+            m_start = now - timedelta(days=30 * (i + 1))
+            m_end = now - timedelta(days=30 * i)
+            ret_r = await self.db.execute(
+                select(func.count(func.distinct(Appointment.master_id))).where(
+                    Appointment.created_at >= m_start,
+                    Appointment.created_at < m_end,
+                )
+            )
+            retention_months.append({
+                "month_offset": i,
+                "active_masters": int(ret_r.scalar() or 0),
+            })
+
+        # Revenue waterfall
+        revenue_by_plan_r = await self.db.execute(
+            select(
+                Master.current_plan,
+                func.coalesce(func.sum(MasterSubscription.price), 0),
+            )
+            .join(MasterSubscription, MasterSubscription.master_id == Master.id)
+            .where(MasterSubscription.status == "active")
+            .group_by(Master.current_plan)
+        )
+        revenue_by_plan = {r[0]: float(r[1]) for r in revenue_by_plan_r.all()}
+
+        return {
+            "period_days": period_days,
+            "total_identities": total_identities,
+            "total_new_masters": total_new_masters,
+            "conversion_rate": round(total_new_masters / total_identities * 100, 1) if total_identities else 0,
+            "masters_by_week": masters_by_week,
+            "retention_cohorts": retention_months,
+            "revenue_by_plan": revenue_by_plan,
+        }

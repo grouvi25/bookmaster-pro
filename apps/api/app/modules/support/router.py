@@ -120,3 +120,28 @@ async def rate_ticket(
         raise HTTPException(status_code=404, detail="Ticket not found")
     await db.commit()
     return ticket
+
+
+# ── Модерация (moderator / superadmin) ──────────────────────
+
+@router.get("/tickets/queue", response_model=List[TicketOut])
+async def get_moderation_queue(
+    status: Optional[str] = None,
+    priority: Optional[str] = None,
+    limit: int = 50,
+    offset: int = 0,
+    user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Очередь тикетов для модератора/суперадмина."""
+    role = user.get("role", "")
+    if role not in ("moderator", "superadmin"):
+        raise HTTPException(status_code=403, detail="Moderators only")
+    svc = SupportService(db)
+    tickets, _ = await svc.get_tickets(
+        status_filter=status,
+        priority_filter=priority,
+        limit=limit,
+        offset=offset,
+    )
+    return tickets

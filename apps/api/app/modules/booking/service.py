@@ -157,6 +157,10 @@ class BookingService:
 
         if new_status == AppointmentStatus.COMPLETED.value:
             appointment.completed_at = datetime.now(timezone.utc)
+            await self._on_complete(appointment)
+
+        if new_status == AppointmentStatus.NO_SHOW.value:
+            await self._on_no_show(appointment)
 
         if master_comment is not None:
             appointment.master_comment = master_comment
@@ -165,6 +169,83 @@ class BookingService:
 
         await self.db.flush()
         return appointment
+
+    async def _on_complete(self, appointment: Appointment) -> None:
+        """При завершении визита: начислить баллы, проверить стрик, первый визит."""
+        if not appointment.client_id:
+            return
+
+        from app.modules.loyalty.service import LoyaltyService
+        from app.modules.masters.models import Master
+        from app.modules.clients.models import ClientMasterLink
+
+        loyalty = LoyaltyService(self.db)
+
+        result = await self.db.execute(
+            select(Master).where(Master.id == appointment.master_id)
+        )
+        master = result.scalar_one_or_none()
+        if not master:
+            return
+
+        # Кэшбэк за визит: 1 балл = loyalty_earn_rate рублей
+        earn_rate = master.loyalty_earn_rate or 10
+        price = appointment.price_final or 0
+        if price > 0 and earn_rate > 0:
+            cashback_points = price // earn_rate
+            if cashback_points > 0:
+                await loyalty.earn_points(
+                    master_id=appointment.master_id,
+                    client_id=appointment.client_id,
+                    points=cashback_points,
+                    earn_type="earn_visit",
+                    appointment_id=appointment.id,
+                    note=f"Кэшбэк за визит ({price}₽)",
+                )
+
+        # Первый визит — бонус
+        result = await self.db.execute(
+            select(ClientMasterLink).where(
+                ClientMasterLink.master_id == appointment.master_id,
+                ClientMasterLink.client_id == appointment.client_id,
+            )
+        )
+        link = result.scalar_one_or_none()
+        is_first = link and (link.visit_count or 0) <= 1
+        if is_first:
+            first_bonus = master.loyalty_first_visit_bonus or 200
+            if first_bonus > 0:
+                await loyalty.earn_points(
+                    master_id=appointment.master_id,
+                    client_id=appointment.client_id,
+                    points=first_bonus,
+                    earn_type="earn_first_visit",
+                    appointment_id=appointment.id,
+                    note="Бонус за первый визит",
+                )
+
+        # Проверка стрика
+        await loyalty.check_streak(
+            master_id=appointment.master_id,
+            client_id=appointment.client_id,
+        )
+
+    async def _on_no_show(self, appointment: Appointment) -> None:
+        """При no-show: увеличить счётчик клиента."""
+        if not appointment.client_id:
+            return
+
+        from app.modules.clients.models import ClientMasterLink
+
+        result = await self.db.execute(
+            select(ClientMasterLink).where(
+                ClientMasterLink.master_id == appointment.master_id,
+                ClientMasterLink.client_id == appointment.client_id,
+            )
+        )
+        link = result.scalar_one_or_none()
+        if link:
+            link.no_show_count = (link.no_show_count or 0) + 1
 
     # ── Blocked slots ───────────────────────────────────────
 

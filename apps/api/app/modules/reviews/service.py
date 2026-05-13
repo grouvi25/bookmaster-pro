@@ -54,7 +54,32 @@ class ReviewService:
 
         # Пересчитать рейтинг мастера
         await self._recalculate_rating(appointment.master_id)
+
+        # Начислить баллы за отзыв
+        await self._earn_review_bonus(appointment.master_id, client_id)
+
         return review
+
+    async def _earn_review_bonus(self, master_id: int, client_id: int) -> None:
+        from app.modules.loyalty.service import LoyaltyService
+
+        result = await self.db.execute(
+            select(Master).where(Master.id == master_id)
+        )
+        master = result.scalar_one_or_none()
+        if not master:
+            return
+
+        bonus = master.loyalty_review_bonus or 50
+        if bonus > 0:
+            loyalty = LoyaltyService(self.db)
+            await loyalty.earn_points(
+                master_id=master_id,
+                client_id=client_id,
+                points=bonus,
+                earn_type="earn_review",
+                note="Бонус за отзыв",
+            )
 
     async def reply_to_review(
         self, review_id: int, master_id: int, reply_text: str

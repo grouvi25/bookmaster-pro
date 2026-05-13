@@ -207,6 +207,25 @@ async def get_blocked_slots(
     ]
 
 
+@router.get("/noshow-risk")
+async def check_noshow_risk(
+    master_id: int = Query(...),
+    user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Проверить риск no-show для текущего клиента."""
+    from sqlalchemy import select as sel
+    result = await db.execute(
+        sel(Client).where(Client.identity_id == int(user["sub"]))
+    )
+    client = result.scalar_one_or_none()
+    if not client:
+        raise HTTPException(status_code=404, detail="Client not found")
+
+    from app.modules.booking.noshow_scoring import check_booking_allowed
+    return await check_booking_allowed(db, client.id, master_id)
+
+
 @router.delete("/blocked/{blocked_id}", status_code=204)
 async def delete_blocked_slot(
     blocked_id: int,

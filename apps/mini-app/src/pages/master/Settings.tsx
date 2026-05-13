@@ -6,7 +6,7 @@ import Loading from '@/components/common/Loading';
 import Button from '@/shared/ui/Button';
 import Card from '@/shared/ui/Card';
 import { toast } from '@/shared/ui/Toast';
-import { BarChart3, ClipboardList, User, MessageCircle, Link2, CreditCard, ChevronLeft, ChevronRight, Star, Plus, Pencil, Trash2, Send } from 'lucide-react';
+import { BarChart3, ClipboardList, User, MessageCircle, Link2, CreditCard, ChevronLeft, ChevronRight, Star, Plus, Pencil, Trash2, Send, MapPin, Megaphone } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 type SettingsTab = 'main' | 'analytics' | 'services' | 'profile' | 'support';
@@ -87,6 +87,34 @@ function SettingsMain({ onNavigate }: { onNavigate: (tab: SettingsTab) => void }
         <div className="flex-1">
           <div className="font-medium text-sm">Тарифы и подписка</div>
           <div className="text-xs text-tg-hint">Управление подпиской</div>
+        </div>
+        <ChevronRight className="w-4 h-4 text-tg-hint" />
+      </button>
+
+      <button
+        onClick={() => navigate('/master/broadcast')}
+        className="flex items-center gap-3 p-4 bg-tg-secondary rounded-xl text-left"
+      >
+        <div className="w-10 h-10 bg-brand-50 rounded-xl flex items-center justify-center">
+          <Megaphone className="w-5 h-5 text-brand-500" strokeWidth={1.8} />
+        </div>
+        <div className="flex-1">
+          <div className="font-medium text-sm">Рассылки</div>
+          <div className="text-xs text-tg-hint">Рассылки по сегментам клиентов</div>
+        </div>
+        <ChevronRight className="w-4 h-4 text-tg-hint" />
+      </button>
+
+      <button
+        onClick={() => navigate('/master/locations')}
+        className="flex items-center gap-3 p-4 bg-tg-secondary rounded-xl text-left"
+      >
+        <div className="w-10 h-10 bg-brand-50 rounded-xl flex items-center justify-center">
+          <MapPin className="w-5 h-5 text-brand-500" strokeWidth={1.8} />
+        </div>
+        <div className="flex-1">
+          <div className="font-medium text-sm">Локации</div>
+          <div className="text-xs text-tg-hint">Управление адресами кабинетов</div>
         </div>
         <ChevronRight className="w-4 h-4 text-tg-hint" />
       </button>

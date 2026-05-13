@@ -140,3 +140,72 @@ async def get_audit_log(
         }
         for log in logs
     ]
+
+
+# ── Финансы ──────────────────────────────────────────────────
+
+@router.get("/finance")
+async def get_finance_dashboard(
+    period_days: int = Query(30, ge=1, le=365),
+    user: dict = Depends(_require_superadmin),
+    db: AsyncSession = Depends(get_db),
+):
+    """Финансовый дашборд: выручка, MRR, возвраты, динамика."""
+    svc = SuperadminService(db)
+    return await svc.get_finance_dashboard(period_days)
+
+
+# ── Тикеты ───────────────────────────────────────────────────
+
+@router.get("/tickets")
+async def get_tickets_queue(
+    status: Optional[str] = None,
+    page: int = Query(1, ge=1),
+    per_page: int = Query(50, ge=1, le=200),
+    user: dict = Depends(_require_superadmin),
+    db: AsyncSession = Depends(get_db),
+):
+    """Очередь тикетов поддержки с SLA-статистикой."""
+    svc = SuperadminService(db)
+    return await svc.get_tickets_queue(status, page, per_page)
+
+
+@router.post("/tickets/{ticket_id}/escalate")
+async def escalate_ticket(
+    ticket_id: int,
+    user: dict = Depends(_require_superadmin),
+    db: AsyncSession = Depends(get_db),
+):
+    """Эскалировать тикет."""
+    svc = SuperadminService(db)
+    admin_id = str(user.get("identity_id", "system"))
+    result = await svc.escalate_ticket(ticket_id, admin_id)
+    if "error" in result:
+        raise HTTPException(status_code=404, detail="Ticket not found")
+    await db.commit()
+    return result
+
+
+# ── Настройки ────────────────────────────────────────────────
+
+@router.get("/settings")
+async def get_platform_settings(
+    user: dict = Depends(_require_superadmin),
+    db: AsyncSession = Depends(get_db),
+):
+    """Глобальные настройки платформы: тарифы, флаги, AI-провайдер."""
+    svc = SuperadminService(db)
+    return await svc.get_platform_settings()
+
+
+# ── Аналитика роста ──────────────────────────────────────────
+
+@router.get("/growth")
+async def get_growth_analytics(
+    period_days: int = Query(90, ge=7, le=365),
+    user: dict = Depends(_require_superadmin),
+    db: AsyncSession = Depends(get_db),
+):
+    """Воронка регистрации, retention-когорты, revenue waterfall."""
+    svc = SuperadminService(db)
+    return await svc.get_growth_analytics(period_days)

@@ -103,6 +103,15 @@ app.include_router(superadmin_router, prefix="/api/v1/superadmin", tags=["supera
 from app.modules.consultations.router import router as consultations_router
 app.include_router(consultations_router, prefix="/api/v1/consultations", tags=["consultations"])
 
+from app.modules.broadcast.router import router as broadcast_router
+app.include_router(broadcast_router, prefix="/api/v1/broadcast", tags=["broadcast"])
+
+from app.modules.nps.router import router as nps_router
+app.include_router(nps_router, prefix="/api/v1/nps", tags=["nps"])
+
+from app.modules.widget.router import router as widget_router
+app.include_router(widget_router, prefix="/api/v1/widget", tags=["widget"])
+
 
 # ── APScheduler ──────────────────────────────────────────────
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -111,6 +120,7 @@ from app.modules.booking.scheduler import (
     admin_daily, birthday_promo, reactivation,
     post_visit_review, billing_reminder, ai_reindex,
     loyalty_expire, loyalty_expiry_warn,
+    waitlist_notify,
 )
 
 scheduler = AsyncIOScheduler()
@@ -135,5 +145,8 @@ async def startup():
     scheduler.add_job(loyalty_expire, "cron", hour=2, minute=0, id="loyalty_expire")
     scheduler.add_job(loyalty_expiry_warn, "cron", hour=10, minute=30, id="loyalty_expiry_warn")
 
+    # Фаза 5: waitlist
+    scheduler.add_job(waitlist_notify, "interval", minutes=5, id="waitlist_notify")
+
     scheduler.start()
-    logger.info("APScheduler started with 11 jobs")
+    logger.info("APScheduler started with 12 jobs")
