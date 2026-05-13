@@ -364,6 +364,45 @@ class PaymentService:
 
         await self.db.flush()
 
+    async def get_active_subscription(self, master_id: int) -> Optional[MasterSubscription]:
+        """Получить активную подписку мастера."""
+        result = await self.db.execute(
+            select(MasterSubscription)
+            .where(
+                MasterSubscription.master_id == master_id,
+                MasterSubscription.status == "active",
+            )
+            .order_by(MasterSubscription.id.desc())
+            .limit(1)
+        )
+        return result.scalar_one_or_none()
+
+    async def request_refund(self, payment: Payment) -> None:
+        """Запросить возврат платежа через ЮKassa."""
+        if not settings.YOOKASSA_SHOP_ID or not settings.YOOKASSA_SECRET_KEY:
+            payment.status = "refunded"
+            await self.db.flush()
+            return
+
+        try:
+            from yookassa import Configuration, Refund
+            Configuration.account_id = settings.YOOKASSA_SHOP_ID
+            Configuration.secret_key = settings.YOOKASSA_SECRET_KEY
+
+            Refund.create({
+                "payment_id": payment.yookassa_payment_id,
+                "amount": {
+                    "value": str(payment.amount_paid),
+                    "currency": "RUB",
+                },
+            })
+            payment.status = "refunded"
+        except Exception as e:
+            logger.error(f"YooKassa refund error: {e}")
+            raise ValueError(f"Refund failed: {e}")
+
+        await self.db.flush()
+
     async def get_client_subscriptions(self, client_id: int) -> list:
         """Получить все абонементы клиента."""
         result = await self.db.execute(

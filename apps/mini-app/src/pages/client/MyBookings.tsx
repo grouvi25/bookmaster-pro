@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { bookingApi } from '@/api/endpoints';
+import { toArray } from '@/shared/lib/normalize';
 import BackButton from '@/components/common/BackButton';
 import Loading from '@/components/common/Loading';
 import Card from '@/shared/ui/Card';
@@ -35,7 +36,7 @@ export default function MyBookings() {
 
   if (isLoading) return <Loading />;
 
-  const bookings = data?.items || [];
+  const bookings = toArray(data);
   const upcomingStatuses = ['confirmed', 'paid', 'pending'];
   const filtered = activeTab === 'upcoming'
     ? bookings.filter((b: Record<string, unknown>) => upcomingStatuses.includes(b.status as string))

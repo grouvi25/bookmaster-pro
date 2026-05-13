@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { superadminApi } from '@/api/endpoints';
+import { toArray } from '@/shared/lib/normalize';
 import Loading from '@/components/common/Loading';
 import {
   BarChart3, Users, Activity, ScrollText,
@@ -94,7 +95,7 @@ function MastersTab() {
 
   if (isLoading) return <Loading />;
 
-  const masters = data?.items || [];
+  const masters = toArray(data);
 
   return (
     <div>
@@ -179,7 +180,7 @@ function AuditTab() {
 
   if (isLoading) return <Loading />;
 
-  const logs = data?.items || [];
+  const logs = toArray(data);
 
   return (
     <div className="flex flex-col gap-2">

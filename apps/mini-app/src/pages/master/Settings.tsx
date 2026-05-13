@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { mastersApi, analyticsApi, supportApi, servicesApi } from '@/api/endpoints';
+import { toArray } from '@/shared/lib/normalize';
 import Loading from '@/components/common/Loading';
 import Button from '@/shared/ui/Button';
 import Card from '@/shared/ui/Card';
@@ -168,7 +169,7 @@ function ServicesSection({ onBack }: { onBack: () => void }) {
 
   if (isLoading) return <Loading />;
 
-  const services = Array.isArray(data) ? data : data?.items || [];
+  const services = toArray(data);
 
   const handleCreate = async () => {
     if (!formName.trim()) { toast.error('Введите название'); return; }
@@ -384,7 +385,7 @@ function SupportSection({ onBack }: { onBack: () => void }) {
 
   if (isLoading) return <Loading />;
 
-  const tickets = data?.items || [];
+  const tickets = toArray(data);
 
   return (
     <div className="animate-slide-up">
