@@ -71,6 +71,11 @@ class AITemplateInfo(BaseModel):
     required_params: List[str]
 
 
+class AITranscribeResponse(BaseModel):
+    transcript: str
+    duration_sec: Optional[float] = None
+
+
 class AIAskRequest(BaseModel):
     message: str = Field(..., max_length=4000)
     context: Optional[List[Dict[str, str]]] = None
