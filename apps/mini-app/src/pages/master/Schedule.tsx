@@ -3,10 +3,23 @@ import { useQuery } from '@tanstack/react-query';
 import { bookingApi } from '@/api/endpoints';
 import { toArray } from '@/shared/lib/normalize';
 import Loading from '@/components/common/Loading';
+import PageHeader from '@/shared/ui/PageHeader';
+import StatusBadge from '@/shared/ui/StatusBadge';
 import { format, addDays, startOfWeek } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import clsx from 'clsx';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import type { Booking } from '@/shared/types/api';
+
+const STATUS_VARIANT: Record<string, 'success' | 'warning' | 'danger' | 'info' | 'neutral'> = {
+  confirmed: 'success',
+  paid: 'success',
+  completed: 'info',
+  cancelled_by_client: 'danger',
+  cancelled_by_master: 'danger',
+  no_show: 'warning',
+  pending: 'neutral',
+};
 
 export default function Schedule() {
   const [viewMode, setViewMode] = useState<'week' | 'month'>('week');
@@ -21,33 +34,33 @@ export default function Schedule() {
 
   if (isLoading) return <Loading />;
 
-  const bookings = toArray(data);
+  const bookings = toArray<Booking>(data);
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
 
   return (
     <div className="p-5 pb-24 animate-fade-in">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-5">
-        <h1 className="text-2xl font-bold tracking-tight">Расписание</h1>
-        <div className="flex bg-tg-secondary rounded-2xl p-1">
-          {(['week', 'month'] as const).map((mode) => (
-            <button
-              key={mode}
-              onClick={() => setViewMode(mode)}
-              className={clsx(
-                'px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200',
-                viewMode === mode
-                  ? 'bg-tg-secondary text-tg-text shadow-card'
-                  : 'text-tg-hint'
-              )}
-            >
-              {mode === 'week' ? 'Неделя' : 'Месяц'}
-            </button>
-          ))}
-        </div>
-      </div>
+      <PageHeader
+        title="Расписание"
+        right={
+          <div className="flex bg-tg-secondary rounded-2xl p-1">
+            {(['week', 'month'] as const).map((mode) => (
+              <button
+                key={mode}
+                onClick={() => setViewMode(mode)}
+                className={clsx(
+                  'px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200',
+                  viewMode === mode
+                    ? 'bg-tg-secondary text-tg-text shadow-card'
+                    : 'text-tg-hint'
+                )}
+              >
+                {mode === 'week' ? 'Неделя' : 'Месяц'}
+              </button>
+            ))}
+          </div>
+        }
+      />
 
-      {/* Week nav */}
       <div className="flex items-center justify-between mb-3">
         <button
           onClick={() => setWeekStart(addDays(weekStart, -7))}
@@ -67,7 +80,6 @@ export default function Schedule() {
         </button>
       </div>
 
-      {/* Week days */}
       <div className="flex gap-1.5 mb-5 overflow-x-auto">
         {weekDays.map((day) => {
           const key = format(day, 'yyyy-MM-dd');
@@ -95,7 +107,6 @@ export default function Schedule() {
         })}
       </div>
 
-      {/* Day header */}
       <div className="section-title">
         {format(new Date(selectedDate + 'T00:00:00'), 'd MMMM, EEEE', { locale: ru })}
       </div>
@@ -106,9 +117,9 @@ export default function Schedule() {
         </div>
       ) : (
         <div className="flex flex-col gap-2.5">
-          {bookings.map((b: Record<string, unknown>) => (
+          {bookings.map((b) => (
             <div
-              key={b.id as number}
+              key={b.id}
               className="bg-surface-elevated shadow-card rounded-2xl p-3.5"
             >
               <div className="flex justify-between items-start">
@@ -116,16 +127,17 @@ export default function Schedule() {
                   <div className="w-1 h-10 rounded-full bg-brand-400 mt-0.5" />
                   <div>
                     <div className="font-semibold text-sm">
-                      {b.time as string} — {b.client_name as string}
+                      {b.time} — {b.client_name}
                     </div>
                     <div className="text-xs text-tg-hint mt-1">
-                      {b.service_name as string} · {b.duration_min as number} мин
+                      {b.service_name} · {b.duration_min} мин
                     </div>
                   </div>
                 </div>
-                <span className="text-sm font-bold text-tg-text">
-                  {b.price ? `${Number(b.price).toLocaleString('ru')} ₽` : ''}
-                </span>
+                <StatusBadge
+                  label={b.status}
+                  variant={STATUS_VARIANT[b.status] || 'neutral'}
+                />
               </div>
             </div>
           ))}
