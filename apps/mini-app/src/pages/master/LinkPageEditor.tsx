@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { mastersApi, servicesApi, portfolioApi } from '@/api/endpoints';
+import { mastersApi, servicesApi, portfolioApi, uploadsApi } from '@/api/endpoints';
 import { toArray } from '@/shared/lib/normalize';
 import Loading from '@/components/common/Loading';
 import Card from '@/shared/ui/Card';
@@ -43,6 +43,7 @@ export default function LinkPageEditor() {
   const [bio, setBio] = useState('');
   const [socialLinks, setSocialLinks] = useState<SocialLink[]>([]);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     if (master) {
@@ -85,6 +86,36 @@ export default function LinkPageEditor() {
     if (master?.slug) {
       navigator.clipboard.writeText(pageUrl(master.slug));
       toast.success('Ссылка скопирована');
+    }
+  };
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    setUploading(true);
+    try {
+      for (const file of Array.from(files)) {
+        const uploadResp = await uploadsApi.uploadFile(file, 'portfolio');
+        const { file_key } = uploadResp.data;
+        await portfolioApi.upload({ s3_key: file_key });
+      }
+      queryClient.invalidateQueries({ queryKey: ['my-portfolio'] });
+      toast.success('Фото добавлены');
+    } catch {
+      toast.error('Ошибка загрузки фото');
+    } finally {
+      setUploading(false);
+      e.target.value = '';
+    }
+  };
+
+  const handlePhotoDelete = async (photoId: number) => {
+    try {
+      await portfolioApi.delete(photoId);
+      queryClient.invalidateQueries({ queryKey: ['my-portfolio'] });
+      toast.success('Фото удалено');
+    } catch {
+      toast.error('Ошибка удаления');
     }
   };
 
@@ -242,27 +273,44 @@ export default function LinkPageEditor() {
         </div>
       </div>
 
-      {/* Portfolio preview */}
+      {/* Portfolio */}
       <div className="mb-6">
         <div className="flex items-center justify-between mb-2">
           <label className="text-sm font-medium">Портфолио</label>
-          <span className="text-xs text-tg-hint">{portfolioItems.length} фото</span>
+          <label className="flex items-center gap-1 text-tg-link text-sm cursor-pointer">
+            <Plus className="w-4 h-4" /> {uploading ? 'Загрузка...' : 'Добавить'}
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={handlePhotoUpload}
+              disabled={uploading}
+            />
+          </label>
         </div>
         {portfolioItems.length > 0 ? (
           <div className="grid grid-cols-4 gap-1 rounded-xl overflow-hidden">
-            {portfolioItems.slice(0, 8).map((item) => (
-              <img
-                key={item.id}
-                src={item.image_url}
-                alt=""
-                className="w-full aspect-square object-cover"
-              />
+            {portfolioItems.map((item) => (
+              <div key={item.id} className="relative group">
+                <img
+                  src={item.image_url}
+                  alt=""
+                  className="w-full aspect-square object-cover"
+                />
+                <button
+                  onClick={() => handlePhotoDelete(item.id)}
+                  className="absolute top-1 right-1 w-6 h-6 bg-black/60 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <Trash2 className="w-3 h-3 text-white" />
+                </button>
+              </div>
             ))}
           </div>
         ) : (
           <div className="bg-tg-secondary rounded-xl p-3 text-sm text-tg-hint flex items-center gap-2">
             <Image className="w-4 h-4" />
-            Добавьте фото в портфолио
+            Добавьте фото работ для привлечения клиентов
           </div>
         )}
       </div>
