@@ -107,11 +107,6 @@ interface ClientNotePayload {
   text: string;
 }
 
-interface AIContentPayload {
-  type: string;
-  context?: string;
-  language?: string;
-}
 
 interface SupportTicketPayload {
   subject: string;
@@ -303,7 +298,7 @@ export const analyticsApi = {
 export const aiApi = {
   ask: (data: { message: string; session_id?: string }) =>
     api.post('/ai/ask', data),
-  generateContent: (data: AIContentPayload) =>
+  generateContent: (data: { template_key: string; params: Record<string, string> }) =>
     api.post('/ai/content', data),
   templates: () => api.get('/ai/templates'),
   tokens: () => api.get('/ai/tokens'),

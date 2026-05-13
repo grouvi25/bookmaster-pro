@@ -3,15 +3,18 @@ Masters router — /api/v1/masters
 """
 
 import io
-from typing import List
+import math
+from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import StreamingResponse
+from sqlalchemy import select, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth import get_current_user
 from app.core.config import settings
 from app.core.database import get_db
+from app.modules.masters.models import Master
 from app.modules.masters.schemas import (
     MasterProfileOut,
     MasterProfileUpdate,
@@ -49,6 +52,58 @@ async def update_my_profile(
         raise HTTPException(status_code=404, detail="Master profile not found")
     updated = await service.update_profile(master, body.model_dump(exclude_unset=True))
     return updated
+
+
+def _haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    R = 6371.0
+    dlat = math.radians(lat2 - lat1)
+    dlon = math.radians(lon2 - lon1)
+    a = math.sin(dlat / 2) ** 2 + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * math.sin(dlon / 2) ** 2
+    return R * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+
+
+@router.get("/search/nearby")
+async def search_nearby_masters(
+    lat: float = Query(..., description="Широта"),
+    lng: float = Query(..., description="Долгота"),
+    radius_km: float = Query(10, description="Радиус поиска в км"),
+    specialization: Optional[str] = Query(None),
+    limit: int = Query(20, le=50),
+    db: AsyncSession = Depends(get_db),
+):
+    """Геопоиск мастеров по координатам (Haversine)."""
+    query = select(Master).where(
+        and_(
+            Master.latitude.isnot(None),
+            Master.longitude.isnot(None),
+            Master.is_active.is_(True),
+        )
+    )
+    if specialization:
+        query = query.where(Master.specialization.ilike(f"%{specialization}%"))
+
+    result = await db.execute(query)
+    masters = result.scalars().all()
+
+    nearby = []
+    for m in masters:
+        dist = _haversine_km(lat, lng, m.latitude, m.longitude)
+        if dist <= radius_km:
+            nearby.append({
+                "id": m.id,
+                "display_name": m.display_name or m.name,
+                "specialization": m.specialization,
+                "slug": m.slug,
+                "avatar_url": m.avatar_url,
+                "rating": m.rating,
+                "review_count": m.review_count,
+                "distance_km": round(dist, 1),
+                "latitude": m.latitude,
+                "longitude": m.longitude,
+            })
+
+    nearby.sort(key=lambda x: x["distance_km"])
+    return nearby[:limit]
 
 
 @router.get("/{slug}", response_model=MasterProfileOut)
