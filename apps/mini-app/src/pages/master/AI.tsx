@@ -1,6 +1,8 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { aiApi } from '@/api/endpoints';
-import { SendHorizontal } from 'lucide-react';
+import Button from '@/shared/ui/Button';
+import { SendHorizontal, Mic, MicOff, Sparkles } from 'lucide-react';
 import FeatureGate from '@/shared/ui/FeatureGate';
 
 interface Message {
@@ -17,6 +19,7 @@ export default function AIAssistant() {
 }
 
 function AIChat() {
+  const navigate = useNavigate();
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
@@ -32,6 +35,9 @@ function AIChat() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [sessionId, setSessionId] = useState<string | undefined>(undefined);
+  const [recording, setRecording] = useState(false);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -74,8 +80,93 @@ function AIChat() {
     }
   };
 
+  const startRecording = useCallback(async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+      mediaRecorderRef.current = mediaRecorder;
+      chunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) chunksRef.current.push(e.data);
+      };
+
+      mediaRecorder.onstop = async () => {
+        stream.getTracks().forEach((t) => t.stop());
+        const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
+        if (blob.size < 100) return;
+
+        setLoading(true);
+        setMessages((prev) => [...prev, { role: 'user', content: '🎤 Голосовое сообщение...' }]);
+
+        try {
+          const formData = new FormData();
+          formData.append('audio', blob, 'voice.webm');
+          const resp = await fetch('/api/v1/ai/transcribe', {
+            method: 'POST',
+            body: formData,
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem('access_token') || ''}`,
+            },
+          });
+          const data = await resp.json();
+          if (data.transcript) {
+            setMessages((prev) => {
+              const updated = [...prev];
+              updated[updated.length - 1] = { role: 'user', content: data.transcript };
+              return updated;
+            });
+            const aiResp = await aiApi.ask({
+              message: data.transcript,
+              session_id: sessionId,
+            });
+            if (aiResp.data.session_id) setSessionId(aiResp.data.session_id);
+            setMessages((prev) => [
+              ...prev,
+              { role: 'assistant', content: aiResp.data.response || 'Нет ответа' },
+            ]);
+          }
+        } catch {
+          setMessages((prev) => [
+            ...prev,
+            { role: 'assistant', content: 'Не удалось распознать голос.' },
+          ]);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      mediaRecorder.start();
+      setRecording(true);
+    } catch {
+      setMessages((prev) => [
+        ...prev,
+        { role: 'assistant', content: 'Нет доступа к микрофону.' },
+      ]);
+    }
+  }, [sessionId]);
+
+  const stopRecording = useCallback(() => {
+    mediaRecorderRef.current?.stop();
+    setRecording(false);
+  }, []);
+
   return (
     <div className="flex flex-col h-[calc(100vh-72px)] animate-fade-in">
+      {/* Header */}
+      <div className="px-4 py-2 flex items-center justify-between bg-surface-primary">
+        <h1 className="text-lg font-bold">AI-ассистент</h1>
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={() => navigate('/master/ai/content')}
+          className="!text-xs"
+        >
+          <Sparkles className="w-3.5 h-3.5" />
+          Контент
+        </Button>
+      </div>
+
       {/* Messages */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-3">
         {messages.map((msg, i) => (
@@ -112,6 +203,17 @@ function AIChat() {
       {/* Input */}
       <div className="p-3 bg-surface-primary">
         <div className="flex gap-2">
+          <button
+            onClick={recording ? stopRecording : startRecording}
+            disabled={loading}
+            className={`px-3 py-3 rounded-2xl transition-all ${
+              recording
+                ? 'bg-red-500 text-white animate-pulse'
+                : 'bg-surface-elevated text-tg-hint'
+            } disabled:opacity-40`}
+          >
+            {recording ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+          </button>
           <input
             type="text"
             value={input}

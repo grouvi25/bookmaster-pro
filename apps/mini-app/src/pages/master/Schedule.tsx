@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import { bookingApi } from '@/api/endpoints';
 import { toArray } from '@/shared/lib/normalize';
 import { ListSkeleton } from '@/shared/ui/Skeleton';
@@ -8,7 +9,7 @@ import StatusBadge from '@/shared/ui/StatusBadge';
 import { format, addDays, startOfWeek } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import clsx from 'clsx';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, CalendarOff } from 'lucide-react';
 import type { Booking } from '@/shared/types/api';
 
 const STATUS_VARIANT: Record<string, 'success' | 'warning' | 'danger' | 'info' | 'neutral'> = {
@@ -22,6 +23,7 @@ const STATUS_VARIANT: Record<string, 'success' | 'warning' | 'danger' | 'info' |
 };
 
 export default function Schedule() {
+  const navigate = useNavigate();
   const [viewMode, setViewMode] = useState<'week' | 'month'>('week');
   const [weekStart, setWeekStart] = useState(startOfWeek(new Date(), { weekStartsOn: 1 }));
   const [selectedDate, setSelectedDate] = useState(format(new Date(), 'yyyy-MM-dd'));
@@ -106,6 +108,14 @@ export default function Schedule() {
           );
         })}
       </div>
+
+      <button
+        onClick={() => navigate('/master/blocked-slots')}
+        className="w-full mb-4 flex items-center gap-2.5 px-4 py-3 bg-surface-elevated shadow-card rounded-2xl text-sm font-medium active:scale-[0.98] transition-transform"
+      >
+        <CalendarOff className="w-4 h-4 text-tg-hint" />
+        Выходные и перерывы
+      </button>
 
       <div className="section-title">
         {format(new Date(selectedDate + 'T00:00:00'), 'd MMMM, EEEE', { locale: ru })}

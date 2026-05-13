@@ -32,6 +32,8 @@ import Broadcast from '@/pages/master/Broadcast';
 import Locations from '@/pages/master/Locations';
 import Billing from '@/pages/master/Billing';
 import LinkPageEditor from '@/pages/master/LinkPageEditor';
+import BlockedSlots from '@/pages/master/BlockedSlots';
+import AIContentTools from '@/pages/master/AIContentTools';
 import TabBar from '@/components/common/TabBar';
 
 // Клиентские дополнительные экраны
@@ -42,6 +44,7 @@ import ReviewForm from '@/pages/client/ReviewForm';
 
 // Специальные страницы
 import LinkPage from '@/pages/LinkPage';
+import NpsPopup from '@/components/NpsPopup';
 import SuperadminPanel from '@/pages/superadmin/SuperadminPanel';
 
 import Loading from '@/components/common/Loading';
@@ -219,6 +222,8 @@ function AppRouter() {
         <Route path="/master/locations" element={<RequireAuth allowedRoles={['master', 'superadmin']}><Locations /></RequireAuth>} />
         <Route path="/billing" element={<RequireAuth allowedRoles={['master', 'superadmin']}><Billing /></RequireAuth>} />
         <Route path="/link-page/edit" element={<RequireAuth allowedRoles={['master', 'superadmin']}><LinkPageEditor /></RequireAuth>} />
+        <Route path="/master/blocked-slots" element={<RequireAuth allowedRoles={['master', 'superadmin']}><BlockedSlots /></RequireAuth>} />
+        <Route path="/master/ai/content" element={<RequireAuth allowedRoles={['master', 'superadmin']}><AIContentTools /></RequireAuth>} />
 
         {/* Публичная страница-линк (TapLink) */}
         <Route path="/p/:slug" element={<LinkPage />} />
@@ -233,6 +238,9 @@ function AppRouter() {
 
       {/* TabBar для мастеров */}
       {isMaster && <TabBar />}
+
+      {/* NPS опрос после визита */}
+      <NpsPopup />
     </>
   );
 }

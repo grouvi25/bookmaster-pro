@@ -291,6 +291,8 @@ export const analyticsApi = {
     api.get('/analytics/dashboard', { params }),
   revenue: (params?: Record<string, string>) =>
     api.get('/analytics/revenue', { params }),
+  funnel: (params?: Record<string, string>) =>
+    api.get('/analytics/funnel', { params }),
 };
 
 // ── AI ──
@@ -378,6 +380,28 @@ export const locationsApi = {
   update: (id: number, data: Partial<LocationPayload>) =>
     api.patch(`/masters/me/locations/${id}`, data),
   delete: (id: number) => api.delete(`/masters/me/locations/${id}`),
+};
+
+// ── Uploads (S3) ──
+export const uploadsApi = {
+  getPresignedUrl: (folder: string, extension: string) =>
+    api.post('/uploads/presigned-url', null, { params: { folder, extension } }),
+  uploadFile: (file: File, folder: string = 'uploads') => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return api.post('/uploads/file', formData, {
+      params: { folder },
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+};
+
+// ── Blocked Slots ──
+export const blockedSlotsApi = {
+  list: () => api.get('/booking/blocked'),
+  create: (data: { date_from: string; date_to: string; time_from?: string; time_to?: string; reason?: string }) =>
+    api.post('/booking/blocked', data),
+  delete: (id: number) => api.delete(`/booking/blocked/${id}`),
 };
 
 // ── Superadmin ──
