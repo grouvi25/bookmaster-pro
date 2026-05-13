@@ -2,7 +2,23 @@ import { useNavigate } from 'react-router-dom';
 import { useBookingStore } from '@/stores/booking';
 import { format, parseISO } from 'date-fns';
 import { ru } from 'date-fns/locale';
-import { CircleCheck } from 'lucide-react';
+import { CircleCheck, CalendarPlus } from 'lucide-react';
+
+function buildCalendarUrl(
+  date: string | null,
+  time: string | null,
+  service: string | null,
+  master: string | null,
+  durationMin: number,
+): string {
+  if (!date || !time) return '';
+  const dt = `${date}T${time}:00`;
+  const start = new Date(dt);
+  const end = new Date(start.getTime() + durationMin * 60_000);
+  const fmt = (d: Date) => d.toISOString().replace(/[-:]/g, '').replace(/\.\d+/, '');
+  const title = encodeURIComponent(`${service || 'Запись'} — ${master || 'мастер'}`);
+  return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${fmt(start)}/${fmt(end)}`;
+}
 
 export default function BookingSuccess() {
   const navigate = useNavigate();
@@ -11,6 +27,14 @@ export default function BookingSuccess() {
   const dateStr = store.selectedDate
     ? format(parseISO(store.selectedDate), 'd MMMM, EEEE', { locale: ru })
     : '';
+
+  const calUrl = buildCalendarUrl(
+    store.selectedDate,
+    store.selectedTime,
+    store.serviceName,
+    store.masterName,
+    store.serviceDuration || 60,
+  );
 
   const handleDone = () => {
     store.reset();
@@ -49,9 +73,20 @@ export default function BookingSuccess() {
       </div>
 
       <div className="flex flex-col gap-2 w-full">
+        {calUrl && (
+          <a
+            href={calUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full bg-brand-500 text-white py-3.5 rounded-2xl font-bold shadow-button active:scale-[0.97] transition-all flex items-center justify-center gap-2"
+          >
+            <CalendarPlus className="w-5 h-5" />
+            Добавить в календарь
+          </a>
+        )}
         <button
           onClick={() => navigate('/client')}
-          className="w-full bg-brand-500 text-white py-3.5 rounded-2xl font-bold shadow-button active:scale-[0.97] transition-all"
+          className="w-full bg-tg-secondary text-tg-text py-3.5 rounded-2xl font-bold active:scale-[0.97] transition-all"
         >
           Мои записи
         </button>

@@ -13,7 +13,7 @@ import { toast } from '@/shared/ui/Toast';
 import {
   BarChart3, ClipboardList, User, MessageCircle,
   Link2, CreditCard, Star, Plus, Trash2, Send,
-  MapPin, Megaphone, Code, Package,
+  MapPin, Megaphone, Code, Package, Clock,
 } from 'lucide-react';
 import type { Service, SupportTicket, MasterProfile } from '@/shared/types/api';
 import { useFeatureFlag } from '@/hooks/useFeatureFlag';
@@ -60,6 +60,14 @@ function SettingsMain({ onNavigate }: { onNavigate: (tab: SettingsTab) => void }
           onClick={() => onNavigate('analytics')}
         />
       )}
+      <MenuItem
+        Icon={Clock}
+        label="Рабочее расписание"
+        description="Часы работы по дням недели"
+        onClick={() => navigate('/master/work-schedule')}
+        iconBg="bg-brand-500/10"
+        iconColor="text-brand-500"
+      />
       <MenuItem
         Icon={ClipboardList}
         label="Мои услуги"
