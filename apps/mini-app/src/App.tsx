@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useState, Component, type ReactNode } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { PlatformAdapter } from '@/platform/platform-adapter';
 import { useAuthStore } from '@/stores/auth';
@@ -47,6 +47,38 @@ import SuperadminPanel from '@/pages/superadmin/SuperadminPanel';
 import Loading from '@/components/common/Loading';
 import Register from '@/pages/Register';
 
+
+class RouteErrorBoundary extends Component<
+  { children: ReactNode },
+  { error: Error | null }
+> {
+  state = { error: null as Error | null };
+
+  static getDerivedStateFromError(error: Error) {
+    return { error };
+  }
+
+  render() {
+    if (this.state.error) {
+      return (
+        <div className="flex flex-col items-center justify-center min-h-[60vh] bg-tg-bg text-tg-text p-6">
+          <ShieldAlert className="w-12 h-12 text-red-400 mb-4" strokeWidth={1.5} />
+          <h2 className="text-xl font-bold mb-2">Ошибка загрузки</h2>
+          <p className="text-tg-hint text-center text-sm mb-4">
+            Произошла ошибка при загрузке страницы
+          </p>
+          <button
+            onClick={() => this.setState({ error: null })}
+            className="px-6 py-2.5 bg-brand-500 text-white rounded-xl text-sm font-semibold"
+          >
+            Попробовать снова
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 function RequireAuth({ children, allowedRoles }: { children: ReactNode; allowedRoles: string[] }) {
   const { role, token } = useAuthStore();
@@ -135,6 +167,7 @@ function AppRouter() {
 
   return (
     <>
+      <RouteErrorBoundary>
       <Routes>
         {/* Регистрация для новых пользователей */}
         <Route path="/register" element={<Register />} />
@@ -196,6 +229,7 @@ function AppRouter() {
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      </RouteErrorBoundary>
 
       {/* TabBar для мастеров */}
       {isMaster && <TabBar />}
