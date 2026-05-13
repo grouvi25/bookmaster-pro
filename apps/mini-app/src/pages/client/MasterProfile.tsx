@@ -47,8 +47,8 @@ export default function MasterProfile({ slug }: MasterProfileProps) {
   return (
     <div className="pb-24 animate-fade-in">
       {/* Header */}
-      <div className="bg-gradient-to-b from-brand-50 to-tg-bg p-6 text-center">
-        <div className="w-24 h-24 rounded-full bg-brand-100 mx-auto mb-3 flex items-center justify-center overflow-hidden">
+      <div className="bg-brand-50 p-6 text-center">
+        <div className="w-24 h-24 rounded-3xl bg-white shadow-card-lg mx-auto mb-3 flex items-center justify-center overflow-hidden">
           {master.avatar_url ? (
             <img src={master.avatar_url} alt={master.name} className="w-full h-full object-cover" />
           ) : (
@@ -71,7 +71,7 @@ export default function MasterProfile({ slug }: MasterProfileProps) {
 
       {/* Loyalty points */}
       {loyalty?.balance > 0 && (
-        <div className="mx-4 mt-4 p-3 bg-brand-50 rounded-xl flex items-center justify-between">
+        <div className="mx-4 mt-4 p-3.5 bg-brand-50 rounded-2xl flex items-center justify-between">
           <span className="text-sm text-brand-700">Баллы лояльности</span>
           <span className="font-bold text-brand-600">{loyalty.balance} баллов</span>
         </div>
@@ -92,7 +92,7 @@ export default function MasterProfile({ slug }: MasterProfileProps) {
             {services.map((svc: Record<string, unknown>) => (
               <div
                 key={svc.id as number}
-                className="flex justify-between items-center p-3 bg-tg-secondary rounded-xl"
+                className="flex justify-between items-center p-3.5 bg-surface-elevated shadow-card rounded-2xl"
               >
                 <div>
                   <div className="font-medium text-sm">{String(svc.name)}</div>
@@ -117,7 +117,7 @@ export default function MasterProfile({ slug }: MasterProfileProps) {
           <h2 className="font-bold text-lg mb-3">Отзывы</h2>
           <div className="flex flex-col gap-3">
             {reviews.reviews.slice(0, 3).map((r: Record<string, unknown>) => (
-              <div key={r.id as number} className="bg-tg-secondary rounded-xl p-3">
+              <div key={r.id as number} className="bg-surface-elevated shadow-card rounded-2xl p-3.5">
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-sm font-medium">{r.client_name as string}</span>
                   <div className="flex gap-0.5">

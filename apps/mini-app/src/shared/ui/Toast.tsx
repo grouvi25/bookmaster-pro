@@ -40,10 +40,10 @@ export function ToastContainer() {
         <div
           key={t.id}
           className={clsx(
-            'px-4 py-3 rounded-2xl shadow-lg text-sm font-medium animate-slide-up pointer-events-auto',
-            t.type === 'success' && 'bg-green-500 text-white',
-            t.type === 'error' && 'bg-red-500 text-white',
-            t.type === 'info' && 'bg-gray-800 text-white',
+            'px-4 py-3.5 rounded-2xl shadow-float text-sm font-medium animate-slide-down pointer-events-auto',
+            t.type === 'success' && 'bg-accent-emerald text-white',
+            t.type === 'error' && 'bg-accent-red text-white',
+            t.type === 'info' && 'bg-gray-900 text-white',
           )}
         >
           {t.message}

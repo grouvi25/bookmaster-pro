@@ -39,7 +39,7 @@ export default function Subscriptions() {
   const past = subscriptions.filter((s) => s.status !== 'active');
 
   return (
-    <div className="p-4 pb-20 animate-fade-in">
+    <div className="p-5 pb-24 animate-fade-in">
       <button
         onClick={() => navigate(-1)}
         className="flex items-center gap-0.5 text-tg-link text-sm mb-3"
@@ -47,7 +47,7 @@ export default function Subscriptions() {
         <ChevronLeft className="w-4 h-4" /> Назад
       </button>
 
-      <h1 className="text-xl font-bold mb-4">
+      <h1 className="text-2xl font-bold tracking-tight mb-5">
         <CreditCard className="w-5 h-5 inline mr-1.5" />
         Мои абонементы
       </h1>

@@ -84,7 +84,7 @@ export default function Register() {
           <div className="w-16 h-16 bg-brand-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
             <Scissors className="w-8 h-8 text-brand-500" strokeWidth={1.8} />
           </div>
-          <h1 className="text-2xl font-bold mb-2">BookMaster Pro</h1>
+          <h1 className="text-2xl font-bold tracking-tight mb-2">BookMaster Pro</h1>
           <p className="text-tg-hint">Онлайн-запись к мастерам</p>
         </div>
 
@@ -95,10 +95,10 @@ export default function Register() {
 
           <button
             onClick={() => setStep('master-form')}
-            className="bg-tg-secondary p-5 rounded-2xl text-left active:scale-[0.98] transition-transform"
+            className="bg-surface-elevated shadow-card-lg p-5 rounded-2xl text-left active:scale-[0.98] transition-all duration-200"
           >
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-brand-100 flex items-center justify-center">
+              <div className="w-12 h-12 rounded-2xl bg-brand-50 flex items-center justify-center">
                 <Scissors className="w-6 h-6 text-brand-500" strokeWidth={1.8} />
               </div>
               <div className="flex-1">
@@ -113,11 +113,11 @@ export default function Register() {
 
           <button
             onClick={() => setStep('client-form')}
-            className="bg-tg-secondary p-5 rounded-2xl text-left active:scale-[0.98] transition-transform"
+            className="bg-surface-elevated shadow-card-lg p-5 rounded-2xl text-left active:scale-[0.98] transition-all duration-200"
           >
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-green-100 flex items-center justify-center">
-                <UserCircle className="w-6 h-6 text-green-600" strokeWidth={1.8} />
+              <div className="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center">
+                <UserCircle className="w-6 h-6 text-accent-emerald" strokeWidth={1.8} />
               </div>
               <div className="flex-1">
                 <div className="font-semibold text-base">Я — клиент</div>
@@ -153,7 +153,7 @@ export default function Register() {
               value={name}
               onChange={e => setName(e.target.value)}
               placeholder="Анна Иванова"
-              className="w-full p-4 rounded-2xl text-base outline-none bg-tg-secondary border border-transparent focus:border-brand-500"
+              className="input-field !text-base !p-4"
             />
           </div>
 
@@ -164,10 +164,10 @@ export default function Register() {
                 <button
                   key={s}
                   onClick={() => setSpecialization(s)}
-                  className={`px-3 py-2 rounded-xl text-sm font-medium transition-colors ${
+                  className={`chip ${
                     specialization === s
-                      ? 'bg-brand-500 text-white'
-                      : 'bg-tg-secondary text-tg-text'
+                      ? 'chip-active'
+                      : 'chip-inactive'
                   }`}
                 >
                   {s}
@@ -182,7 +182,7 @@ export default function Register() {
               value={city}
               onChange={e => setCity(e.target.value)}
               placeholder="Москва"
-              className="w-full p-4 rounded-2xl text-base outline-none bg-tg-secondary border border-transparent focus:border-brand-500"
+              className="input-field !text-base !p-4"
             />
           </div>
         </div>
@@ -215,7 +215,7 @@ export default function Register() {
             value={name}
             onChange={e => setName(e.target.value)}
             placeholder="Мария"
-            className="w-full p-4 rounded-2xl text-base outline-none bg-tg-secondary border border-transparent focus:border-brand-500"
+            className="input-field !text-base !p-4"
           />
         </div>
         <div>
@@ -225,7 +225,7 @@ export default function Register() {
             onChange={e => setPhone(e.target.value)}
             placeholder="+7 (999) 000-00-00"
             type="tel"
-            className="w-full p-4 rounded-2xl text-base outline-none bg-tg-secondary border border-transparent focus:border-brand-500"
+            className="input-field !text-base !p-4"
           />
         </div>
       </div>

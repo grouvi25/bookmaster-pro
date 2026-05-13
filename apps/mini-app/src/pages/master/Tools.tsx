@@ -9,10 +9,10 @@ export default function Tools() {
   const [tab, setTab] = useState<'promo' | 'loyalty'>('promo');
 
   return (
-    <div className="p-4 pb-20 animate-fade-in">
-      <h1 className="text-xl font-bold mb-3">Инструменты</h1>
+    <div className="p-5 pb-24 animate-fade-in">
+      <h1 className="text-2xl font-bold tracking-tight mb-4">Инструменты</h1>
 
-      <div className="flex gap-2 mb-4">
+      <div className="flex gap-2 mb-5">
         {[
           { key: 'promo' as const, label: 'Промокоды', Icon: Ticket },
           { key: 'loyalty' as const, label: 'Лояльность', Icon: Star },
@@ -20,13 +20,11 @@ export default function Tools() {
           <button
             key={key}
             onClick={() => setTab(key)}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
-              tab === key
-                ? 'bg-tg-button text-tg-button-text'
-                : 'bg-tg-secondary text-tg-text'
+            className={`chip ${
+              tab === key ? 'chip-active' : 'chip-inactive'
             }`}
           >
-            <Icon className="w-4 h-4" />
+            <Icon className="w-3.5 h-3.5" />
             {label}
           </button>
         ))}
@@ -75,18 +73,18 @@ function PromoSection() {
       </div>
 
       {showForm && (
-        <div className="bg-tg-secondary rounded-xl p-4 mb-3 animate-slide-up">
+        <div className="bg-surface-elevated shadow-card-lg rounded-2xl p-4 mb-3 animate-slide-up">
           <input
             value={code}
             onChange={(e) => setCode(e.target.value.toUpperCase())}
             placeholder="Код (например WELCOME)"
-            className="w-full px-3 py-2 bg-white rounded-lg text-sm outline-none mb-2"
+            className="input-field mb-2"
           />
           <input
             value={discount}
             onChange={(e) => setDiscount(e.target.value)}
             placeholder="Скидка (10% или 500)"
-            className="w-full px-3 py-2 bg-white rounded-lg text-sm outline-none mb-2"
+            className="input-field mb-2"
           />
           <button
             onClick={() =>
@@ -101,7 +99,7 @@ function PromoSection() {
               })
             }
             disabled={!code || !discount}
-            className="w-full bg-tg-button text-tg-button-text py-2 rounded-lg text-sm font-medium disabled:opacity-50"
+            className="w-full bg-brand-500 text-white py-2.5 rounded-xl text-sm font-semibold shadow-button disabled:opacity-40 active:scale-[0.97] transition-all"
           >
             Создать
           </button>
@@ -118,7 +116,7 @@ function PromoSection() {
           {promos.map((p: Record<string, unknown>) => (
             <div
               key={p.id as number}
-              className="bg-tg-secondary rounded-xl p-3 flex justify-between items-center"
+              className="bg-surface-elevated shadow-card rounded-2xl p-3.5 flex justify-between items-center"
             >
               <div>
                 <div className="font-mono font-bold text-sm">{String(p.code)}</div>
@@ -169,7 +167,7 @@ function LoyaltySection() {
       ) : (
         <div className="flex flex-col gap-2">
           {history.map((h: Record<string, unknown>, i: number) => (
-            <div key={i} className="bg-tg-secondary rounded-xl p-3 flex justify-between items-center">
+            <div key={i} className="bg-surface-elevated shadow-card rounded-2xl p-3.5 flex justify-between items-center">
               <div>
                 <div className="text-sm font-medium">{h.client_name as string}</div>
                 <div className="text-xs text-tg-hint">{h.reason as string}</div>
