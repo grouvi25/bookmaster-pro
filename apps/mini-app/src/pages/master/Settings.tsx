@@ -282,6 +282,8 @@ function ProfileSection({ onBack }: { onBack: () => void }) {
   const [name, setName] = useState('');
   const [bio, setBio] = useState('');
   const [city, setCity] = useState('');
+  const [depositAmount, setDepositAmount] = useState('');
+  const [prepayPercent, setPrepayPercent] = useState('');
   const [saving, setSaving] = useState(false);
 
   if (isLoading) return <ListSkeleton count={3} />;
@@ -290,13 +292,21 @@ function ProfileSection({ onBack }: { onBack: () => void }) {
     setName(profile?.display_name || '');
     setBio(profile?.description || '');
     setCity(profile?.city || '');
+    setDepositAmount(profile?.noshow_deposit_amount ? String(profile.noshow_deposit_amount) : '');
+    setPrepayPercent(profile?.noshow_prepay_percent ? String(profile.noshow_prepay_percent) : '');
     setEditing(true);
   };
 
   const handleSave = async () => {
     setSaving(true);
     try {
-      await mastersApi.updateProfile({ display_name: name, description: bio, city });
+      await mastersApi.updateProfile({
+        display_name: name,
+        description: bio,
+        city,
+        noshow_deposit_amount: depositAmount ? Number(depositAmount) : 0,
+        noshow_prepay_percent: prepayPercent ? Number(prepayPercent) : 0,
+      });
       await queryClient.invalidateQueries({ queryKey: ['master-profile'] });
       toast.success('Профиль обновлён');
       setEditing(false);
@@ -351,6 +361,26 @@ function ProfileSection({ onBack }: { onBack: () => void }) {
               <input value={city} onChange={e => setCity(e.target.value)}
                 className="w-full p-3 rounded-xl text-sm outline-none bg-tg-bg border border-transparent focus:border-brand-500" />
             </div>
+
+            <div className="pt-2 border-t border-tg-bg">
+              <label className="text-xs font-medium text-tg-text mb-2 block">Антино-шоу: депозит и предоплата</label>
+              <div className="flex gap-2">
+                <div className="flex-1">
+                  <label className="text-xs text-tg-hint mb-1 block">Депозит, ₽</label>
+                  <input value={depositAmount} onChange={e => setDepositAmount(e.target.value)}
+                    type="number" placeholder="0"
+                    className="w-full p-3 rounded-xl text-sm outline-none bg-tg-bg border border-transparent focus:border-brand-500" />
+                </div>
+                <div className="flex-1">
+                  <label className="text-xs text-tg-hint mb-1 block">Предоплата, %</label>
+                  <input value={prepayPercent} onChange={e => setPrepayPercent(e.target.value)}
+                    type="number" placeholder="0" min="0" max="100"
+                    className="w-full p-3 rounded-xl text-sm outline-none bg-tg-bg border border-transparent focus:border-brand-500" />
+                </div>
+              </div>
+              <p className="text-xs text-tg-hint mt-1">При высоком риске no-show система запросит оплату</p>
+            </div>
+
             <div className="flex gap-2">
               <Button onClick={handleSave} loading={saving} fullWidth>Сохранить</Button>
               <Button onClick={() => setEditing(false)} variant="secondary" fullWidth>Отмена</Button>
@@ -376,6 +406,18 @@ function ProfileSection({ onBack }: { onBack: () => void }) {
                 {profile?.rating_avg?.toFixed(1) || '—'} ({profile?.rating_count || 0})
               </span>
             </div>
+            {(profile?.noshow_deposit_amount || profile?.noshow_prepay_percent) ? (
+              <>
+                <div className="flex justify-between">
+                  <span className="text-tg-hint">Депозит</span>
+                  <span>{profile.noshow_deposit_amount ? `${profile.noshow_deposit_amount} ₽` : '—'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-tg-hint">Предоплата</span>
+                  <span>{profile.noshow_prepay_percent ? `${profile.noshow_prepay_percent}%` : '—'}</span>
+                </div>
+              </>
+            ) : null}
           </div>
         )}
       </Card>

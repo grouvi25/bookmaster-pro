@@ -42,7 +42,16 @@ export default function LinkPage() {
   });
 
   if (isLoading) return <Loading />;
-  if (!master) return <div className="p-8 text-center text-tg-hint">Мастер не найден</div>;
+  if (!master) return (
+    <div className="flex flex-col items-center justify-center min-h-screen bg-tg-bg p-6">
+      <User className="w-16 h-16 text-tg-hint/40 mb-4" strokeWidth={1.5} />
+      <h2 className="text-xl font-bold text-tg-text mb-2">Мастер не найден</h2>
+      <p className="text-sm text-tg-hint text-center max-w-xs">
+        Страница с адресом <span className="font-mono text-xs bg-tg-secondary px-1 rounded">/p/{slug}</span> не существует. 
+        Проверьте ссылку или попросите мастера прислать актуальную.
+      </p>
+    </div>
+  );
 
   const publicUrl = pageUrl(slug!);
   const bookUrl = botLink(`m_${slug}`);
@@ -118,11 +127,11 @@ export default function LinkPage() {
       )}
 
       {/* Portfolio */}
-      {portfolio?.items?.length > 0 && (
+      {Array.isArray(portfolio) && portfolio.length > 0 && (
         <div className="px-4 mb-6">
           <h2 className="font-bold text-lg mb-3 text-center">Портфолио</h2>
           <div className="grid grid-cols-3 gap-1 max-w-md mx-auto rounded-xl overflow-hidden">
-            {(portfolio.items as PortfolioItem[]).map((item) => (
+            {(portfolio as PortfolioItem[]).map((item) => (
               <img
                 key={item.id}
                 src={item.image_url}
