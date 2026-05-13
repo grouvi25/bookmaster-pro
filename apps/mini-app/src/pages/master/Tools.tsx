@@ -9,6 +9,7 @@ import ChipTabs from '@/shared/ui/ChipTabs';
 import EmptyState from '@/shared/ui/EmptyState';
 import { Ticket, Star, Plus, Tag } from 'lucide-react';
 import type { Promo, LoyaltyTransaction } from '@/shared/types/api';
+import FeatureGate from '@/shared/ui/FeatureGate';
 
 type ToolsTab = 'promo' | 'loyalty';
 
@@ -28,7 +29,13 @@ export default function Tools() {
         <ChipTabs tabs={TABS} active={tab} onChange={setTab} />
       </div>
 
-      {tab === 'promo' ? <PromoSection /> : <LoyaltySection />}
+      {tab === 'promo' ? (
+        <PromoSection />
+      ) : (
+        <FeatureGate flag="loyalty_enabled">
+          <LoyaltySection />
+        </FeatureGate>
+      )}
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { mastersApi, servicesApi, reviewsApi, portfolioApi } from '@/api/endpoin
 import Loading from '@/components/common/Loading';
 import { User, Star, ExternalLink } from 'lucide-react';
 import type { Service, PortfolioItem } from '@/shared/types/api';
+import { botLink } from '@/shared/config';
 
 interface Review {
   id: number;
@@ -43,7 +44,7 @@ export default function LinkPage() {
   if (isLoading) return <Loading />;
   if (!master) return <div className="p-8 text-center text-tg-hint">Мастер не найден</div>;
 
-  const appUrl = `https://t.me/BookMasterProBot?start=m_${slug}`;
+  const appUrl = botLink(`m_${slug}`);
   const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(appUrl)}`;
 
   return (
