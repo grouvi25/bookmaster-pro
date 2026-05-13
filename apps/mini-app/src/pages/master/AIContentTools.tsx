@@ -35,8 +35,8 @@ export default function AIContentTools() {
   const generateMutation = useMutation({
     mutationFn: () =>
       aiApi.generateContent({
-        type: selectedTemplate!.key,
-        ...params,
+        template_key: selectedTemplate!.key,
+        params,
       }),
     onSuccess: (resp) => {
       setResult(resp.data.content || resp.data.text || JSON.stringify(resp.data));

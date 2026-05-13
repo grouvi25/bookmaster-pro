@@ -1,6 +1,7 @@
 import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { bookingApi, paymentsApi } from '@/api/endpoints';
+import { bookingApi, paymentsApi, subscriptionsApi } from '@/api/endpoints';
 import { useBookingStore } from '@/stores/booking';
 import BackButton from '@/components/common/BackButton';
 import Button from '@/shared/ui/Button';
@@ -8,15 +9,30 @@ import Card from '@/shared/ui/Card';
 import { toast } from '@/shared/ui/Toast';
 import { format, parseISO } from 'date-fns';
 import { ru } from 'date-fns/locale';
-import { User, Scissors, CalendarDays, Clock, CreditCard, Wallet, Banknote, Coins } from 'lucide-react';
+import { User, Scissors, CalendarDays, Clock, CreditCard, Wallet, Banknote, Coins, Ticket } from 'lucide-react';
 
-type PaymentType = 'full' | 'prepay_30' | 'prepay_50' | 'points' | 'none';
+interface ClientSubscription {
+  id: number;
+  package_name: string;
+  total_visits: number;
+  used_visits: number;
+  is_active: boolean;
+}
+
+type PaymentType = 'full' | 'prepay_30' | 'prepay_50' | 'points' | 'subscription' | 'none';
 
 export default function Confirm() {
   const navigate = useNavigate();
   const store = useBookingStore();
   const [loading, setLoading] = useState(false);
   const [paymentType, setPaymentType] = useState<PaymentType>('none');
+
+  const { data: clientSubs } = useQuery<ClientSubscription[]>({
+    queryKey: ['client-subscriptions'],
+    queryFn: () => subscriptionsApi.list().then((r) => r.data),
+  });
+
+  const activeSub = clientSubs?.find((s) => s.is_active && s.used_visits < s.total_visits);
 
   const discountAmount = store.discount < 100
     ? store.servicePrice * store.discount / 100
@@ -54,6 +70,7 @@ export default function Confirm() {
         time: store.selectedTime,
         promo_code: store.promoCode || undefined,
         use_loyalty_points: paymentType === 'points',
+        subscription_id: paymentType === 'subscription' ? activeSub?.id : undefined,
       };
 
       const bookingResp = await bookingApi.create(bookingData);
@@ -109,6 +126,14 @@ export default function Confirm() {
       label: `Оплатить баллами ${store.loyaltyPoints} \u20bd`,
       Icon: Coins,
       show: store.loyaltyPoints > 0,
+    },
+    {
+      type: 'subscription' as PaymentType,
+      label: activeSub
+        ? `Из абонемента (${activeSub.used_visits}/${activeSub.total_visits} визитов)`
+        : 'Из абонемента',
+      Icon: Ticket,
+      show: !!activeSub,
     },
     {
       type: 'none',
