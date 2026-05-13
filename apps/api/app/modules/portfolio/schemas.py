@@ -35,4 +35,4 @@ class WorkPhotoOut(BaseModel):
     @computed_field  # type: ignore[prop-decorator]
     @property
     def image_url(self) -> str:
-        return f"{settings.S3_PUBLIC_URL}/{self.s3_key}"
+        return f"{settings.API_URL}/api/v1/uploads/s3/{self.s3_key}"
