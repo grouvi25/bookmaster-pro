@@ -23,27 +23,37 @@ export default function TabBar() {
   const location = useLocation();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-tg-bg border-t border-gray-200/60 z-50 safe-area-bottom">
-      <div className="flex justify-around items-center h-14">
-        {MASTER_TABS.map((tab) => {
-          const active =
-            tab.path === '/master'
-              ? location.pathname === '/master'
-              : location.pathname.startsWith(tab.path);
-          return (
-            <button
-              key={tab.path}
-              onClick={() => navigate(tab.path)}
-              className={clsx(
-                'flex flex-col items-center justify-center flex-1 h-full text-xs transition-colors',
-                active ? 'text-brand-600' : 'text-tg-hint'
-              )}
-            >
-              <tab.Icon className="w-5 h-5 mb-0.5" strokeWidth={active ? 2.2 : 1.8} />
-              <span>{tab.label}</span>
-            </button>
-          );
-        })}
+    <nav className="fixed bottom-0 left-0 right-0 z-50 safe-area-bottom px-4 pb-2">
+      <div className="bg-surface-elevated/95 backdrop-blur-lg shadow-tab-bar rounded-2xl">
+        <div className="flex justify-around items-center h-[60px]">
+          {MASTER_TABS.map((tab) => {
+            const active =
+              tab.path === '/master'
+                ? location.pathname === '/master'
+                : location.pathname.startsWith(tab.path);
+            return (
+              <button
+                key={tab.path}
+                onClick={() => navigate(tab.path)}
+                className={clsx(
+                  'flex flex-col items-center justify-center flex-1 h-full transition-all duration-200',
+                  active ? 'text-brand-500' : 'text-tg-hint'
+                )}
+              >
+                <div className={clsx(
+                  'flex items-center justify-center w-8 h-8 rounded-xl transition-all duration-200 mb-0.5',
+                  active && 'bg-brand-50'
+                )}>
+                  <tab.Icon className="w-[20px] h-[20px]" strokeWidth={active ? 2.2 : 1.6} />
+                </div>
+                <span className={clsx(
+                  'text-2xs transition-all',
+                  active ? 'font-semibold' : 'font-medium'
+                )}>{tab.label}</span>
+              </button>
+            );
+          })}
+        </div>
       </div>
     </nav>
   );

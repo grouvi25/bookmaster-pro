@@ -38,17 +38,17 @@ export default function SelectService() {
     : services || [];
 
   return (
-    <div className="p-4 pb-20 animate-slide-up">
+    <div className="p-5 pb-24 animate-slide-up">
       <BackButton />
-      <h1 className="text-xl font-bold mb-1">Выберите услугу</h1>
-      <p className="text-tg-hint text-sm mb-4">Шаг 1 из 5</p>
+      <h1 className="text-2xl font-bold tracking-tight mb-1">Выберите услугу</h1>
+      <p className="text-tg-hint text-sm mb-5">Шаг 1 из 5</p>
 
       {categories.length > 1 && (
         <div className="flex gap-2 mb-4 overflow-x-auto pb-1">
           <button
             onClick={() => setActiveCategory(null)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
-              !activeCategory ? 'bg-tg-button text-tg-button-text' : 'bg-tg-secondary text-tg-text'
+            className={`chip whitespace-nowrap ${
+              !activeCategory ? 'chip-active' : 'chip-inactive'
             }`}
           >
             Все
@@ -57,8 +57,8 @@ export default function SelectService() {
             <button
               key={cat}
               onClick={() => setActiveCategory(cat)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
-                activeCategory === cat ? 'bg-tg-button text-tg-button-text' : 'bg-tg-secondary text-tg-text'
+              className={`chip whitespace-nowrap ${
+                activeCategory === cat ? 'chip-active' : 'chip-inactive'
               }`}
             >
               {cat}
@@ -72,7 +72,7 @@ export default function SelectService() {
           <button
             key={svc.id as number}
             onClick={() => handleSelect(svc)}
-            className="flex items-center p-4 bg-tg-secondary rounded-xl text-left active:scale-[0.98] transition-transform"
+            className="flex items-center p-4 bg-surface-elevated shadow-card rounded-2xl text-left active:scale-[0.98] transition-all duration-200"
           >
             <div className="flex-1 min-w-0">
               <div className="font-medium text-tg-text">{String(svc.name)}</div>

@@ -46,8 +46,8 @@ export default function SelectTime() {
               className={clsx(
                 'py-2.5 rounded-xl font-medium text-sm transition-all active:scale-95',
                 selectedTime === time
-                  ? 'bg-tg-button text-tg-button-text shadow-sm'
-                  : 'bg-tg-secondary text-tg-text'
+                  ? 'bg-brand-500 text-white shadow-button'
+                  : 'bg-surface-elevated shadow-card text-tg-text'
               )}
             >
               {time}
@@ -59,9 +59,9 @@ export default function SelectTime() {
   };
 
   return (
-    <div className="p-4 pb-20 animate-slide-up">
+    <div className="p-5 pb-24 animate-slide-up">
       <BackButton to="/book/date" />
-      <h1 className="text-xl font-bold mb-1">Выберите время</h1>
+      <h1 className="text-2xl font-bold tracking-tight mb-1">Выберите время</h1>
       <div className="flex items-center gap-2 text-tg-hint text-sm mb-4">
         <span>Шаг 3 из 5</span>
         {selectedDate && (
