@@ -5,7 +5,7 @@ Booking schemas.
 from datetime import date, datetime
 from typing import Optional, List
 
-from pydantic import BaseModel, computed_field, field_validator
+from pydantic import BaseModel, field_validator
 
 
 class TimeSlot(BaseModel):
@@ -29,6 +29,9 @@ class BookingCreate(BaseModel):
     client_comment: Optional[str] = None
     location_id: Optional[int] = None
     promotion_id: Optional[int] = None
+    promo_code: Optional[str] = None
+    use_loyalty_points: bool = False
+    subscription_id: Optional[int] = None
 
 
 class BookingOut(BaseModel):
