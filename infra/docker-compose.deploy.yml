@@ -98,6 +98,17 @@ services:
       - "127.0.0.1:8082:8082"
     networks: [bookmaster]
 
+  scheduler:
+    <<: [*restart, *env]
+    container_name: bm_scheduler
+    build:
+      context: ..
+      dockerfile: apps/scheduler/Dockerfile
+    depends_on:
+      db: { condition: service_healthy }
+      redis: { condition: service_healthy }
+    networks: [bookmaster]
+
 volumes:
   pgdata:
   redisdata:

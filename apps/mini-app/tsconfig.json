@@ -16,9 +16,15 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@bookmaster/shared-types": ["../../packages/shared-types/src/index.ts"],
+      "@bookmaster/shared-config": ["../../packages/shared-config/src/index.ts"]
     },
     "baseUrl": "."
   },
-  "include": ["src"]
+  "include": [
+    "src",
+    "../../packages/shared-types/src",
+    "../../packages/shared-config/src"
+  ]
 }
