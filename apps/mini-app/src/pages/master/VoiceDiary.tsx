@@ -16,6 +16,29 @@ interface DiaryEntry {
   created_at: string;
 }
 
+function parseNotes(raw: string): string {
+  try {
+    const parsed = JSON.parse(raw);
+    const parts: string[] = [];
+    if (parsed.note_text) parts.push(parsed.note_text);
+    if (parsed.physical_params && Object.keys(parsed.physical_params).length > 0) {
+      parts.push('📋 ' + Object.entries(parsed.physical_params).map(([k, v]) => `${k}: ${v}`).join(', '));
+    }
+    if (parsed.preferences && Object.keys(parsed.preferences).length > 0) {
+      parts.push('⭐ ' + Object.entries(parsed.preferences).map(([k, v]) => `${k}: ${v}`).join(', '));
+    }
+    if (parsed.allergies && parsed.allergies.length > 0) {
+      parts.push('⚠️ Аллергии: ' + parsed.allergies.join(', '));
+    }
+    if (parsed.suggested_days_until_next) {
+      parts.push(`🔄 Следующий визит через ${parsed.suggested_days_until_next} дн.`);
+    }
+    return parts.join('\n') || raw;
+  } catch {
+    return raw;
+  }
+}
+
 export default function VoiceDiary() {
   return (
     <FeatureGate flag="ai_advisor">
@@ -29,6 +52,7 @@ function VoiceDiaryContent() {
   const [recording, setRecording] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [lastResult, setLastResult] = useState<{ transcript: string; notes: string } | null>(null);
+  const [expandedId, setExpandedId] = useState<number | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
 
@@ -171,29 +195,48 @@ function VoiceDiaryContent() {
             />
           ) : (
             <div className="space-y-2">
-              {entries.map((entry) => (
-                <div
-                  key={entry.id}
-                  className="bg-surface-elevated rounded-xl p-3 shadow-card flex items-center gap-3"
-                >
-                  <FileText className="w-5 h-5 text-brand-500 shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm truncate">
-                      {entry.structured_notes || entry.transcript}
-                    </p>
-                    <p className="text-xs text-tg-hint">
-                      {new Date(entry.created_at).toLocaleDateString('ru-RU', {
-                        day: 'numeric',
-                        month: 'short',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
-                      {entry.client_name && ` · ${entry.client_name}`}
-                    </p>
+              {entries.map((entry) => {
+                const isExpanded = expandedId === entry.id;
+                const displayText = parseNotes(entry.structured_notes || entry.transcript);
+                return (
+                  <div
+                    key={entry.id}
+                    onClick={() => setExpandedId(isExpanded ? null : entry.id)}
+                    className="bg-surface-elevated rounded-xl p-3 shadow-card cursor-pointer active:scale-[0.98] transition-all"
+                  >
+                    <div className="flex items-center gap-3">
+                      <FileText className="w-5 h-5 text-brand-500 shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className={`text-sm ${isExpanded ? '' : 'truncate'}`}>
+                          {displayText.split('\n')[0]}
+                        </p>
+                        <p className="text-xs text-tg-hint">
+                          {new Date(entry.created_at).toLocaleDateString('ru-RU', {
+                            day: 'numeric',
+                            month: 'short',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                          {entry.client_name && ` · ${entry.client_name}`}
+                        </p>
+                      </div>
+                      <ChevronRight className={`w-4 h-4 text-tg-hint shrink-0 transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
+                    </div>
+                    {isExpanded && (
+                      <div className="mt-3 pt-3 border-t border-tg-section-separator space-y-2">
+                        <div>
+                          <p className="text-xs text-tg-hint mb-1">Распознанный текст:</p>
+                          <p className="text-sm">{entry.transcript}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-tg-hint mb-1">AI-заметка:</p>
+                          <p className="text-sm whitespace-pre-wrap">{displayText}</p>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                  <ChevronRight className="w-4 h-4 text-tg-hint shrink-0" />
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
