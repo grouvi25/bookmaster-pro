@@ -110,6 +110,7 @@ interface ClientNotePayload {
 
 
 interface SupportTicketPayload {
+  category?: string;
   subject: string;
   message: string;
   priority?: string;
@@ -271,6 +272,11 @@ export const reviewsApi = {
   create: (data: ReviewPayload) => api.post('/reviews/', data),
   reply: (id: number, text: string) =>
     api.post(`/reviews/${id}/reply`, { text }),
+  report: (id: number, reason: string) =>
+    api.post(`/reviews/${id}/report`, { reason }),
+  hide: (id: number, reason: string) =>
+    api.post(`/reviews/${id}/hide`, { reason }),
+  unhide: (id: number) => api.post(`/reviews/${id}/unhide`),
 };
 
 // ── Waitlist ──
@@ -323,11 +329,15 @@ export const portfolioApi = {
 
 // ── Support ──
 export const supportApi = {
-  list: () => api.get('/support/tickets/my'),
+  list: (params?: Record<string, string | undefined>) =>
+    api.get('/support/tickets/my', { params }),
   create: (data: SupportTicketPayload) =>
     api.post('/support/tickets', data),
   reply: (id: number, text: string) =>
     api.post(`/support/tickets/${id}/reply`, { text }),
+  messages: (id: number) => api.get(`/support/tickets/${id}/messages`),
+  rate: (id: number, satisfaction: number) =>
+    api.post(`/support/tickets/${id}/rate`, { satisfaction }),
 };
 
 // ── Consultations ──
@@ -416,13 +426,20 @@ export const moderationApi = {
   queue: (params?: Record<string, string | undefined>) =>
     api.get('/support/tickets/queue', { params }),
   resolve: (id: number) => api.post(`/support/tickets/${id}/resolve`),
+  close: (id: number, resolutionNote?: string) =>
+    api.post(`/support/tickets/${id}/close`, { resolution_note: resolutionNote }),
+  assign: (id: number) => api.post(`/support/tickets/${id}/assign`),
   reply: (id: number, text: string) =>
     api.post(`/support/tickets/${id}/reply`, { text }),
   messages: (id: number) => api.get(`/support/tickets/${id}/messages`),
+  slaStats: () => api.get('/support/sla-stats'),
   masterVerify: (masterId: number) =>
     api.post(`/superadmin/masters/${masterId}/verify`),
   mastersList: (params?: Record<string, string | undefined>) =>
     api.get('/superadmin/masters', { params }),
+  reviewHide: (id: number, reason: string) =>
+    api.post(`/reviews/${id}/hide`, { reason }),
+  reviewUnhide: (id: number) => api.post(`/reviews/${id}/unhide`),
 };
 
 // ── Superadmin ──

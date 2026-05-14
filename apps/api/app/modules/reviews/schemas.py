@@ -17,6 +17,14 @@ class ReviewReply(BaseModel):
     master_reply: str
 
 
+class ReportReviewRequest(BaseModel):
+    reason: str = Field(..., min_length=10, max_length=500)
+
+
+class HideReviewRequest(BaseModel):
+    reason: str = Field(..., min_length=5, max_length=500)
+
+
 class ReviewOut(BaseModel):
     id: int
     appointment_id: int
@@ -26,5 +34,6 @@ class ReviewOut(BaseModel):
     text: Optional[str] = None
     master_reply: Optional[str] = None
     is_hidden: bool = False
+    hide_reason: Optional[str] = None
 
     model_config = {"from_attributes": True}

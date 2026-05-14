@@ -132,10 +132,15 @@ export interface Promo {
 /** Тикет поддержки */
 export interface SupportTicket {
   id: number;
-  master_id: number;
+  ticket_code?: string;
+  initiator_role: string;
+  initiator_id: number;
+  category: string;
+  priority: string;
   subject: string;
-  message?: string;
   status: string;
+  assigned_to?: number | null;
+  satisfaction?: number | null;
   created_at: string;
 }
 

@@ -19,6 +19,8 @@ class SupportTicket(BaseModel):
     priority = Column(String(10), nullable=False)
     # 'high' | 'medium' | 'low' | 'feedback'
     status = Column(String(20), default="open")
+    # 'open' | 'in_progress' | 'waiting_user' | 'resolved' | 'closed'
+    subject = Column(String(300), nullable=True)
     assigned_to = Column(Integer, nullable=True)
     first_response_at = Column(DateTime(timezone=True), nullable=True)
     resolved_at = Column(DateTime(timezone=True), nullable=True)
