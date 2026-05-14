@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import api from '@/api/client';
+import { APP_URL } from '@/shared/config';
 import Loading from '@/components/common/Loading';
 import { CalendarDays, Star, ChevronRight } from 'lucide-react';
 
@@ -18,10 +19,11 @@ interface MasterPublic {
 
 export default function EmbedPage() {
   const { slug = '' } = useParams<{ slug: string }>();
-  const navigate = useNavigate();
   const [master, setMaster] = useState<MasterPublic | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const isIframe = window.self !== window.top;
+  const bookingUrl = `${APP_URL}?startParam=m_${slug}`;
 
   useEffect(() => {
     api.get(`/masters/${slug}`)
@@ -94,14 +96,20 @@ export default function EmbedPage() {
       )}
 
       {/* Book button */}
-      <button
-        onClick={() => navigate(`/m/${slug}`)}
+      <a
+        href={bookingUrl}
+        target={isIframe ? '_blank' : '_self'}
+        rel="noopener noreferrer"
         className="w-full py-3.5 bg-purple-600 text-white rounded-xl text-base font-semibold flex items-center justify-center gap-2 hover:bg-purple-700 transition-colors"
       >
         <CalendarDays className="w-5 h-5" />
         Записаться
         <ChevronRight className="w-4 h-4" />
-      </button>
+      </a>
+
+      <p className="text-center text-xs text-gray-400 mt-4">
+        Запись через BookMaster Pro
+      </p>
     </div>
   );
 }
