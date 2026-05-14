@@ -87,3 +87,21 @@ class AIAskResponse(BaseModel):
     response: str
     session_id: str
     tokens_used: int
+
+
+class AIDocumentOut(BaseModel):
+    id: int
+    filename: str
+    mime_type: str
+    size_bytes: Optional[int] = None
+    pages_count: Optional[int] = None
+    chars_count: Optional[int] = None
+    chunks_count: int = 0
+    status: str
+    error: Optional[str] = None
+    created_at: datetime
+
+
+class AIDocumentUploadResponse(BaseModel):
+    document: AIDocumentOut
+    chunks_created: int

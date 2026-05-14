@@ -36,6 +36,9 @@ yookassa==3.4.0
 # === STORAGE (S3) ===
 aioboto3==13.1.1
 
+# === DOCUMENT PARSING (RAG: PDF/TXT) ===
+pypdf==4.3.1
+
 # === TELEGRAM BOT ===
 aiogram==3.13.0
 
