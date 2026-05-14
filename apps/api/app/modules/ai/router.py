@@ -4,8 +4,10 @@ AI router — WebSocket чат, голосовой дневник, STT, конт
 
 import uuid
 import logging
+from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, WebSocket, WebSocketDisconnect
+from fastapi.responses import Response
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -15,9 +17,18 @@ from app.core.feature_flags import require_feature
 from app.modules.ai.service import AIService, CONTENT_TEMPLATES
 from app.modules.ai.providers import get_stt_provider
 from app.modules.ai.indexer import AIIndexer
+from app.modules.ai.documents import (
+    DocumentValidationError,
+    MAX_DOC_SIZE,
+    delete_from_s3,
+    process_uploaded_document,
+)
+from app.modules.ai.models import AICustomDocument
 from app.modules.ai.schemas import (
     AIContentRequest,
     AIContentResponse,
+    AIDocumentOut,
+    AIDocumentUploadResponse,
     AIVoiceRequest,
     AIVoiceDiaryResponse,
     AIIndexResponse,
@@ -246,3 +257,116 @@ async def get_voice_diary_entries(
         }
         for e in entries
     ]
+
+
+# ── RAG: custom documents (PDF / TXT) ─────────────────────────
+
+def _doc_to_out(doc: AICustomDocument) -> AIDocumentOut:
+    return AIDocumentOut(
+        id=doc.id,
+        filename=doc.filename,
+        mime_type=doc.mime_type,
+        size_bytes=doc.size_bytes,
+        pages_count=doc.pages_count,
+        chars_count=doc.chars_count,
+        chunks_count=doc.chunks_count or 0,
+        status=doc.status,
+        error=doc.error,
+        created_at=doc.created_at,
+    )
+
+
+@router.post(
+    "/knowledge/docs",
+    response_model=AIDocumentUploadResponse,
+    status_code=201,
+)
+async def upload_knowledge_document(
+    file: UploadFile = File(...),
+    master: Master = Depends(require_feature("ai_advisor")),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Загрузить PDF/TXT в RAG-базу знаний мастера.
+    Максимум {MAX_DOC_SIZE // (1024 * 1024)} MB. Работает синхронно:
+    файл извлекается → чанкуется → эмбеддится → уходит в ai_knowledge_chunks.
+    """
+    raw = await file.read()
+    if not raw:
+        raise HTTPException(status_code=400, detail="Пустой файл.")
+    if len(raw) > MAX_DOC_SIZE:
+        raise HTTPException(
+            status_code=413,
+            detail=f"Файл слишком большой (макс {MAX_DOC_SIZE // (1024 * 1024)} MB).",
+        )
+
+    try:
+        doc, chunks_created = await process_uploaded_document(
+            db,
+            master_id=master.id,
+            raw_bytes=raw,
+            filename=file.filename or "document",
+            mime_type=file.content_type or "",
+        )
+    except DocumentValidationError as e:
+        await db.rollback()
+        raise HTTPException(status_code=400, detail=str(e))
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception("AI document upload failed: %s", e)
+        await db.rollback()
+        raise HTTPException(
+            status_code=500,
+            detail="Не удалось обработать документ.",
+        )
+
+    await db.commit()
+    await db.refresh(doc)
+    return AIDocumentUploadResponse(
+        document=_doc_to_out(doc),
+        chunks_created=chunks_created,
+    )
+
+
+@router.get("/knowledge/docs", response_model=List[AIDocumentOut])
+async def list_knowledge_documents(
+    master: Master = Depends(require_feature("ai_advisor")),
+    db: AsyncSession = Depends(get_db),
+):
+    """Список загруженных мастером документов в RAG-базе."""
+    result = await db.execute(
+        select(AICustomDocument)
+        .where(AICustomDocument.master_id == master.id)
+        .order_by(AICustomDocument.created_at.desc())
+    )
+    return [_doc_to_out(d) for d in result.scalars().all()]
+
+
+@router.delete("/knowledge/docs/{doc_id}", status_code=204)
+async def delete_knowledge_document(
+    doc_id: int,
+    master: Master = Depends(require_feature("ai_advisor")),
+    db: AsyncSession = Depends(get_db),
+):
+    """Удалить документ и все его RAG-чанки."""
+    result = await db.execute(
+        select(AICustomDocument).where(
+            AICustomDocument.id == doc_id,
+            AICustomDocument.master_id == master.id,
+        )
+    )
+    doc = result.scalar_one_or_none()
+    if not doc:
+        raise HTTPException(status_code=404, detail="Документ не найден.")
+
+    indexer = AIIndexer(db)
+    await indexer.delete_custom_document_chunks(master.id, doc.id)
+
+    s3_key = doc.s3_key
+    await db.delete(doc)
+    await db.commit()
+
+    # Удаление файла из S3 — best-effort, после коммита.
+    await delete_from_s3(s3_key)
+    return Response(status_code=204)

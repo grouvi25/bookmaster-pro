@@ -25,7 +25,12 @@ from app.modules.promo.models import Promotion, PromoUsage  # noqa
 from app.modules.loyalty.models import LoyaltyAccount, LoyaltyTransaction, Referral  # noqa
 from app.modules.waitlist.models import WaitlistEntry  # noqa
 from app.modules.reviews.models import ClientReview  # noqa
-from app.modules.ai.models import AIKnowledgeChunk, AIConversation, VoiceSession  # noqa
+from app.modules.ai.models import (  # noqa
+    AIKnowledgeChunk,
+    AIConversation,
+    VoiceSession,
+    AICustomDocument,
+)
 from app.modules.portfolio.models import WorkPhoto  # noqa
 from app.modules.support.models import SupportTicket, TicketMessage  # noqa
 from app.modules.marketplace.models import MarketplaceListing  # noqa

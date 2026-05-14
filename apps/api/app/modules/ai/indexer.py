@@ -10,7 +10,7 @@ AIIndexer — строит RAG базу знаний для каждого ма�
 """
 
 import logging
-from typing import List
+from typing import List, Optional
 from datetime import datetime, timedelta, timezone
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -22,10 +22,15 @@ from app.modules.services.models import Service
 from app.modules.booking.models import Appointment, AppointmentStatus
 from app.modules.reviews.models import ClientReview
 from app.modules.ai.providers import get_embed_provider
+from app.modules.ai.chunking import chunk_paragraphs
 
 logger = logging.getLogger(__name__)
 
-CHUNK_SIZE = 500
+# Размер чанка по умолчанию (совпадает с chunking.DEFAULT_CHUNK_SIZE).
+CHUNK_SIZE = 800
+CHUNK_OVERLAP = 120
+# Максимум чанков, которые отправляем в embed_batch за один вызов.
+EMBED_BATCH_SIZE = 64
 
 
 class AIIndexer:
@@ -104,17 +109,38 @@ class AIIndexer:
         master = await self.db.get(Master, master_id)
         if not master:
             return []
-        parts = [
+        head_parts = [
             f"Мастер: {master.display_name}",
             f"Специализация: {master.specialization or 'не указана'}",
             f"Город: {master.city or 'не указан'}",
         ]
-        if master.description:
-            parts.append(f"О себе: {master.description}")
         if master.address:
-            parts.append(f"Адрес: {master.address}")
-        parts.append(f"Рейтинг: {master.rating_avg} ({master.rating_count} отзывов)")
-        return ["\n".join(parts)]
+            head_parts.append(f"Адрес: {master.address}")
+        head_parts.append(
+            f"Рейтинг: {master.rating_avg} ({master.rating_count} отзывов)"
+        )
+        header = "\n".join(head_parts)
+
+        bio_text: Optional[str] = (master.description or "").strip() or None
+        welcome_text: Optional[str] = (
+            getattr(master, "welcome_message", None) or ""
+        ).strip() or None
+
+        if not bio_text and not welcome_text:
+            return [header]
+
+        chunks: List[str] = [header]
+        if bio_text:
+            for body in chunk_paragraphs(
+                bio_text, chunk_size=CHUNK_SIZE, overlap=CHUNK_OVERLAP
+            ):
+                chunks.append(f"О мастере: {body}")
+        if welcome_text:
+            for body in chunk_paragraphs(
+                welcome_text, chunk_size=CHUNK_SIZE, overlap=CHUNK_OVERLAP
+            ):
+                chunks.append(f"Приветствие клиенту: {body}")
+        return chunks
 
     async def _build_services_chunks(self, master_id: int) -> List[str]:
         result = await self.db.execute(
@@ -124,14 +150,25 @@ class AIIndexer:
             )
         )
         services = result.scalars().all()
-        chunks = []
+        chunks: List[str] = []
         for svc in services:
-            text = f"Услуга: {svc.name}, {svc.duration_min} мин, {svc.price}₽"
+            head = f"Услуга: {svc.name}, {svc.duration_min} мин, {svc.price}₽"
             if svc.price_max:
-                text += f" (до {svc.price_max}₽)"
-            if svc.description:
-                text += f". {svc.description}"
-            chunks.append(text)
+                head += f" (до {svc.price_max}₽)"
+            description = (svc.description or "").strip()
+            if not description:
+                chunks.append(head)
+                continue
+            if len(head) + 2 + len(description) <= CHUNK_SIZE:
+                chunks.append(f"{head}. {description}")
+                continue
+            # Длинное описание — дробим, повторяя заголовок в каждом чанке.
+            for body in chunk_paragraphs(
+                description,
+                chunk_size=max(CHUNK_SIZE - len(head) - 2, 200),
+                overlap=CHUNK_OVERLAP,
+            ):
+                chunks.append(f"{head}. {body}")
         return chunks
 
     async def _build_stats_chunks(self, master_id: int) -> List[str]:
@@ -187,10 +224,21 @@ class AIIndexer:
             .limit(20)
         )
         reviews = result.scalars().all()
-        chunks = []
+        chunks: List[str] = []
         for rev in reviews:
-            if rev.text:
-                chunks.append(f"Отзыв ({rev.rating}★): {rev.text[:CHUNK_SIZE]}")
+            text = (rev.text or "").strip()
+            if not text:
+                continue
+            head = f"Отзыв ({rev.rating}★):"
+            if len(head) + 1 + len(text) <= CHUNK_SIZE:
+                chunks.append(f"{head} {text}")
+                continue
+            for body in chunk_paragraphs(
+                text,
+                chunk_size=max(CHUNK_SIZE - len(head) - 1, 200),
+                overlap=CHUNK_OVERLAP,
+            ):
+                chunks.append(f"{head} {body}")
         return chunks
 
     async def _save_chunks(
@@ -203,8 +251,11 @@ class AIIndexer:
                 AIKnowledgeChunk.source_type == source_type,
             )
         )
+        if not texts:
+            await self.db.flush()
+            return 0
 
-        embeddings = await self.embed_provider.embed_batch(texts)
+        embeddings = await self._embed_in_batches(texts)
 
         for text, embedding in zip(texts, embeddings):
             chunk = AIKnowledgeChunk(
@@ -217,3 +268,61 @@ class AIIndexer:
 
         await self.db.flush()
         return len(texts)
+
+    async def _embed_in_batches(self, texts: List[str]) -> List[List[float]]:
+        """Батчим эмбеддинги, чтобы не упираться в лимиты провайдера."""
+        out: List[List[float]] = []
+        for i in range(0, len(texts), EMBED_BATCH_SIZE):
+            batch = texts[i:i + EMBED_BATCH_SIZE]
+            embeddings = await self.embed_provider.embed_batch(batch)
+            out.extend(embeddings)
+        return out
+
+    async def index_custom_document(
+        self,
+        master_id: int,
+        doc_id: int,
+        filename: str,
+        text: str,
+    ) -> int:
+        """
+        Индексирует загруженный PDF/TXT документ в RAG.
+        Чанки source_type='custom_doc' не трогаются в index_master(),
+        их жизненный цикл привязан к AICustomDocument.
+        Возвращает количество созданных чанков.
+        """
+        chunks_text = chunk_paragraphs(
+            text, chunk_size=CHUNK_SIZE, overlap=CHUNK_OVERLAP
+        )
+        if not chunks_text:
+            return 0
+
+        embeddings = await self._embed_in_batches(chunks_text)
+        for idx, (body, embedding) in enumerate(zip(chunks_text, embeddings)):
+            chunk = AIKnowledgeChunk(
+                master_id=master_id,
+                source_type="custom_doc",
+                content=body,
+                embedding=embedding,
+                metadata_={
+                    "doc_id": doc_id,
+                    "filename": filename,
+                    "chunk_idx": idx,
+                },
+            )
+            self.db.add(chunk)
+        await self.db.flush()
+        return len(chunks_text)
+
+    async def delete_custom_document_chunks(
+        self, master_id: int, doc_id: int
+    ) -> int:
+        """Удаляет все RAG-чанки конкретного пользовательского документа."""
+        result = await self.db.execute(
+            delete(AIKnowledgeChunk).where(
+                AIKnowledgeChunk.master_id == master_id,
+                AIKnowledgeChunk.source_type == "custom_doc",
+                AIKnowledgeChunk.metadata_["doc_id"].as_integer() == doc_id,
+            )
+        )
+        return result.rowcount or 0
