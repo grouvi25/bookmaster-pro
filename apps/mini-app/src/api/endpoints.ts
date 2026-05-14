@@ -316,6 +316,17 @@ export const aiApi = {
   tokens: () => api.get('/ai/tokens'),
   voiceDiary: (data: { transcript: string; client_id?: number; appointment_id?: number }) =>
     api.post('/ai/voice-diary', data),
+  knowledge: {
+    list: () => api.get('/ai/knowledge/docs'),
+    upload: (file: File) => {
+      const formData = new FormData();
+      formData.append('file', file);
+      return api.post('/ai/knowledge/docs', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+    },
+    remove: (id: number) => api.delete(`/ai/knowledge/docs/${id}`),
+  },
 };
 
 // ── Portfolio ──
