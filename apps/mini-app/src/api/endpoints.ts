@@ -166,6 +166,8 @@ export const authApi = {
     api.post('/auth/identify', { init_data: initData }),
   register: (data: { init_data: string; role: string; name?: string; specialization?: string; city?: string; phone?: string }) =>
     api.post('/auth/register', data),
+  switchRole: (targetRole: string) =>
+    api.post('/auth/switch-role', { target_role: targetRole }),
 };
 
 // ── Masters ──

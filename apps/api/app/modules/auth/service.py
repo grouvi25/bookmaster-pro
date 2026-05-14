@@ -193,6 +193,102 @@ class AuthService:
             return client.display_name if client else "Client"
         return identity.role
 
+    async def switch_role(self, identity_id: int, target_role: str) -> dict:
+        """Switch superadmin to master/client role.
+        Auto-creates Master/Client record if missing.
+        """
+        result = await self.db.execute(
+            select(Identity).where(Identity.id == identity_id)
+        )
+        identity = result.scalar_one_or_none()
+        if not identity:
+            raise ValueError("Identity not found")
+
+        display_name = "SuperAdmin"
+        master_id = None
+
+        if target_role == "superadmin":
+            token = self._create_token(identity, "superadmin")
+            return {
+                "role": "superadmin",
+                "token": token,
+                "user_id": identity.id,
+                "display_name": display_name,
+                "master_id": None,
+            }
+
+        if target_role == "master":
+            result = await self.db.execute(
+                select(Master).where(Master.identity_id == identity.id)
+            )
+            master = result.scalar_one_or_none()
+            if not master:
+                slug = generate_slug("Admin Master", identity.id)
+                master = Master(
+                    identity_id=identity.id,
+                    display_name="Admin Master",
+                    slug=slug,
+                    specialization="Тестирование",
+                    city="Москва",
+                )
+                self.db.add(master)
+                await self.db.flush()
+                flags = FeatureFlags(
+                    master_id=master.id,
+                    crm_basic=True,
+                    crm_advanced=True,
+                    promo_enabled=True,
+                    loyalty_enabled=True,
+                    client_subscriptions=True,
+                    waitlist_enabled=True,
+                    analytics_enabled=True,
+                    ai_advisor=True,
+                    ai_client_bot=True,
+                    ai_voice=True,
+                    portfolio_enabled=True,
+                    widget_enabled=True,
+                    consultations_enabled=True,
+                    multi_location=True,
+                    reviews_enabled=True,
+                    broadcast_enabled=True,
+                    max_bookings_per_month=9999,
+                    max_services=999,
+                    max_locations=99,
+                    ai_tokens_monthly=100000,
+                )
+                self.db.add(flags)
+                await self.db.flush()
+            display_name = master.display_name
+            master_id = master.id
+            token = self._create_token(identity, "master")
+
+        elif target_role == "client":
+            result = await self.db.execute(
+                select(Client).where(Client.identity_id == identity.id)
+            )
+            client = result.scalar_one_or_none()
+            if not client:
+                client = Client(
+                    identity_id=identity.id,
+                    display_name="Admin Client",
+                )
+                self.db.add(client)
+                await self.db.flush()
+            display_name = client.display_name
+            token = self._create_token(identity, "client")
+
+        else:
+            raise ValueError(f"Invalid role: {target_role}")
+
+        await self.db.commit()
+        return {
+            "role": target_role,
+            "token": token,
+            "user_id": identity.id,
+            "display_name": display_name,
+            "master_id": master_id,
+        }
+
     def _create_token(self, identity: Identity, role: str) -> str:
         return create_access_token(
             data={

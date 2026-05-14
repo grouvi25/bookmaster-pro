@@ -5,12 +5,13 @@ Auth router — /api/v1/auth
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.auth import validate_telegram_init_data
+from app.core.auth import validate_telegram_init_data, get_current_user
 from app.core.database import get_db
 from app.modules.auth.schemas import (
     IdentifyRequest,
     IdentifyResponse,
     RegisterRequest,
+    SwitchRoleRequest,
     TokenResponse,
 )
 from app.modules.auth.service import AuthService
@@ -103,4 +104,33 @@ async def register(
         role=result["role"],
         user_id=result["user_id"],
         display_name=result["display_name"],
+    )
+
+
+@router.post("/switch-role", response_model=TokenResponse)
+async def switch_role(
+    body: SwitchRoleRequest,
+    user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Переключение роли для суперадмина.
+    Создаёт Master/Client запись если её нет, возвращает новый JWT.
+    """
+    if user.get("role") != "superadmin":
+        raise HTTPException(status_code=403, detail="Only superadmin can switch roles")
+
+    if body.target_role not in ("master", "client", "superadmin"):
+        raise HTTPException(status_code=400, detail="target_role must be master, client, or superadmin")
+
+    service = AuthService(db)
+    result = await service.switch_role(
+        identity_id=int(user["sub"]),
+        target_role=body.target_role,
+    )
+    return TokenResponse(
+        access_token=result["token"],
+        role=result["role"],
+        user_id=result["user_id"],
+        display_name=result["display_name"],
+        master_id=result.get("master_id"),
     )

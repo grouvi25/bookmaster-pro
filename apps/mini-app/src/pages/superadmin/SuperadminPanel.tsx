@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { superadminApi } from '@/api/endpoints';
+import { superadminApi, authApi } from '@/api/endpoints';
+import { toast } from '@/shared/ui/Toast';
 import { useAuthStore } from '@/stores/auth';
 import { toArray } from '@/shared/lib/normalize';
 import Loading from '@/components/common/Loading';
@@ -33,14 +34,23 @@ const TABS: { key: Tab; label: string; Icon: typeof BarChart3 }[] = [
 
 export default function SuperadminPanel() {
   const [tab, setTab] = useState<Tab>('dashboard');
+  const [switching, setSwitching] = useState(false);
   const navigate = useNavigate();
   const { setAuth, token } = useAuthStore();
 
-  const switchToRole = (targetRole: 'master' | 'client') => {
-    if (token) {
-      localStorage.setItem('sa_original_role', 'superadmin');
-      setAuth(token, targetRole);
-      navigate(targetRole === 'master' ? '/master' : '/');
+  const switchToRole = async (targetRole: 'master' | 'client') => {
+    if (!token || switching) return;
+    setSwitching(true);
+    try {
+      const { data } = await authApi.switchRole(targetRole);
+      const newToken = data.access_token;
+      localStorage.setItem('sa_original_token', token);
+      setAuth(newToken, targetRole, data.master_id ?? null);
+      navigate(targetRole === 'master' ? '/master' : '/client');
+    } catch {
+      toast.error('Не удалось переключить роль');
+    } finally {
+      setSwitching(false);
     }
   };
 
@@ -52,17 +62,19 @@ export default function SuperadminPanel() {
       <div className="flex gap-2 mb-4">
         <button
           onClick={() => switchToRole('master')}
-          className="flex-1 flex items-center justify-center gap-2 p-3 bg-brand-500/10 text-brand-600 rounded-2xl text-sm font-medium active:scale-[0.97] transition-all"
+          disabled={switching}
+          className="flex-1 flex items-center justify-center gap-2 p-3 bg-brand-500/10 text-brand-600 rounded-2xl text-sm font-medium active:scale-[0.97] transition-all disabled:opacity-50"
         >
           <Wrench className="w-4 h-4" />
-          Режим мастера
+          {switching ? '...' : 'Режим мастера'}
         </button>
         <button
           onClick={() => switchToRole('client')}
-          className="flex-1 flex items-center justify-center gap-2 p-3 bg-blue-500/10 text-blue-600 rounded-2xl text-sm font-medium active:scale-[0.97] transition-all"
+          disabled={switching}
+          className="flex-1 flex items-center justify-center gap-2 p-3 bg-blue-500/10 text-blue-600 rounded-2xl text-sm font-medium active:scale-[0.97] transition-all disabled:opacity-50"
         >
           <UserCircle className="w-4 h-4" />
-          Режим клиента
+          {switching ? '...' : 'Режим клиента'}
         </button>
       </div>
 
@@ -85,22 +97,38 @@ export default function SuperadminPanel() {
 /** Floating button to return to superadmin from master/client view */
 export function SuperadminReturnButton() {
   const navigate = useNavigate();
-  const { role, token, setAuth } = useAuthStore();
+  const { role, setAuth } = useAuthStore();
+  const [loading, setLoading] = useState(false);
 
-  const wasSuperadmin = localStorage.getItem('sa_original_role') === 'superadmin';
-  if (role === 'superadmin' || !token || !wasSuperadmin) return null;
+  const originalToken = localStorage.getItem('sa_original_token');
+  if (role === 'superadmin' || !originalToken) return null;
+
+  const handleReturn = async () => {
+    if (loading) return;
+    setLoading(true);
+    try {
+      setAuth(originalToken, 'superadmin');
+      const { data } = await authApi.switchRole('superadmin');
+      localStorage.removeItem('sa_original_token');
+      setAuth(data.access_token, 'superadmin');
+      navigate('/superadmin');
+    } catch {
+      localStorage.removeItem('sa_original_token');
+      setAuth(originalToken, 'superadmin');
+      navigate('/superadmin');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <button
-      onClick={() => {
-        localStorage.removeItem('sa_original_role');
-        setAuth(token, 'superadmin');
-        navigate('/superadmin');
-      }}
-      className="fixed top-4 right-4 z-[100] flex items-center gap-1.5 px-3 py-2 bg-red-500 text-white rounded-full text-xs font-semibold shadow-lg active:scale-95 transition-all"
+      onClick={handleReturn}
+      disabled={loading}
+      className="fixed top-4 right-4 z-[100] flex items-center gap-1.5 px-3 py-2 bg-red-500 text-white rounded-full text-xs font-semibold shadow-lg active:scale-95 transition-all disabled:opacity-50"
     >
       <ArrowRightLeft className="w-3.5 h-3.5" />
-      Суперадмин
+      {loading ? '...' : 'Суперадмин'}
     </button>
   );
 }
