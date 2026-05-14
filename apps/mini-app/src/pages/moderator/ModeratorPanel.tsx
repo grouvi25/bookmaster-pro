@@ -110,14 +110,6 @@ export default function ModeratorPanel() {
     },
   });
 
-  const resolveMutation = useMutation({
-    mutationFn: (id: number) => moderationApi.resolve(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['moderation-queue'] });
-      toast.success('Тикет закрыт');
-    },
-  });
-
   const closeMutation = useMutation({
     mutationFn: ({ id, note }: { id: number; note?: string }) =>
       moderationApi.close(id, note),
