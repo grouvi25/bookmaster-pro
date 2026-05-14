@@ -1,5 +1,5 @@
 """
-AI models — RAG knowledge, conversations, voice sessions.
+AI models — RAG knowledge, conversations, voice sessions, custom documents.
 """
 
 from sqlalchemy import (
@@ -42,3 +42,20 @@ class VoiceSession(BaseModel):
     tts_s3_key = Column(String(500), nullable=True)
     duration_sec = Column(Integer, nullable=True)
     tokens_used = Column(Integer, nullable=True)
+
+
+class AICustomDocument(BaseModel):
+    """PDF/TXT, загруженный мастером в базу знаний RAG."""
+    __tablename__ = "ai_custom_documents"
+
+    master_id = Column(Integer, ForeignKey("masters.id", ondelete="CASCADE"), nullable=False)
+    filename = Column(String(300), nullable=False)
+    mime_type = Column(String(100), nullable=False)
+    s3_key = Column(String(500), nullable=False)
+    size_bytes = Column(Integer, nullable=True)
+    pages_count = Column(Integer, nullable=True)
+    chars_count = Column(Integer, nullable=True)
+    chunks_count = Column(Integer, default=0, nullable=False)
+    status = Column(String(20), default="pending", nullable=False)
+    # 'pending' | 'processing' | 'indexed' | 'error'
+    error = Column(Text, nullable=True)
