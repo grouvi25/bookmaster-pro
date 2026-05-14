@@ -178,6 +178,46 @@ class YandexGPTProvider(AIProvider):
         yield result
 
 
+class FallbackProvider(AIProvider):
+    """Runtime fallback: primary → secondary on error."""
+
+    def __init__(self, primary: AIProvider, secondary: AIProvider):
+        self._primary = primary
+        self._secondary = secondary
+
+    async def chat(
+        self,
+        messages: List[dict],
+        temperature: float = 0.7,
+        max_tokens: int = 1000,
+    ) -> str:
+        try:
+            return await self._primary.chat(messages, temperature, max_tokens)
+        except Exception as e:
+            logger.warning(f"Primary AI failed: {e}, falling back to secondary")
+            return await self._secondary.chat(messages, temperature, max_tokens)
+
+    async def chat_stream(
+        self,
+        messages: List[dict],
+        temperature: float = 0.7,
+        max_tokens: int = 1000,
+    ) -> AsyncIterator[str]:
+        try:
+            chunks: List[str] = []
+            async for chunk in self._primary.chat_stream(messages, temperature, max_tokens):
+                chunks.append(chunk)
+                yield chunk
+            if not chunks:
+                raise ValueError("Empty response from primary")
+        except Exception as e:
+            if chunks:
+                return
+            logger.warning(f"Primary AI stream failed: {e}, falling back to secondary")
+            async for chunk in self._secondary.chat_stream(messages, temperature, max_tokens):
+                yield chunk
+
+
 class DummyProvider(AIProvider):
     """Dev-mode: без реального AI."""
 
@@ -197,21 +237,35 @@ class DummyEmbedProvider(EmbedProvider):
 
 
 def get_ai_provider() -> AIProvider:
-    """Фабрика AI провайдера с fallback."""
+    """Фабрика AI провайдера с runtime fallback (ТЗ 6.1)."""
     provider = getattr(settings, "AI_DEFAULT_PROVIDER", "openai")
-    if provider == "openai" and settings.OPENAI_API_KEY:
-        try:
-            return OpenAIProvider()
-        except Exception as e:
-            logger.warning(f"OpenAI init failed: {e}, trying YandexGPT")
 
-    if provider == "yandexgpt" or (
-        settings.YANDEX_GPT_API_KEY and settings.YANDEX_FOLDER_ID
-    ):
-        try:
-            return YandexGPTProvider()
-        except Exception as e:
-            logger.warning(f"YandexGPT init failed: {e}")
+    openai_ok = bool(settings.OPENAI_API_KEY)
+    yandex_ok = bool(
+        getattr(settings, "YANDEX_GPT_API_KEY", None)
+        and getattr(settings, "YANDEX_FOLDER_ID", None)
+    )
+
+    primary: AIProvider | None = None
+    secondary: AIProvider | None = None
+
+    if provider == "yandexgpt":
+        if yandex_ok:
+            primary = YandexGPTProvider()
+        if openai_ok:
+            secondary = OpenAIProvider()
+    else:
+        if openai_ok:
+            primary = OpenAIProvider()
+        if yandex_ok:
+            secondary = YandexGPTProvider()
+
+    if primary and secondary:
+        return FallbackProvider(primary, secondary)
+    if primary:
+        return primary
+    if secondary:
+        return secondary
 
     logger.info("No AI provider configured, using DummyProvider")
     return DummyProvider()
