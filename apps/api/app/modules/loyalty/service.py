@@ -148,34 +148,67 @@ class LoyaltyService:
         """
         Проверить стрик: если клиент завершил STREAK_THRESHOLD визитов подряд
         без отмен — начислить бонус STREAK_BONUS баллов.
+        Бонус начисляется на каждый N-й визит (3, 6, 9, ...),
+        предотвращая повторное начисление.
         """
         from app.modules.booking.models import Appointment, AppointmentStatus
 
+        # Считаем текущую серию подряд завершённых визитов
         result = await self.db.execute(
             select(Appointment)
             .where(
                 Appointment.master_id == master_id,
                 Appointment.client_id == client_id,
             )
-            .order_by(Appointment.date.desc())
-            .limit(STREAK_THRESHOLD)
+            .order_by(Appointment.date.desc(), Appointment.time_start.desc())
+            .limit(50)
         )
         recent = result.scalars().all()
-        if len(recent) < STREAK_THRESHOLD:
+
+        streak_count = 0
+        for appt in recent:
+            if appt.status == AppointmentStatus.COMPLETED.value:
+                streak_count += 1
+            else:
+                break
+
+        if streak_count < STREAK_THRESHOLD:
             return None
 
-        all_completed = all(
-            a.status == AppointmentStatus.COMPLETED.value for a in recent
-        )
-        if not all_completed:
+        # Бонус на каждый N-й визит (3, 6, 9, ...)
+        if streak_count % STREAK_THRESHOLD != 0:
             return None
+
+        # Проверяем, не начислен ли уже бонус за этот стрик
+        streak_txs_result = await self.db.execute(
+            select(LoyaltyTransaction)
+            .where(
+                LoyaltyTransaction.master_id == master_id,
+                LoyaltyTransaction.client_id == client_id,
+                LoyaltyTransaction.type == "earn_streak",
+            )
+            .order_by(LoyaltyTransaction.created_at.desc())
+            .limit(1)
+        )
+        last_streak_tx = streak_txs_result.scalar_one_or_none()
+
+        if last_streak_tx and last_streak_tx.note:
+            # Извлекаем номер стрика из предыдущего бонуса
+            try:
+                prev_streak = int(
+                    last_streak_tx.note.split("за ")[1].split(" визит")[0]
+                )
+                if prev_streak >= streak_count:
+                    return None
+            except (IndexError, ValueError):
+                pass
 
         tx = await self.earn_points(
             master_id=master_id,
             client_id=client_id,
             points=STREAK_BONUS,
             earn_type="earn_streak",
-            note=f"Бонус за {STREAK_THRESHOLD} визитов подряд без отмен",
+            note=f"Бонус за {streak_count} визитов подряд без отмен",
         )
         return tx
 

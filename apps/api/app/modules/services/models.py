@@ -26,5 +26,7 @@ class Service(BaseModel):
     is_online = Column(Boolean, default=False)  # онлайн-консультация
     is_consultation = Column(Boolean, default=False)  # тип "консультация"
     consultation_url = Column(String(500), nullable=True)  # ссылка на звонок
+    deposit_type = Column(String(20), default="none")  # 'none' | 'fixed' | 'percent'
+    deposit_value = Column(Float, nullable=True)  # сумма или процент депозита
 
     master = relationship("Master", back_populates="services")
