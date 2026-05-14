@@ -435,6 +435,9 @@ function ProfileSection({ onBack }: { onBack: () => void }) {
 
 function SupportSection({ onBack }: { onBack: () => void }) {
   const [message, setMessage] = useState('');
+  const [subject, setSubject] = useState('');
+  const [category, setCategory] = useState('technical');
+  const queryClient = useQueryClient();
 
   const { data, isLoading } = useQuery({
     queryKey: ['support-tickets'],
@@ -442,11 +445,17 @@ function SupportSection({ onBack }: { onBack: () => void }) {
   });
 
   const handleSubmit = async () => {
-    if (!message.trim()) return;
+    if (!message.trim() || !subject.trim()) return;
     try {
-      await supportApi.create({ subject: 'Вопрос', message: message.trim() });
+      await supportApi.create({
+        category,
+        subject: subject.trim(),
+        message: message.trim(),
+      });
       setMessage('');
-      toast.success('Сообщение отправлено');
+      setSubject('');
+      queryClient.invalidateQueries({ queryKey: ['support-tickets'] });
+      toast.success('Тикет создан');
     } catch {
       toast.error('Ошибка отправки');
     }
@@ -456,19 +465,45 @@ function SupportSection({ onBack }: { onBack: () => void }) {
 
   const tickets = toArray<SupportTicket>(data);
 
+  const statusLabel = (s: string) => {
+    const map: Record<string, string> = {
+      open: 'Открыт', in_progress: 'В работе',
+      waiting_user: 'Ожидание', resolved: 'Решён', closed: 'Закрыт',
+    };
+    return map[s] || s;
+  };
+
   return (
     <div className="animate-slide-up">
       <SectionBack onBack={onBack} />
       <h2 className="font-bold text-lg mb-3">Поддержка</h2>
 
-      <div className="mb-4">
+      <div className="mb-4 space-y-2">
+        <select
+          value={category}
+          onChange={(e) => setCategory(e.target.value)}
+          className="input-field text-sm"
+        >
+          <option value="technical">Техническая проблема</option>
+          <option value="billing">Оплата / биллинг</option>
+          <option value="abuse">Жалоба</option>
+          <option value="feature_request">Предложение</option>
+          <option value="feedback">Обратная связь</option>
+        </select>
+        <input
+          type="text"
+          value={subject}
+          onChange={(e) => setSubject(e.target.value)}
+          placeholder="Тема обращения..."
+          className="input-field text-sm"
+        />
         <textarea
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           placeholder="Опишите вашу проблему..."
           className="input-field resize-none h-24"
         />
-        <Button onClick={handleSubmit} disabled={!message.trim()} fullWidth size="sm">
+        <Button onClick={handleSubmit} disabled={!message.trim() || !subject.trim()} fullWidth size="sm">
           <Send className="w-4 h-4" /> Отправить
         </Button>
       </div>
@@ -484,8 +519,19 @@ function SupportSection({ onBack }: { onBack: () => void }) {
               >
                 <div className="flex justify-between text-sm">
                   <span className="font-medium">{t.subject}</span>
-                  <span className="text-xs text-tg-hint">{t.status}</span>
+                  <span className={`text-xs px-2 py-0.5 rounded-full ${
+                    t.status === 'resolved' || t.status === 'closed'
+                      ? 'bg-green-100 text-green-700'
+                      : t.status === 'in_progress'
+                        ? 'bg-blue-100 text-blue-700'
+                        : 'bg-yellow-100 text-yellow-700'
+                  }`}>
+                    {statusLabel(t.status)}
+                  </span>
                 </div>
+                <p className="text-xs text-tg-hint mt-1">
+                  {t.ticket_code} · {t.category}
+                </p>
               </div>
             ))}
           </div>
