@@ -6,6 +6,8 @@ from sqlalchemy import (
     Column, Integer, String, Boolean, Date,
     ForeignKey,
 )
+from geoalchemy2 import Geometry
+from sqlalchemy.dialects.postgresql import TSVECTOR
 
 from app.core.base_model import BaseModel
 
@@ -21,5 +23,7 @@ class MarketplaceListing(BaseModel):
     placement_tier = Column(String(20), default="free")
     # 'free' | 'priority' | 'featured'
     tier_expires_at = Column(Date, nullable=True)
+    geo_point = Column(Geometry("POINT", srid=4326), nullable=True)  # PostGIS
+    search_vector = Column(TSVECTOR, nullable=True)  # полнотекстовый поиск
     views_total = Column(Integer, default=0)
     clicks_book_total = Column(Integer, default=0)

@@ -198,6 +198,20 @@ async def get_platform_settings(
     return await svc.get_platform_settings()
 
 
+@router.post("/settings")
+async def update_platform_settings(
+    updates: dict,
+    user: dict = Depends(_require_superadmin),
+    db: AsyncSession = Depends(get_db),
+):
+    """Обновить системные настройки платформы (без деплоя)."""
+    svc = SuperadminService(db)
+    admin_id = str(user.get("identity_id", "system"))
+    result = await svc.update_platform_settings(updates, admin_id)
+    await db.commit()
+    return result
+
+
 # ── Аналитика роста ──────────────────────────────────────────
 
 @router.get("/growth")

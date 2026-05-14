@@ -43,20 +43,20 @@ async def get_balance(
     account = await service.get_or_create_account(master_id, client.id)
 
     # Streak: count consecutive completed appointments
-    from app.modules.booking.models import Appointment
+    from app.modules.booking.models import Appointment, AppointmentStatus
     result2 = await db.execute(
         select(Appointment)
         .where(
             Appointment.master_id == master_id,
             Appointment.client_id == client.id,
         )
-        .order_by(Appointment.date.desc())
-        .limit(20)
+        .order_by(Appointment.date.desc(), Appointment.time_start.desc())
+        .limit(50)
     )
     recent_appts = result2.scalars().all()
     streak_count = 0
     for appt in recent_appts:
-        if appt.status == "completed":
+        if appt.status == AppointmentStatus.COMPLETED.value:
             streak_count += 1
         else:
             break

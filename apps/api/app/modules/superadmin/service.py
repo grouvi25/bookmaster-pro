@@ -437,6 +437,41 @@ class SuperadminService:
             "debug": getattr(settings, "DEBUG", False),
         }
 
+    async def update_platform_settings(self, updates: dict, admin_id: str) -> dict:
+        """Обновить системные настройки (SystemSetting key-value)."""
+        from app.modules.core.models import SystemSetting
+
+        ALLOWED_KEYS = {
+            "ai_provider", "timezone", "commission_default_bp",
+            "max_free_bookings", "min_plan_price", "support_email",
+        }
+        updated = {}
+        for key, value in updates.items():
+            if key not in ALLOWED_KEYS:
+                continue
+            result = await self.db.execute(
+                select(SystemSetting).where(SystemSetting.key == key)
+            )
+            setting = result.scalar_one_or_none()
+            if setting:
+                setting.value = str(value)
+            else:
+                setting = SystemSetting(key=key, value=str(value))
+                self.db.add(setting)
+            updated[key] = str(value)
+
+        if updated:
+            self.db.add(AdminAuditLog(
+                admin_id=admin_id,
+                action="update_settings",
+                entity_type="system_settings",
+                entity_id=0,
+                payload=updated,
+            ))
+            await self.db.flush()
+
+        return {"status": "ok", "updated": updated}
+
     # ── Аналитика роста ──────────────────────────────────────
 
     async def get_growth_analytics(self, period_days: int = 90) -> dict:

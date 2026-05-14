@@ -6,6 +6,7 @@ from sqlalchemy import (
     Column, Integer, String, Boolean, Text, Float,
     ForeignKey, JSON,
 )
+from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.orm import relationship
 
 from app.core.base_model import BaseModel
@@ -22,7 +23,9 @@ class Master(BaseModel):
     display_name = Column(String(100), nullable=False)
     slug = Column(String(100), unique=True, nullable=False)
     specialization = Column(String(100), nullable=True)
+    specialization_tags = Column(ARRAY(String), default=list)  # ['гель-лак','наращивание',...]
     description = Column(Text, nullable=True)
+    welcome_message = Column(Text, nullable=True)  # приветствие в боте/мини-апп
     avatar_url = Column(String(500), nullable=True)
     cover_url = Column(String(500), nullable=True)
 
@@ -58,6 +61,7 @@ class Master(BaseModel):
     link_page_links = Column(JSON, default=list)
 
     # Тариф
+    tariff_type = Column(String(5), default="B")  # 'A'(комиссия) | 'B'(абонемент)
     current_plan = Column(String(20), default="start")
     is_verified = Column(Boolean, default=False)
     is_active = Column(Boolean, default=True)
@@ -104,7 +108,9 @@ class MasterPage(BaseModel):
     show_reviews = Column(Boolean, default=True)
     show_portfolio = Column(Boolean, default=True)
     show_services = Column(Boolean, default=True)
+    show_prices = Column(Boolean, default=True)
     bio_text = Column(Text, nullable=True)
+    custom_domain = Column(String(200), nullable=True)  # опц.: 'anna-nails.ru'
     seo_title = Column(String(200), nullable=True)
     seo_description = Column(Text, nullable=True)
 
