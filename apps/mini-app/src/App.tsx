@@ -39,6 +39,7 @@ import Billing from '@/pages/master/Billing';
 import LinkPageEditor from '@/pages/master/LinkPageEditor';
 import BlockedSlots from '@/pages/master/BlockedSlots';
 import AIContentTools from '@/pages/master/AIContentTools';
+import AIKnowledge from '@/pages/master/AIKnowledge';
 import VoiceDiary from '@/pages/master/VoiceDiary';
 import WidgetSettings from '@/pages/master/WidgetSettings';
 import SubscriptionPackages from '@/pages/master/SubscriptionPackages';
@@ -246,6 +247,7 @@ function AppRouter() {
         <Route path="/link-page/edit" element={<RequireAuth allowedRoles={['master', 'superadmin']}><LinkPageEditor /></RequireAuth>} />
         <Route path="/master/blocked-slots" element={<RequireAuth allowedRoles={['master', 'superadmin']}><BlockedSlots /></RequireAuth>} />
         <Route path="/master/ai/content" element={<RequireAuth allowedRoles={['master', 'superadmin']}><AIContentTools /></RequireAuth>} />
+        <Route path="/master/ai/knowledge" element={<RequireAuth allowedRoles={['master', 'superadmin']}><AIKnowledge /></RequireAuth>} />
         <Route path="/master/ai/voice-diary" element={<RequireAuth allowedRoles={['master', 'superadmin']}><VoiceDiary /></RequireAuth>} />
         <Route path="/master/widget" element={<RequireAuth allowedRoles={['master', 'superadmin']}><WidgetSettings /></RequireAuth>} />
         <Route path="/master/subscription-packages" element={<RequireAuth allowedRoles={['master', 'superadmin']}><SubscriptionPackages /></RequireAuth>} />
