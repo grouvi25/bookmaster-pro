@@ -13,6 +13,9 @@ class LoyaltyBalanceOut(BaseModel):
     balance: int
     tier: str
     total_earned: int
+    streak_count: int = 0
+    streak_threshold: int = 3
+    streak_bonus: int = 100
 
 
 class LoyaltyTransactionOut(BaseModel):

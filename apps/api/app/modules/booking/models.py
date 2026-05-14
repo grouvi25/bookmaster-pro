@@ -29,11 +29,13 @@ class ScheduleTemplate(BaseModel):
 
     master_id = Column(Integer, ForeignKey("masters.id", ondelete="CASCADE"), nullable=False)
     location_id = Column(Integer, ForeignKey("master_locations.id"), nullable=True)
-    day_of_week = Column(Integer, nullable=False)  # 0=Mon, 6=Sun
+    day_of_week = Column(Integer, nullable=True)  # 0=Mon, 6=Sun; NULL если конкретная дата
+    specific_date = Column(Date, nullable=True)  # конкретная дата (вместо day_of_week)
     start_time = Column(Time, nullable=False)
     end_time = Column(Time, nullable=False)
     break_start = Column(Time, nullable=True)
     break_end = Column(Time, nullable=True)
+    slot_step_min = Column(Integer, default=30)  # шаг слотов в минутах
     is_active = Column(Boolean, default=True)
 
     master = relationship("Master", back_populates="schedule_templates")
@@ -88,6 +90,9 @@ class Appointment(BaseModel):
     cancelled_at = Column(DateTime(timezone=True), nullable=True)
     cancel_reason = Column(String(300), nullable=True)
     completed_at = Column(DateTime(timezone=True), nullable=True)
+
+    reminder_1d_sent = Column(Boolean, default=False)
+    reminder_2h_sent = Column(Boolean, default=False)
 
     # Отношения
     master = relationship("Master")

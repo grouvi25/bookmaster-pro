@@ -37,6 +37,7 @@ async def remind_24h():
                     AppointmentStatus.CONFIRMED.value,
                     AppointmentStatus.PAID.value,
                 ]),
+                Appointment.reminder_1d_sent == False,
             )
         )
         appointments = result.scalars().all()
@@ -55,11 +56,13 @@ async def remind_24h():
                 button_url=f"{settings.APP_URL}?startParam=my_bookings",
             )
             if ok:
+                appt.reminder_1d_sent = True
                 sent += 1
             logger.info(
                 f"24h reminder: appointment #{appt.id}, "
                 f"client_id={appt.client_id}, sent={ok}"
             )
+        await db.commit()
         logger.info(f"24h reminders sent: {sent}/{len(appointments)}")
 
 
@@ -78,6 +81,7 @@ async def remind_2h():
                     AppointmentStatus.CONFIRMED.value,
                     AppointmentStatus.PAID.value,
                 ]),
+                Appointment.reminder_2h_sent == False,
             )
         )
         appointments = result.scalars().all()
@@ -95,11 +99,13 @@ async def remind_2h():
                 button_url=f"{settings.APP_URL}?startParam=my_bookings",
             )
             if ok:
+                appt.reminder_2h_sent = True
                 sent += 1
             logger.info(
                 f"2h reminder: appointment #{appt.id}, "
                 f"client_id={appt.client_id}, sent={ok}"
             )
+        await db.commit()
         logger.info(f"2h reminders sent: {sent}/{len(appointments)}")
 
 
