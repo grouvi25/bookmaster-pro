@@ -7,6 +7,8 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      '@bookmaster/shared-types': path.resolve(__dirname, '../../packages/shared-types/src/index.ts'),
+      '@bookmaster/shared-config': path.resolve(__dirname, '../../packages/shared-config/src/index.ts'),
     },
   },
   server: {

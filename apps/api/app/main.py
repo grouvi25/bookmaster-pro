@@ -119,41 +119,6 @@ from app.modules.uploads.router import router as uploads_router
 app.include_router(uploads_router, prefix="/api/v1/uploads", tags=["uploads"])
 
 
-# ── APScheduler ──────────────────────────────────────────────
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from app.modules.booking.scheduler import (
-    remind_24h, remind_2h, cleanup_pending,
-    admin_daily, birthday_promo, reactivation,
-    post_visit_review, post_visit_rebooking, billing_reminder, ai_reindex,
-    loyalty_expire, loyalty_expiry_warn,
-    waitlist_notify,
-)
-
-scheduler = AsyncIOScheduler()
-
-
-@app.on_event("startup")
-async def startup():
-    # Фаза 1: напоминания и очистка
-    scheduler.add_job(remind_24h, "interval", hours=1, id="remind_24h")
-    scheduler.add_job(remind_2h, "interval", minutes=30, id="remind_2h")
-    scheduler.add_job(cleanup_pending, "interval", minutes=1, id="cleanup_pending")
-
-    # Фаза 3: расширенные задачи
-    scheduler.add_job(admin_daily, "cron", hour=9, minute=0, id="admin_daily")
-    scheduler.add_job(birthday_promo, "cron", hour=8, minute=0, id="birthday_promo")
-    scheduler.add_job(reactivation, "cron", hour=11, minute=0, id="reactivation")
-    scheduler.add_job(post_visit_review, "interval", hours=1, id="post_visit_review")
-    scheduler.add_job(post_visit_rebooking, "interval", hours=2, id="post_visit_rebooking")
-    scheduler.add_job(billing_reminder, "cron", hour=10, minute=0, id="billing_reminder")
-    scheduler.add_job(ai_reindex, "cron", hour=3, minute=0, id="ai_reindex")
-
-    # Лояльность: сгорание баллов и предупреждение
-    scheduler.add_job(loyalty_expire, "cron", hour=2, minute=0, id="loyalty_expire")
-    scheduler.add_job(loyalty_expiry_warn, "cron", hour=10, minute=30, id="loyalty_expiry_warn")
-
-    # Фаза 5: waitlist
-    scheduler.add_job(waitlist_notify, "interval", minutes=5, id="waitlist_notify")
-
-    scheduler.start()
-    logger.info("APScheduler started with 12 jobs")
+# ── APScheduler вынесен в отдельный воркер apps/scheduler/runner.py ──
+# Все фоновые задачи теперь запускаются через контейнер bm_scheduler
+# с Redis jobstore для персистентности.
