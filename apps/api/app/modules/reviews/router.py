@@ -12,7 +12,10 @@ from app.core.auth import get_current_user
 from app.core.database import get_db
 from app.modules.clients.models import Client
 from app.modules.masters.service import MasterService
-from app.modules.reviews.schemas import ReviewCreate, ReviewReply, ReviewOut
+from app.modules.reviews.schemas import (
+    ReviewCreate, ReviewReply, ReportReviewRequest,
+    HideReviewRequest, ReviewOut,
+)
 from app.modules.reviews.service import ReviewService
 
 router = APIRouter()
@@ -42,6 +45,7 @@ async def create_review(
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+    await db.commit()
     return review
 
 
@@ -62,6 +66,77 @@ async def reply_to_review(
         review = await service.reply_to_review(review_id, master.id, body.master_reply)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+    await db.commit()
+    return review
+
+
+@router.post("/{review_id}/report")
+async def report_review(
+    review_id: int,
+    request: ReportReviewRequest,
+    user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Мастер жалуется на отзыв → создаётся тикет."""
+    master = await MasterService(db).get_by_identity(int(user["sub"]))
+    if not master:
+        raise HTTPException(status_code=403, detail="Not a master")
+
+    service = ReviewService(db)
+    try:
+        ticket_id = await service.report_review(
+            review_id=review_id,
+            master_id=master.id,
+            reason=request.reason,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    await db.commit()
+    return {
+        "status": "reported",
+        "ticket_id": ticket_id,
+        "message": "Жалоба принята. Модератор рассмотрит её в течение 24 часов.",
+    }
+
+
+@router.post("/{review_id}/hide", response_model=ReviewOut)
+async def hide_review(
+    review_id: int,
+    request: HideReviewRequest,
+    user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Модератор/суперадмин скрывает отзыв."""
+    role = user.get("role", "")
+    if role not in ("moderator", "superadmin"):
+        raise HTTPException(status_code=403, detail="Moderators only")
+
+    service = ReviewService(db)
+    try:
+        review = await service.hide_review(review_id, request.reason)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    await db.commit()
+    return review
+
+
+@router.post("/{review_id}/unhide", response_model=ReviewOut)
+async def unhide_review(
+    review_id: int,
+    user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Модератор/суперадмин восстанавливает отзыв."""
+    role = user.get("role", "")
+    if role not in ("moderator", "superadmin"):
+        raise HTTPException(status_code=403, detail="Moderators only")
+
+    service = ReviewService(db)
+    try:
+        review = await service.unhide_review(review_id)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    await db.commit()
     return review
 
 

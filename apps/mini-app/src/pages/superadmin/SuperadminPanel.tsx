@@ -363,7 +363,7 @@ function TicketsTab() {
                 <div>
                   <div className="text-sm font-medium">#{t.id}: {t.subject}</div>
                   <div className="text-xs text-tg-hint mt-0.5">
-                    Мастер #{t.master_id} &middot; {t.created_at}
+                    {t.initiator_role} #{t.initiator_id} &middot; {t.created_at}
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
