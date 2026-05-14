@@ -3,7 +3,7 @@ Reviews — отзывы клиентов, рейтинги.
 """
 
 from sqlalchemy import (
-    Column, Integer, Text, Boolean, SmallInteger,
+    Column, Integer, String, Text, Boolean, SmallInteger,
     ForeignKey, CheckConstraint,
 )
 
@@ -22,6 +22,7 @@ class ClientReview(BaseModel):
     text = Column(Text, nullable=True)
     master_reply = Column(Text, nullable=True)
     is_hidden = Column(Boolean, default=False)
+    hide_reason = Column(String(500), nullable=True)
 
     __table_args__ = (
         CheckConstraint("rating BETWEEN 1 AND 5", name="ck_review_rating"),

@@ -1,15 +1,18 @@
 """
-Reviews service — CRUD + rating recalculation.
+Reviews service — CRUD + rating recalculation + moderation.
 """
 
+import logging
 from typing import Optional, List
 
-from sqlalchemy import select, func
+from sqlalchemy import select, func, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.reviews.models import ClientReview
 from app.modules.booking.models import Appointment, AppointmentStatus
 from app.modules.masters.models import Master
+
+logger = logging.getLogger(__name__)
 
 
 class ReviewService:
@@ -110,6 +113,83 @@ class ReviewService:
             .offset(offset)
         )
         return list(result.scalars().all())
+
+    async def report_review(
+        self,
+        review_id: int,
+        master_id: int,
+        reason: str,
+    ) -> int:
+        """Мастер жалуется на отзыв → создаётся тикет в поддержку."""
+        result = await self.db.execute(
+            select(ClientReview).where(
+                and_(
+                    ClientReview.id == review_id,
+                    ClientReview.master_id == master_id,
+                )
+            )
+        )
+        review = result.scalar_one_or_none()
+        if not review:
+            raise ValueError("Отзыв не найден")
+
+        from app.modules.support.service import SupportService
+        support = SupportService(self.db)
+        ticket = await support.create_ticket(
+            initiator_role="master",
+            initiator_id=master_id,
+            category="review_complaint",
+            priority="medium",
+            subject=f"Жалоба на отзыв #{review_id}",
+            message=(
+                f"Отзыв #{review_id}\n"
+                f"Оценка: {review.rating}/5\n"
+                f"Текст: {review.text}\n\n"
+                f"Причина жалобы: {reason}"
+            ),
+        )
+        return ticket.id
+
+    async def hide_review(
+        self,
+        review_id: int,
+        reason: str,
+    ) -> ClientReview:
+        """Модератор скрывает отзыв."""
+        result = await self.db.execute(
+            select(ClientReview).where(ClientReview.id == review_id)
+        )
+        review = result.scalar_one_or_none()
+        if not review:
+            raise ValueError("Review not found")
+
+        review.is_hidden = True
+        review.hide_reason = reason
+        await self.db.flush()
+
+        await self._recalculate_rating(review.master_id)
+        logger.info(f"Review #{review_id} hidden: {reason}")
+        return review
+
+    async def unhide_review(
+        self,
+        review_id: int,
+    ) -> ClientReview:
+        """Модератор восстанавливает отзыв."""
+        result = await self.db.execute(
+            select(ClientReview).where(ClientReview.id == review_id)
+        )
+        review = result.scalar_one_or_none()
+        if not review:
+            raise ValueError("Review not found")
+
+        review.is_hidden = False
+        review.hide_reason = None
+        await self.db.flush()
+
+        await self._recalculate_rating(review.master_id)
+        logger.info(f"Review #{review_id} unhidden")
+        return review
 
     async def _recalculate_rating(self, master_id: int) -> None:
         result = await self.db.execute(
