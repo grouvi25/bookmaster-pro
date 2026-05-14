@@ -3,7 +3,7 @@ Client — профиль клиента и CRM-связанные таблиц�
 """
 
 from sqlalchemy import (
-    Column, Integer, String, Text, Date, Float,
+    Column, Integer, String, Text, Date, Float, Boolean,
     ForeignKey, JSON,
 )
 from sqlalchemy.orm import relationship
@@ -41,6 +41,7 @@ class ClientProfile(BaseModel):
     preferences = Column(JSON, default=dict)
     allergies = Column(JSON, default=list)
     source = Column(String(50), nullable=True)
+    communication_pref = Column(String(20), default="any")  # 'morning' | 'evening' | 'any'
 
     client = relationship("Client", back_populates="profile")
 
@@ -59,6 +60,7 @@ class ClientMasterLink(BaseModel):
     visit_count = Column(Integer, default=0)
     total_spent = Column(Integer, default=0)
     no_show_count = Column(Integer, default=0)
+    is_blocked = Column(Boolean, default=False)
     source = Column(String(50), nullable=True)
 
 
@@ -69,6 +71,7 @@ class ClientTag(BaseModel):
     master_id = Column(Integer, ForeignKey("masters.id", ondelete="CASCADE"), nullable=False)
     client_id = Column(Integer, ForeignKey("clients.id", ondelete="CASCADE"), nullable=False)
     tag = Column(String(100), nullable=False)
+    color = Column(String(20), default="grey")
 
 
 class ClientNote(BaseModel):
@@ -78,6 +81,7 @@ class ClientNote(BaseModel):
     master_id = Column(Integer, ForeignKey("masters.id", ondelete="CASCADE"), nullable=False)
     client_id = Column(Integer, ForeignKey("clients.id", ondelete="CASCADE"), nullable=False)
     text = Column(Text, nullable=False)
+    is_pinned = Column(Boolean, default=False)
     appointment_id = Column(Integer, ForeignKey("appointments.id", ondelete="SET NULL"), nullable=True)
 
 
