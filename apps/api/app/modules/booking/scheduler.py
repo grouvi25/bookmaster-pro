@@ -37,7 +37,7 @@ async def remind_24h():
                     AppointmentStatus.CONFIRMED.value,
                     AppointmentStatus.PAID.value,
                 ]),
-                Appointment.reminder_1d_sent == False,
+                Appointment.reminder_1d_sent.is_(False),
             )
         )
         appointments = result.scalars().all()
@@ -81,7 +81,7 @@ async def remind_2h():
                     AppointmentStatus.CONFIRMED.value,
                     AppointmentStatus.PAID.value,
                 ]),
-                Appointment.reminder_2h_sent == False,
+                Appointment.reminder_2h_sent.is_(False),
             )
         )
         appointments = result.scalars().all()
