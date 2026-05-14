@@ -2,7 +2,6 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { aiApi } from '@/api/endpoints';
 import { useAuthStore } from '@/stores/auth';
-import Button from '@/shared/ui/Button';
 import { SendHorizontal, Mic, MicOff, Sparkles, FileText, BookOpen } from 'lucide-react';
 import FeatureGate from '@/shared/ui/FeatureGate';
 
@@ -237,35 +236,29 @@ function AIChat() {
     <div className="flex flex-col h-[calc(100vh-72px)] animate-fade-in">
       {/* Header */}
       <div className="px-4 py-2 flex items-center justify-between bg-surface-primary">
-        <h1 className="text-lg font-bold">AI-ассистент</h1>
-        <div className="flex gap-1.5">
-          <Button
-            variant="secondary"
-            size="sm"
+        <h1 className="text-lg font-bold truncate mr-2">AI-ассистент</h1>
+        <div className="flex gap-1 shrink-0">
+          <button
             onClick={() => navigate('/master/ai/knowledge')}
-            className="!text-xs"
+            className="p-2 rounded-xl bg-tg-secondary text-tg-text active:scale-95 transition-all"
+            title="База знаний"
           >
-            <BookOpen className="w-3.5 h-3.5" />
-            База знаний
-          </Button>
-          <Button
-            variant="secondary"
-            size="sm"
+            <BookOpen className="w-4 h-4" />
+          </button>
+          <button
             onClick={() => navigate('/master/ai/voice-diary')}
-            className="!text-xs"
+            className="p-2 rounded-xl bg-tg-secondary text-tg-text active:scale-95 transition-all"
+            title="Голосовой дневник"
           >
-            <FileText className="w-3.5 h-3.5" />
-            Дневник
-          </Button>
-          <Button
-            variant="secondary"
-            size="sm"
+            <FileText className="w-4 h-4" />
+          </button>
+          <button
             onClick={() => navigate('/master/ai/content')}
-            className="!text-xs"
+            className="p-2 rounded-xl bg-tg-secondary text-tg-text active:scale-95 transition-all"
+            title="Контент"
           >
-            <Sparkles className="w-3.5 h-3.5" />
-            Контент
-          </Button>
+            <Sparkles className="w-4 h-4" />
+          </button>
         </div>
       </div>
 
