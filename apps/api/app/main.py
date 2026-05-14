@@ -124,7 +124,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from app.modules.booking.scheduler import (
     remind_24h, remind_2h, cleanup_pending,
     admin_daily, birthday_promo, reactivation,
-    post_visit_review, billing_reminder, ai_reindex,
+    post_visit_review, post_visit_rebooking, billing_reminder, ai_reindex,
     loyalty_expire, loyalty_expiry_warn,
     waitlist_notify,
 )
@@ -144,6 +144,7 @@ async def startup():
     scheduler.add_job(birthday_promo, "cron", hour=8, minute=0, id="birthday_promo")
     scheduler.add_job(reactivation, "cron", hour=11, minute=0, id="reactivation")
     scheduler.add_job(post_visit_review, "interval", hours=1, id="post_visit_review")
+    scheduler.add_job(post_visit_rebooking, "interval", hours=2, id="post_visit_rebooking")
     scheduler.add_job(billing_reminder, "cron", hour=10, minute=0, id="billing_reminder")
     scheduler.add_job(ai_reindex, "cron", hour=3, minute=0, id="ai_reindex")
 
