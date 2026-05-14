@@ -345,6 +345,72 @@ async def post_visit_review():
         logger.info(f"post_visit_review: {len(completed)} review requests")
 
 
+async def post_visit_rebooking():
+    """
+    Через 24 часа после визита — AI-приглашение записаться повторно.
+    Отправляется только если клиент ещё не записался к этому мастеру.
+    """
+    async with async_session_factory() as db:
+        now = datetime.now(timezone.utc)
+        window_start = now - timedelta(hours=25)
+        window_end = now - timedelta(hours=23)
+
+        result = await db.execute(
+            select(Appointment).where(
+                Appointment.status == AppointmentStatus.COMPLETED.value,
+                Appointment.completed_at.between(window_start, window_end),
+                Appointment.client_id.isnot(None),
+            )
+        )
+        completed = result.scalars().all()
+
+        sent = 0
+        for appt in completed:
+            future = await db.execute(
+                select(Appointment.id).where(
+                    Appointment.client_id == appt.client_id,
+                    Appointment.master_id == appt.master_id,
+                    Appointment.status.in_([
+                        AppointmentStatus.CONFIRMED.value,
+                        AppointmentStatus.PENDING.value,
+                    ]),
+                )
+            )
+            if future.scalar_one_or_none():
+                continue
+
+            from app.modules.masters.models import Master
+            master_row = await db.execute(
+                select(Master).where(Master.id == appt.master_id)
+            )
+            master = master_row.scalar_one_or_none()
+            master_name = master.display_name if master else "мастеру"
+
+            service_name = ""
+            if appt.service:
+                service_name = appt.service.name
+
+            text = (
+                f"✨ Вам понравился визит к {master_name}?"
+            )
+            if service_name:
+                text += f"\nЗапишитесь снова на «{service_name}» — "
+            else:
+                text += "\nЗапишитесь снова — "
+            text += "мастер будет рад вас видеть!"
+
+            slug = master.slug if master else ""
+            ok = await notify.send_by_client_id(
+                db, appt.client_id, text,
+                button_text="Записаться снова",
+                button_url=f"{settings.APP_URL}?startParam=m_{slug}",
+            )
+            if ok:
+                sent += 1
+
+        logger.info(f"post_visit_rebooking: {sent} rebooking invites sent")
+
+
 async def billing_reminder():
     """
     Ежедневно — за 3 дня до next_billing отправить
