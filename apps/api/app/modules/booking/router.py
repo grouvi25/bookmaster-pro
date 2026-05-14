@@ -2,8 +2,9 @@
 Booking router — /api/v1/booking
 """
 
-from datetime import date
+from datetime import date, datetime
 from typing import List, Optional
+from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -69,9 +70,11 @@ async def get_available_dates(
 ):
     """Получить список дат с доступными слотами на ближайшие N дней."""
     from datetime import timedelta as td
+    from app.core.config import settings
     slot_service = SlotService(db)
     available = []
-    today = date.today()
+    tz = ZoneInfo(settings.TIMEZONE)
+    today = datetime.now(tz).date()
     for offset in range(days_ahead):
         d = today + td(days=offset)
         slots = await slot_service.get_available_slots(

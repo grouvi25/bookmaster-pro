@@ -5,9 +5,12 @@ SlotService — генерация доступных слотов с учёто
 
 from datetime import date, datetime, timedelta
 from typing import List, Optional
+from zoneinfo import ZoneInfo
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.config import settings
 
 from app.modules.booking.models import (
     ScheduleTemplate,
@@ -166,8 +169,11 @@ class SlotService:
                         is_available = False
                         break
 
-            # Не показываем прошедшие слоты
-            if target_date == date.today() and current_time <= datetime.now():
+            # Не показываем прошедшие слоты (с учётом таймзоны)
+            tz = ZoneInfo(settings.TIMEZONE)
+            now_local = datetime.now(tz).replace(tzinfo=None)
+            today_local = now_local.date()
+            if target_date == today_local and current_time <= now_local:
                 is_available = False
 
             slots.append({
