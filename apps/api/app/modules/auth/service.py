@@ -3,6 +3,7 @@ Auth service — identify user, register, create JWT.
 """
 
 import re
+from datetime import time
 from typing import Optional
 
 from sqlalchemy import select
@@ -13,6 +14,7 @@ from app.modules.auth.models import Identity
 from app.modules.masters.models import Master
 from app.modules.clients.models import Client
 from app.modules.core.models import FeatureFlags
+from app.modules.booking.models import ScheduleTemplate
 
 
 _TRANSLIT = {
@@ -149,6 +151,19 @@ class AuthService:
             flags = FeatureFlags(master_id=master.id)
             self.db.add(flags)
 
+            # Расписание по умолчанию Пн-Сб 9:00-18:00
+            for dow in range(6):
+                tmpl = ScheduleTemplate(
+                    master_id=master.id,
+                    day_of_week=dow,
+                    start_time=time(9, 0),
+                    end_time=time(18, 0),
+                    break_start=time(13, 0),
+                    break_end=time(14, 0),
+                    is_active=True,
+                )
+                self.db.add(tmpl)
+
         elif role == "client":
             client = Client(
                 identity_id=identity.id,
@@ -257,6 +272,25 @@ class AuthService:
                     ai_tokens_monthly=100000,
                 )
                 self.db.add(flags)
+                await self.db.flush()
+            # Ensure schedule templates exist (for new and existing masters)
+            sched_result = await self.db.execute(
+                select(ScheduleTemplate).where(
+                    ScheduleTemplate.master_id == master.id
+                ).limit(1)
+            )
+            if not sched_result.scalar_one_or_none():
+                for dow in range(6):  # Mon-Sat
+                    tmpl = ScheduleTemplate(
+                        master_id=master.id,
+                        day_of_week=dow,
+                        start_time=time(9, 0),
+                        end_time=time(20, 0),
+                        break_start=time(13, 0),
+                        break_end=time(14, 0),
+                        is_active=True,
+                    )
+                    self.db.add(tmpl)
                 await self.db.flush()
             display_name = master.display_name
             master_id = master.id
