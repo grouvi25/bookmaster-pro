@@ -40,6 +40,7 @@ class SlotService:
         target_date: date,
         service_id: int,
         location_id: Optional[int] = None,
+        client_tz: Optional[str] = None,
     ) -> List[dict]:
         """
         Генерирует список доступных слотов для заданной даты.
@@ -111,6 +112,7 @@ class SlotService:
                 buffer=buffer,
                 existing=existing_appointments,
                 blocked=blocked,
+                client_tz=client_tz,
             )
             slots.extend(template_slots)
 
@@ -124,6 +126,7 @@ class SlotService:
         buffer: int,
         existing: List[Appointment],
         blocked: List[BlockedSlot],
+        client_tz: Optional[str] = None,
     ) -> List[dict]:
         """Генерация слотов из одного шаблона расписания."""
         slots = []
@@ -169,8 +172,11 @@ class SlotService:
                         is_available = False
                         break
 
-            # Не показываем прошедшие слоты (с учётом таймзоны)
-            tz = ZoneInfo(settings.TIMEZONE)
+            # Не показываем прошедшие слоты (в таймзоне клиента)
+            try:
+                tz = ZoneInfo(client_tz) if client_tz else ZoneInfo(settings.TIMEZONE)
+            except (KeyError, ValueError):
+                tz = ZoneInfo(settings.TIMEZONE)
             now_local = datetime.now(tz).replace(tzinfo=None)
             today_local = now_local.date()
             if target_date == today_local and current_time <= now_local:

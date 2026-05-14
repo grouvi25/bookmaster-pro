@@ -199,10 +199,12 @@ export const servicesApi = {
 // ── Booking ──
 export const bookingApi = {
   getSlots: (masterId: number, date: string, serviceId: number) =>
-    api.get(`/booking/slots/${masterId}`, { params: { date, service_id: serviceId } }),
+    api.get(`/booking/slots/${masterId}`, {
+      params: { date, service_id: serviceId, tz: Intl.DateTimeFormat().resolvedOptions().timeZone },
+    }),
   getAvailableDates: (masterId: number, serviceId: number) =>
     api.get('/booking/available-dates', {
-      params: { master_id: masterId, service_id: serviceId },
+      params: { master_id: masterId, service_id: serviceId, tz: Intl.DateTimeFormat().resolvedOptions().timeZone },
     }),
   create: (data: BookingPayload) => api.post('/booking/', data),
   cancel: (id: number) =>
