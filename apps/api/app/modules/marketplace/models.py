@@ -3,7 +3,7 @@ Marketplace — маркетплейс листинги.
 """
 
 from sqlalchemy import (
-    Column, Integer, String, Boolean, Date, Float,
+    Column, Integer, String, Boolean, Date,
     ForeignKey,
 )
 from geoalchemy2 import Geometry
