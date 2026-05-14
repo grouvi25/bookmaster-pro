@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { aiApi } from '@/api/endpoints';
 import { useAuthStore } from '@/stores/auth';
 import Button from '@/shared/ui/Button';
-import { SendHorizontal, Mic, MicOff, Sparkles, FileText } from 'lucide-react';
+import { SendHorizontal, Mic, MicOff, Sparkles, FileText, BookOpen } from 'lucide-react';
 import FeatureGate from '@/shared/ui/FeatureGate';
 
 interface Message {
@@ -239,6 +239,15 @@ function AIChat() {
       <div className="px-4 py-2 flex items-center justify-between bg-surface-primary">
         <h1 className="text-lg font-bold">AI-ассистент</h1>
         <div className="flex gap-1.5">
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => navigate('/master/ai/knowledge')}
+            className="!text-xs"
+          >
+            <BookOpen className="w-3.5 h-3.5" />
+            База знаний
+          </Button>
           <Button
             variant="secondary"
             size="sm"
