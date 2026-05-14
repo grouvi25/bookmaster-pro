@@ -66,6 +66,7 @@ async def get_available_dates(
     service_id: int = Query(...),
     days_ahead: int = Query(30),
     location_id: Optional[int] = Query(None),
+    tz: Optional[str] = Query(None, description="Client IANA timezone"),
     db: AsyncSession = Depends(get_db),
 ):
     """Получить список дат с доступными слотами на ближайшие N дней."""
@@ -73,12 +74,15 @@ async def get_available_dates(
     from app.core.config import settings
     slot_service = SlotService(db)
     available = []
-    tz = ZoneInfo(settings.TIMEZONE)
-    today = datetime.now(tz).date()
+    try:
+        client_tz = ZoneInfo(tz) if tz else ZoneInfo(settings.TIMEZONE)
+    except (KeyError, ValueError):
+        client_tz = ZoneInfo(settings.TIMEZONE)
+    today = datetime.now(client_tz).date()
     for offset in range(days_ahead):
         d = today + td(days=offset)
         slots = await slot_service.get_available_slots(
-            master_id, d, service_id, location_id
+            master_id, d, service_id, location_id, client_tz=tz
         )
         if any(s["available"] for s in slots):
             available.append(d)
@@ -91,12 +95,13 @@ async def get_slots(
     target_date: date = Query(..., alias="date"),
     service_id: int = Query(...),
     location_id: Optional[int] = Query(None),
+    tz: Optional[str] = Query(None, description="Client IANA timezone"),
     db: AsyncSession = Depends(get_db),
 ):
     """Получить доступные слоты мастера на дату."""
     slot_service = SlotService(db)
     slots = await slot_service.get_available_slots(
-        master_id, target_date, service_id, location_id
+        master_id, target_date, service_id, location_id, client_tz=tz
     )
     return DaySlots(
         date=target_date,
