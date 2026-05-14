@@ -37,9 +37,14 @@ class IdentifyResponse(BaseModel):
     master_id: Optional[int] = None
 
 
+class SwitchRoleRequest(BaseModel):
+    target_role: str  # 'master' | 'client'
+
+
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
     role: str
     user_id: int
     display_name: str
+    master_id: int | None = None
