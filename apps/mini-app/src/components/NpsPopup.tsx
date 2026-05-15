@@ -36,7 +36,7 @@ export default function NpsPopup() {
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 animate-fade-in">
-      <div className="w-full max-w-md bg-surface-primary rounded-t-3xl p-5 pb-8 animate-slide-up">
+      <div className="w-full max-w-md bg-surface-primary rounded-t-sheet p-card-inner pb-8 animate-slide-up">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-bold">Оцените BookMaster Pro</h3>
           <button onClick={() => setVisible(false)} className="text-tg-hint p-1">

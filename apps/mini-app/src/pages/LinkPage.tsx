@@ -61,7 +61,7 @@ export default function LinkPage() {
     <div className="min-h-screen bg-tg-bg">
       {/* Header */}
       <div className="pt-10 pb-6 px-6 text-center">
-        <div className="w-28 h-28 rounded-3xl bg-brand-500/10 shadow-card-lg mx-auto mb-4 flex items-center justify-center overflow-hidden">
+        <div className="w-28 h-28 rounded-3xl bg-brand-500/10 mx-auto mb-4 flex items-center justify-center overflow-hidden">
           {master.avatar_url ? (
             <img src={master.avatar_url} alt={master.display_name} className="w-full h-full object-cover" />
           ) : (
@@ -95,7 +95,7 @@ export default function LinkPage() {
               href={/^https?:\/\//i.test(link.url) ? link.url : `https://${link.url}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full flex items-center gap-3 p-3 bg-surface-elevated shadow-card rounded-2xl hover:scale-[1.02] transition-transform"
+              className="w-full flex items-center gap-3 p-3 bg-surface-elevated rounded-card hover:scale-[1.02] transition-transform"
             >
               <div className="w-10 h-10 bg-tg-secondary rounded-xl flex items-center justify-center shrink-0">
                 <ExternalLink className="w-4 h-4 text-gray-500" />
@@ -116,7 +116,7 @@ export default function LinkPage() {
             {(services as Service[]).map((svc) => (
               <div
                 key={svc.id}
-                className="flex justify-between items-center p-3.5 bg-surface-elevated shadow-card rounded-2xl"
+                className="flex justify-between items-center p-3.5 bg-surface-elevated rounded-card"
               >
                 <div>
                   <div className="font-medium text-sm">{svc.name}</div>
@@ -156,7 +156,7 @@ export default function LinkPage() {
           <h2 className="font-bold text-lg mb-3 text-center">Отзывы</h2>
           <div className="flex flex-col gap-2 max-w-md mx-auto">
             {(reviews.reviews as Review[]).map((r) => (
-              <div key={r.id} className="bg-surface-elevated shadow-card rounded-2xl p-3.5">
+              <div key={r.id} className="bg-surface-elevated rounded-card p-3.5">
                 <div className="flex justify-between mb-1">
                   <span className="text-sm font-medium">{r.client_name}</span>
                   <div className="flex gap-0.5">
@@ -178,7 +178,7 @@ export default function LinkPage() {
       <div className="px-4 pb-8 text-center">
         <a
           href={bookUrl}
-          className="inline-block w-full max-w-md bg-brand-500 text-white py-4 rounded-2xl font-bold text-lg shadow-button active:scale-[0.97] transition-all"
+          className="inline-block w-full max-w-md bg-brand-500 text-white py-4 rounded-btn font-bold text-lg shadow-button active:scale-[0.97] transition-all"
         >
           Записаться
         </a>

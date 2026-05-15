@@ -42,7 +42,7 @@ export default function BlockedSlots() {
   const slots = data || [];
 
   return (
-    <div className="p-5 pb-24 animate-fade-in">
+    <div className="px-screen-x pt-section-y pb-24 animate-fade-in">
       <SectionBack onBack={() => navigate(-1)} />
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-xl font-bold tracking-tight">Выходные и перерывы</h1>

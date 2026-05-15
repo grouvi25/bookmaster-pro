@@ -57,7 +57,7 @@ export default function SelectDate() {
   const today = startOfDay(new Date());
 
   return (
-    <div className="p-5 pb-24 animate-slide-up">
+    <div className="px-screen-x pt-section-y pb-24 animate-slide-up">
       <BackButton to="/book/service" />
       <h1 className="text-2xl font-bold tracking-tight mb-1">Выберите дату</h1>
       <p className="text-tg-hint text-sm mb-5">Шаг 2 из 5</p>

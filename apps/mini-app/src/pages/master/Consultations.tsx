@@ -127,7 +127,7 @@ function ConsultationsList() {
           {items.map((c) => (
             <div
               key={c.id}
-              className="bg-surface-elevated shadow-card rounded-2xl p-3.5"
+              className="bg-surface-elevated rounded-card p-3.5"
             >
               <div className="flex justify-between items-start mb-2">
                 <div>
@@ -231,7 +231,7 @@ function ConsultationStatsSection() {
         />
       </div>
 
-      <div className="bg-surface-elevated shadow-card-lg rounded-2xl p-4">
+      <div className="bg-surface-elevated rounded-card p-4">
         <h3 className="text-sm font-medium mb-2">Что такое конверсия?</h3>
         <p className="text-xs text-tg-hint">
           Процент завершённых консультаций, которые привели к записи на услугу.

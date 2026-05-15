@@ -88,7 +88,7 @@ export default function LoyaltyHistory() {
                 <div className="text-xs text-tg-hint">кешбэк {tier.cashback}%</div>
               </div>
             </div>
-            <div className="bg-tg-secondary rounded-2xl p-2.5 text-center">
+            <div className="bg-tg-secondary rounded-card p-2.5 text-center">
               <span className="text-xs text-tg-hint">
                 Всего заработано: <span className="font-medium text-tg-text">{balance.total_earned}</span>
               </span>
