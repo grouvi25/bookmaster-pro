@@ -104,7 +104,7 @@ function SubscriptionPackagesContent() {
 
       <div className="px-4 space-y-4">
         {showForm && (
-          <div className="bg-surface-elevated rounded-2xl p-4 shadow-card space-y-3">
+          <div className="bg-surface-elevated rounded-card p-4 space-y-3">
             <h3 className="font-semibold text-sm">Новый пакет</h3>
 
             <div>
@@ -175,7 +175,7 @@ function SubscriptionPackagesContent() {
         ) : (
           <div className="space-y-2">
             {packages.map((pkg) => (
-              <div key={pkg.id} className="bg-surface-elevated rounded-xl p-4 shadow-card flex items-center gap-3">
+              <div key={pkg.id} className="bg-surface-elevated rounded-xl p-4 flex items-center gap-3">
                 <Package className="w-5 h-5 text-brand-500 shrink-0" />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium">{pkg.service_name || `Услуга #${pkg.service_id}`}</p>

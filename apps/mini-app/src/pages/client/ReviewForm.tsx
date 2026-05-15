@@ -39,9 +39,9 @@ export default function ReviewForm() {
 
   if (submitted) {
     return (
-      <div className="p-5 pb-24 animate-fade-in">
+      <div className="px-screen-x pt-section-y pb-24 animate-fade-in">
         <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
-          <div className="w-16 h-16 bg-accent-emerald/10 rounded-2xl flex items-center justify-center mb-4">
+          <div className="w-16 h-16 bg-accent-emerald/10 rounded-card flex items-center justify-center mb-4">
             <CheckCircle className="w-8 h-8 text-accent-emerald" strokeWidth={1.5} />
           </div>
           <h1 className="text-2xl font-bold mb-2">Спасибо за отзыв!</h1>
@@ -55,7 +55,7 @@ export default function ReviewForm() {
   }
 
   return (
-    <div className="p-5 pb-24 animate-fade-in">
+    <div className="px-screen-x pt-section-y pb-24 animate-fade-in">
       <h1 className="text-2xl font-bold tracking-tight mb-1">Оставьте отзыв</h1>
       <p className="text-tg-hint text-sm mb-6">Оцените ваш визит</p>
 

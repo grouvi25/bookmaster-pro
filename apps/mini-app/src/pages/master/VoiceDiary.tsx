@@ -167,7 +167,7 @@ function VoiceDiaryContent() {
 
         {/* Last result */}
         {lastResult && (
-          <div className="bg-surface-elevated rounded-2xl p-4 shadow-card space-y-3">
+          <div className="bg-surface-elevated rounded-card p-4 space-y-3">
             <h3 className="font-semibold text-sm">Результат</h3>
             {lastResult.transcript && (
               <div>
@@ -202,7 +202,7 @@ function VoiceDiaryContent() {
                   <div
                     key={entry.id}
                     onClick={() => setExpandedId(isExpanded ? null : entry.id)}
-                    className="bg-surface-elevated rounded-xl p-3 shadow-card cursor-pointer active:scale-[0.98] transition-all"
+                    className="bg-surface-elevated rounded-xl p-3 cursor-pointer active:scale-[0.98] transition-all"
                   >
                     <div className="flex items-center gap-3">
                       <FileText className="w-5 h-5 text-brand-500 shrink-0" />

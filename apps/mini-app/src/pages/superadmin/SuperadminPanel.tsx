@@ -56,7 +56,7 @@ export default function SuperadminPanel() {
   };
 
   return (
-    <div className="p-5 pb-24 animate-fade-in">
+    <div className="px-screen-x pt-section-y pb-24 animate-fade-in">
       <PageHeader title="Суперадмин" />
 
       {/* Role switcher */}
@@ -64,7 +64,7 @@ export default function SuperadminPanel() {
         <button
           onClick={() => switchToRole('master')}
           disabled={switching}
-          className="flex-1 flex items-center justify-center gap-2 p-3 bg-brand-500/10 text-brand-600 rounded-2xl text-sm font-medium active:scale-[0.97] transition-all disabled:opacity-50"
+          className="flex-1 flex items-center justify-center gap-2 p-3 bg-brand-500/10 text-brand-600 rounded-btn text-sm font-medium active:scale-[0.97] transition-all disabled:opacity-50"
         >
           <Wrench className="w-4 h-4" />
           {switching ? '...' : 'Режим мастера'}
@@ -72,7 +72,7 @@ export default function SuperadminPanel() {
         <button
           onClick={() => switchToRole('client')}
           disabled={switching}
-          className="flex-1 flex items-center justify-center gap-2 p-3 bg-blue-500/10 text-blue-600 rounded-2xl text-sm font-medium active:scale-[0.97] transition-all disabled:opacity-50"
+          className="flex-1 flex items-center justify-center gap-2 p-3 bg-blue-500/10 text-blue-600 rounded-btn text-sm font-medium active:scale-[0.97] transition-all disabled:opacity-50"
         >
           <UserCircle className="w-4 h-4" />
           {switching ? '...' : 'Режим клиента'}
@@ -194,7 +194,7 @@ function MastersTab() {
         {masters.map((m) => (
           <div
             key={m.id}
-            className="bg-surface-elevated shadow-card rounded-2xl p-3.5"
+            className="bg-surface-elevated rounded-card p-3.5"
           >
             <div className="flex justify-between items-center">
               <div>
@@ -275,7 +275,7 @@ function HealthTab() {
       <button
         onClick={() => mutation.mutate()}
         disabled={mutation.isPending}
-        className="w-full bg-brand-500 text-white py-3 rounded-2xl font-semibold shadow-button mb-4 disabled:opacity-40 active:scale-[0.97] transition-all"
+        className="w-full bg-brand-500 text-white py-3 rounded-btn font-semibold shadow-button mb-4 disabled:opacity-40 active:scale-[0.97] transition-all"
       >
         {mutation.isPending ? 'Проверка...' : 'Запустить проверку здоровья'}
       </button>
@@ -286,7 +286,7 @@ function HealthTab() {
             ([service, status]) => (
               <div
                 key={service}
-                className="bg-surface-elevated shadow-card rounded-2xl p-3.5 flex justify-between"
+                className="bg-surface-elevated rounded-card p-3.5 flex justify-between"
               >
                 <span className="text-sm font-medium">{service}</span>
                 <StatusBadge
@@ -318,7 +318,7 @@ function AuditTab() {
         <EmptyState emoji="\uD83D\uDCDC" title="Нет записей" />
       ) : (
         logs.map((log, i) => (
-          <div key={i} className="bg-surface-elevated shadow-card rounded-2xl p-3.5">
+          <div key={i} className="bg-surface-elevated rounded-card p-3.5">
             <div className="flex justify-between text-sm">
               <span className="font-medium">{log.action}</span>
               <span className="text-xs text-tg-hint">{log.created_at}</span>
@@ -365,7 +365,7 @@ function FinanceTab() {
       </div>
 
       {f.revenue_by_day && f.revenue_by_day.length > 0 && (
-        <div className="bg-surface-elevated shadow-card rounded-2xl p-3.5">
+        <div className="bg-surface-elevated rounded-card p-3.5">
           <h3 className="text-sm font-medium mb-2">Выручка по дням</h3>
           <div className="flex flex-col gap-1 max-h-60 overflow-y-auto">
             {f.revenue_by_day.map((d) => (
@@ -427,7 +427,7 @@ function TicketsTab() {
           <EmptyState emoji="\uD83D\uDCE8" title="Нет тикетов" />
         ) : (
           tickets.map((t) => (
-            <div key={t.id} className="bg-surface-elevated shadow-card rounded-2xl p-3.5">
+            <div key={t.id} className="bg-surface-elevated rounded-card p-3.5">
               <div className="flex justify-between items-start">
                 <div>
                   <div className="text-sm font-medium">#{t.id}: {t.subject}</div>
@@ -470,7 +470,7 @@ function SettingsTab() {
 
   return (
     <div>
-      <div className="bg-surface-elevated shadow-card rounded-2xl p-4 mb-3">
+      <div className="bg-surface-elevated rounded-card p-4 mb-3">
         <h3 className="text-sm font-semibold mb-2">Тарифы</h3>
         <div className="flex flex-col gap-1">
           {Object.entries(s.plan_prices || {}).map(([plan, price]) => (
@@ -482,7 +482,7 @@ function SettingsTab() {
         </div>
       </div>
 
-      <div className="bg-surface-elevated shadow-card rounded-2xl p-4 mb-3">
+      <div className="bg-surface-elevated rounded-card p-4 mb-3">
         <h3 className="text-sm font-semibold mb-2">Система</h3>
         <div className="flex flex-col gap-1 text-xs">
           {[
@@ -564,13 +564,13 @@ function PromoCodesTab() {
     <div>
       <button
         onClick={() => setShowCreate(!showCreate)}
-        className="w-full bg-tg-button text-tg-button-text py-3 rounded-2xl font-semibold mb-4 active:scale-[0.97] transition-all"
+        className="w-full bg-tg-button text-tg-button-text py-3 rounded-btn font-semibold mb-4 active:scale-[0.97] transition-all"
       >
         {showCreate ? 'Отмена' : '+ Создать промо-код'}
       </button>
 
       {showCreate && (
-        <div className="bg-surface-elevated shadow-card rounded-2xl p-4 mb-4 flex flex-col gap-3">
+        <div className="bg-surface-elevated rounded-card p-4 mb-4 flex flex-col gap-3">
           <input
             type="text"
             value={code}
@@ -625,7 +625,7 @@ function PromoCodesTab() {
       ) : (
         <div className="flex flex-col gap-2">
           {codes.map((c) => (
-            <div key={c.id} className="bg-surface-elevated shadow-card rounded-2xl p-3.5">
+            <div key={c.id} className="bg-surface-elevated rounded-card p-3.5">
               <div className="flex justify-between items-start">
                 <div>
                   <div className="font-semibold text-sm font-mono">{c.code}</div>
@@ -686,7 +686,7 @@ function GrowthTab() {
       </div>
 
       {g.masters_by_week && g.masters_by_week.length > 0 && (
-        <div className="bg-surface-elevated shadow-card rounded-2xl p-3.5 mb-3">
+        <div className="bg-surface-elevated rounded-card p-3.5 mb-3">
           <h3 className="text-sm font-medium mb-2">Мастера по неделям</h3>
           <div className="flex flex-col gap-1">
             {g.masters_by_week.map((w) => (
@@ -700,7 +700,7 @@ function GrowthTab() {
       )}
 
       {g.retention_cohorts && (
-        <div className="bg-surface-elevated shadow-card rounded-2xl p-3.5 mb-3">
+        <div className="bg-surface-elevated rounded-card p-3.5 mb-3">
           <h3 className="text-sm font-semibold mb-2">Retention (активные мастера)</h3>
           <div className="flex flex-col gap-1">
             {g.retention_cohorts.map((c) => (
@@ -714,7 +714,7 @@ function GrowthTab() {
       )}
 
       {g.revenue_by_plan && Object.keys(g.revenue_by_plan).length > 0 && (
-        <div className="bg-surface-elevated shadow-card rounded-2xl p-3.5">
+        <div className="bg-surface-elevated rounded-card p-3.5">
           <h3 className="text-sm font-semibold mb-2">Revenue по тарифам</h3>
           <div className="flex flex-col gap-1">
             {Object.entries(g.revenue_by_plan).map(([plan, rev]) => (

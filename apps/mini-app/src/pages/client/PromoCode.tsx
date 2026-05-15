@@ -47,7 +47,7 @@ export default function PromoCode() {
     : servicePrice;
 
   return (
-    <div className="p-5 pb-24 animate-slide-up">
+    <div className="px-screen-x pt-section-y pb-24 animate-slide-up">
       <BackButton to="/book/time" />
       <h1 className="text-2xl font-bold tracking-tight mb-1">Промокод и баллы</h1>
       <p className="text-tg-hint text-sm mb-5">Шаг 4 из 5</p>
@@ -105,7 +105,7 @@ export default function PromoCode() {
       )}
 
       {/* Summary */}
-      <div className="bg-surface-elevated shadow-card rounded-2xl p-4 mb-6">
+      <div className="bg-surface-elevated rounded-card p-4 mb-6">
         <div className="flex justify-between text-sm">
           <span className="text-tg-hint">Стоимость</span>
           <span>{servicePrice.toLocaleString('ru')} \u20bd</span>

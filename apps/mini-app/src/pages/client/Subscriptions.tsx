@@ -49,7 +49,7 @@ export default function Subscriptions() {
   const past = subscriptions.filter((s) => s.status !== 'active');
 
   return (
-    <div className="p-5 pb-24 animate-fade-in">
+    <div className="px-screen-x pt-section-y pb-24 animate-fade-in">
       <SectionBack onBack={() => navigate(-1)} />
 
       <h1 className="text-2xl font-bold tracking-tight mb-5">

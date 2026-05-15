@@ -274,8 +274,8 @@ function AIChat() {
             <div
               className={`rounded-2xl px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap ${
                 msg.role === 'user'
-                  ? 'bg-brand-500 text-white rounded-br-lg shadow-button'
-                  : 'bg-surface-elevated shadow-card text-tg-text rounded-bl-lg'
+                  ? 'bg-brand-500 text-white rounded-br-lg'
+                  : 'bg-surface-elevated text-tg-text rounded-bl-lg'
               }`}
             >
               {msg.content}
@@ -287,7 +287,7 @@ function AIChat() {
         ))}
         {loading && !messages[messages.length - 1]?.streaming && (
           <div className="mr-auto">
-            <div className="bg-surface-elevated shadow-card rounded-2xl rounded-bl-lg px-4 py-3.5">
+            <div className="bg-surface-elevated rounded-2xl rounded-bl-lg px-4 py-3.5">
               <div className="flex gap-1.5">
                 <div className="w-2 h-2 bg-tg-hint/40 rounded-full animate-bounce" />
                 <div className="w-2 h-2 bg-tg-hint/40 rounded-full animate-bounce [animation-delay:0.15s]" />
@@ -323,7 +323,7 @@ function AIChat() {
           <button
             onClick={handleSend}
             disabled={!input.trim() || loading}
-            className="px-4 py-3 bg-brand-500 text-white rounded-2xl shadow-button disabled:opacity-40 active:scale-[0.95] transition-all"
+            className="px-4 py-3 bg-brand-500 text-white rounded-2xl disabled:opacity-40 active:scale-[0.95] transition-all"
           >
             <SendHorizontal className="w-4 h-4" />
           </button>

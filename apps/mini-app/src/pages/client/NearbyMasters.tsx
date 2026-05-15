@@ -52,7 +52,7 @@ export default function NearbyMasters() {
   };
 
   return (
-    <div className="p-5 pb-24 animate-fade-in">
+    <div className="px-screen-x pt-section-y pb-24 animate-fade-in">
       <h1 className="text-2xl font-bold tracking-tight mb-1">Мастера рядом</h1>
       <p className="text-tg-hint text-sm mb-5">Найдите специалиста поблизости</p>
 
@@ -67,7 +67,7 @@ export default function NearbyMasters() {
           <button
             onClick={requestLocation}
             disabled={locating}
-            className="px-6 py-3 bg-brand-500 text-white rounded-2xl font-semibold shadow-button disabled:opacity-50 active:scale-[0.97] transition-all"
+            className="px-6 py-3 bg-brand-500 text-white rounded-btn font-semibold shadow-button disabled:opacity-50 active:scale-[0.97] transition-all"
           >
             {locating ? 'Определяем...' : 'Определить местоположение'}
           </button>
@@ -108,7 +108,7 @@ export default function NearbyMasters() {
                 <button
                   key={m.id}
                   onClick={() => navigate(`/m/${m.slug}`)}
-                  className="bg-surface-elevated shadow-card rounded-2xl p-3.5 flex items-center gap-3 text-left active:scale-[0.98] transition-all"
+                  className="bg-surface-elevated rounded-card p-3.5 flex items-center gap-3 text-left active:scale-[0.98] transition-all"
                 >
                   {m.avatar_url ? (
                     <img

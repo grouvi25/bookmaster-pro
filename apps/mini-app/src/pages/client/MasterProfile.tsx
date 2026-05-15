@@ -89,7 +89,7 @@ export default function MasterProfile({ slug }: MasterProfileProps) {
     <div className="pb-24 animate-fade-in">
       {/* Header */}
       <div className="bg-brand-500/10 p-6 text-center">
-        <div className="w-24 h-24 rounded-3xl bg-tg-bg shadow-card-lg mx-auto mb-3 flex items-center justify-center overflow-hidden">
+        <div className="w-24 h-24 rounded-3xl bg-tg-bg mx-auto mb-3 flex items-center justify-center overflow-hidden">
           {master.avatar_url ? (
             <img src={master.avatar_url} alt={master.display_name} className="w-full h-full object-cover" />
           ) : (
@@ -112,7 +112,7 @@ export default function MasterProfile({ slug }: MasterProfileProps) {
 
       {/* Loyalty points */}
       {loyalty?.balance > 0 && (
-        <div className="mx-4 mt-4 p-3.5 bg-brand-500/10 rounded-2xl flex items-center justify-between">
+        <div className="mx-4 mt-4 p-card-inner bg-brand-500/10 rounded-card flex items-center justify-between">
           <span className="text-sm text-brand-700">Баллы лояльности</span>
           <span className="font-bold text-brand-600">{loyalty.balance} баллов</span>
         </div>
@@ -133,7 +133,7 @@ export default function MasterProfile({ slug }: MasterProfileProps) {
             {(services as Service[]).map((svc) => (
               <div
                 key={svc.id}
-                className="flex justify-between items-center p-3.5 bg-surface-elevated shadow-card rounded-2xl"
+                className="flex justify-between items-center p-3.5 bg-surface-elevated rounded-card"
               >
                 <div>
                   <div className="font-medium text-sm">{svc.name}</div>
@@ -165,7 +165,7 @@ export default function MasterProfile({ slug }: MasterProfileProps) {
               return (
                 <div
                   key={pkg.id}
-                  className="flex items-center justify-between p-3.5 bg-brand-500/5 border border-brand-500/20 rounded-2xl"
+                  className="flex items-center justify-between p-3.5 bg-brand-500/5 border border-brand-500/20 rounded-card"
                 >
                   <div>
                     <div className="font-medium text-sm">{svc?.name || 'Любая услуга'}</div>
@@ -190,7 +190,7 @@ export default function MasterProfile({ slug }: MasterProfileProps) {
           <h2 className="font-bold text-lg mb-3">Отзывы</h2>
           <div className="flex flex-col gap-3">
             {(reviews.reviews as Review[]).slice(0, 3).map((r) => (
-              <div key={r.id} className="bg-surface-elevated shadow-card rounded-2xl p-3.5">
+              <div key={r.id} className="bg-surface-elevated rounded-card p-3.5">
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-sm font-medium">{r.client_name}</span>
                   <div className="flex gap-0.5">

@@ -62,7 +62,7 @@ export default function SelectTime() {
                 'py-2.5 rounded-xl font-medium text-sm transition-all active:scale-95',
                 selectedTime === slot.start
                   ? 'bg-brand-500 text-white shadow-button'
-                  : 'bg-surface-elevated shadow-card text-tg-text'
+                  : 'bg-surface-elevated text-tg-text'
               )}
             >
               {slot.start}
@@ -74,7 +74,7 @@ export default function SelectTime() {
   };
 
   return (
-    <div className="p-5 pb-24 animate-slide-up">
+    <div className="px-screen-x pt-section-y pb-24 animate-slide-up">
       <BackButton to="/book/date" />
       <h1 className="text-2xl font-bold tracking-tight mb-1">Выберите время</h1>
       <div className="flex items-center gap-2 text-tg-hint text-sm mb-4">

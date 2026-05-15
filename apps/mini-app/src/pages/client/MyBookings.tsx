@@ -51,7 +51,7 @@ export default function MyBookings({ hideBack }: { hideBack?: boolean } = {}) {
     queryFn: () => bookingApi.myBookings().then((r) => r.data),
   });
 
-  if (isLoading) return <div className="p-5"><ListSkeleton count={4} /></div>;
+  if (isLoading) return <div className="px-screen-x py-section-y"><ListSkeleton count={4} /></div>;
 
   const bookings = toArray<Booking>(data);
   const filtered = activeTab === 'upcoming'
@@ -75,7 +75,7 @@ export default function MyBookings({ hideBack }: { hideBack?: boolean } = {}) {
   };
 
   return (
-    <div className="p-5 pb-24 animate-fade-in">
+    <div className="px-screen-x pt-section-y pb-24 animate-fade-in">
       {!hideBack && <BackButton to="/" />}
       <h1 className="text-2xl font-bold tracking-tight mb-5">Мои записи</h1>
 
