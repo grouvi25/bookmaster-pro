@@ -58,7 +58,7 @@ export default function BlockedSlots() {
       {slots.length === 0 ? (
         <Card className="!py-10">
           <EmptyState
-            emoji="\uD83D\uDEAB"
+            emoji="🚫"
             title="Нет блокировок"
             description="Добавьте выходные или перерывы"
           />

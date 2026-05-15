@@ -21,7 +21,7 @@ export default function StarRating({ value, onChange, size = 'md' }: Props) {
             emojiSizes[size],
           )}
         >
-          {star <= value ? '\u2B50' : '\u2606'}
+          {star <= value ? '\⭐' : '\☆'}
         </button>
       ))}
     </div>

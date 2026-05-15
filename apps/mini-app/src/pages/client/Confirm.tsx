@@ -105,25 +105,25 @@ export default function Confirm() {
   const paymentOptions: { type: PaymentType; label: string; Icon: typeof CreditCard; show: boolean }[] = [
     {
       type: 'full',
-      label: `Полная оплата ${payableAmount.toLocaleString('ru')} \u20bd`,
+      label: `Полная оплата ${payableAmount.toLocaleString('ru')} \₽`,
       Icon: CreditCard,
       show: payableAmount > 0,
     },
     {
       type: 'prepay_30',
-      label: `Предоплата 30% \u2014 ${Math.round(payableAmount * 0.3).toLocaleString('ru')} \u20bd`,
+      label: `Предоплата 30% \— ${Math.round(payableAmount * 0.3).toLocaleString('ru')} \₽`,
       Icon: Banknote,
       show: payableAmount > 0,
     },
     {
       type: 'prepay_50',
-      label: `Предоплата 50% \u2014 ${Math.round(payableAmount * 0.5).toLocaleString('ru')} \u20bd`,
+      label: `Предоплата 50% \— ${Math.round(payableAmount * 0.5).toLocaleString('ru')} \₽`,
       Icon: Banknote,
       show: payableAmount > 0,
     },
     {
       type: 'points',
-      label: `Оплатить баллами ${store.loyaltyPoints} \u20bd`,
+      label: `Оплатить баллами ${store.loyaltyPoints} \₽`,
       Icon: Coins,
       show: store.loyaltyPoints > 0,
     },
@@ -176,7 +176,7 @@ export default function Confirm() {
             <div className="flex items-center gap-3 text-green-600">
               <span className="w-4 h-4" />
               <span>Промокод {store.promoCode}</span>
-              <span className="ml-auto">-{store.discount}{store.discount < 100 ? '%' : ' \u20bd'}</span>
+              <span className="ml-auto">-{store.discount}{store.discount < 100 ? '%' : ' \₽'}</span>
             </div>
           )}
 
@@ -184,21 +184,21 @@ export default function Confirm() {
             <div className="flex items-center gap-3 text-blue-600">
               <Coins className="w-4 h-4 flex-shrink-0" />
               <span>Баллы лояльности</span>
-              <span className="ml-auto">-{Math.min(store.loyaltyPoints, finalPrice)} \u20bd</span>
+              <span className="ml-auto">-{Math.min(store.loyaltyPoints, finalPrice)} \₽</span>
             </div>
           )}
 
           <div className="border-t border-gray-200 pt-3 flex justify-between">
             <span className="font-bold">Итого</span>
             <span className="font-bold text-brand-600">
-              {finalPrice.toLocaleString('ru')} \u20bd
+              {finalPrice.toLocaleString('ru')} \₽
             </span>
           </div>
 
           {paymentType !== 'none' && paymentType !== 'points' && getPaymentAmount() < finalPrice && (
             <div className="flex justify-between text-sm text-tg-hint">
               <span>К оплате сейчас</span>
-              <span>{getPaymentAmount().toLocaleString('ru')} \u20bd</span>
+              <span>{getPaymentAmount().toLocaleString('ru')} \₽</span>
             </div>
           )}
         </div>
