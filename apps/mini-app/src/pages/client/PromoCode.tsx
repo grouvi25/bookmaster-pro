@@ -79,7 +79,7 @@ export default function PromoCode() {
           <div className="flex items-center gap-2 mt-3 text-green-600 text-sm">
             <CircleCheck className="w-4 h-4" />
             <span>
-              Скидка: -{discount}{discount < 100 ? '%' : ` \u20bd`}
+              Скидка: -{discount}{discount < 100 ? '%' : ` \₽`}
             </span>
           </div>
         )}
@@ -108,19 +108,19 @@ export default function PromoCode() {
       <div className="bg-surface-elevated rounded-card p-4 mb-6">
         <div className="flex justify-between text-sm">
           <span className="text-tg-hint">Стоимость</span>
-          <span>{servicePrice.toLocaleString('ru')} \u20bd</span>
+          <span>{servicePrice.toLocaleString('ru')} \₽</span>
         </div>
         {discount !== null && discount > 0 && (
           <div className="flex justify-between text-sm mt-1">
             <span className="text-green-600">Скидка</span>
             <span className="text-green-600">
-              -{(servicePrice - finalPrice).toLocaleString('ru')} \u20bd
+              -{(servicePrice - finalPrice).toLocaleString('ru')} \₽
             </span>
           </div>
         )}
         <div className="border-t border-gray-200 mt-2 pt-2 flex justify-between font-semibold">
           <span>Итого</span>
-          <span className="text-brand-600">{finalPrice.toLocaleString('ru')} \u20bd</span>
+          <span className="text-brand-600">{finalPrice.toLocaleString('ru')} \₽</span>
         </div>
       </div>
 

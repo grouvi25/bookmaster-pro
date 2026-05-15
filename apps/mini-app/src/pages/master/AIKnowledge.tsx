@@ -191,7 +191,7 @@ function AIKnowledgeInner() {
       ) : docs.length === 0 ? (
         <Card className="!py-10">
           <EmptyState
-            emoji="\uD83D\uDCDA"
+            emoji="📚"
             title="Пока ничего не загружено"
             description="Добавьте PDF или TXT — например прайс с описаниями, правила работы, FAQ — и AI начнёт ссылаться на них."
           />

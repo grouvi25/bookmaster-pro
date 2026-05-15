@@ -31,7 +31,7 @@ export default function ClientProfile() {
       {isLoading ? (
         <ListSkeleton count={3} />
       ) : !data || data.length === 0 ? (
-        <EmptyState emoji="\uD83D\uDCAC" title="Нет отзывов" description="После визита вы сможете оставить отзыв мастеру" />
+        <EmptyState emoji="💬" title="Нет отзывов" description="После визита вы сможете оставить отзыв мастеру" />
       ) : (
         <div className="flex flex-col gap-3">
           {data.map((review) => (
@@ -40,7 +40,7 @@ export default function ClientProfile() {
                 <div className="flex items-center gap-0.5">
                   {Array.from({ length: 5 }).map((_, i) => (
                     <span key={i} className="text-[14px]">
-                      {i < review.rating ? '\u2B50' : '\u2606'}
+                      {i < review.rating ? '\⭐' : '\☆'}
                     </span>
                   ))}
                 </div>

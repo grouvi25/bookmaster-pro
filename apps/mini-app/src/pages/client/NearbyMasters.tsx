@@ -98,7 +98,7 @@ export default function NearbyMasters() {
             <Loading />
           ) : !masters || masters.length === 0 ? (
             <EmptyState
-              emoji="\uD83D\uDD0D"
+              emoji="🔍"
               title="Мастеров не найдено"
               description="Попробуйте увеличить радиус поиска"
             />

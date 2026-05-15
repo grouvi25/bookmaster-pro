@@ -315,7 +315,7 @@ function AuditTab() {
   return (
     <div className="flex flex-col gap-2">
       {logs.length === 0 ? (
-        <EmptyState emoji="\uD83D\uDCDC" title="Нет записей" />
+        <EmptyState emoji="📜" title="Нет записей" />
       ) : (
         logs.map((log, i) => (
           <div key={i} className="bg-surface-elevated rounded-card p-3.5">
@@ -424,7 +424,7 @@ function TicketsTab() {
 
       <div className="flex flex-col gap-2">
         {tickets.length === 0 ? (
-          <EmptyState emoji="\uD83D\uDCE8" title="Нет тикетов" />
+          <EmptyState emoji="📨" title="Нет тикетов" />
         ) : (
           tickets.map((t) => (
             <div key={t.id} className="bg-surface-elevated rounded-card p-3.5">
@@ -621,7 +621,7 @@ function PromoCodesTab() {
       )}
 
       {codes.length === 0 ? (
-        <EmptyState emoji={'\uD83C\uDFAB'} title="Нет промо-кодов" description="Создайте первый промо-код" />
+        <EmptyState emoji={'🎫'} title="Нет промо-кодов" description="Создайте первый промо-код" />
       ) : (
         <div className="flex flex-col gap-2">
           {codes.map((c) => (

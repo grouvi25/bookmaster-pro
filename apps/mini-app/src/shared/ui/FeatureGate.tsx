@@ -42,7 +42,7 @@ function FeatureLockedScreen({ flag }: { flag: string }) {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] bg-tg-bg text-tg-text px-screen-x">
-      <div className="text-[48px] mb-4">{'\uD83D\uDD12'}</div>
+      <div className="text-[48px] mb-4">{'🔒'}</div>
       <h2 className="text-h1 mb-2 text-center">Доступно на тарифе «{tariff}»</h2>
       <p className="text-tg-hint text-center text-body mb-6">
         Эта функция недоступна на вашем текущем тарифе.

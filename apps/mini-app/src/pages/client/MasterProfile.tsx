@@ -99,7 +99,7 @@ export default function MasterProfile({ slug }: MasterProfileProps) {
         <h1 className="text-xl font-bold text-tg-text">{master.display_name}</h1>
         <p className="text-tg-hint text-sm mt-1">
           {master.specialization}
-          {master.city && ` \u00b7 ${master.city}`}
+          {master.city && ` \· ${master.city}`}
         </p>
         {master.rating_count > 0 && (
           <div className="flex items-center justify-center gap-1 mt-2">

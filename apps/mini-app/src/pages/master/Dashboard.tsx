@@ -49,17 +49,17 @@ export default function Dashboard() {
         <StatCard
           label="Сегодня"
           value={confirmed.length}
-          emoji={'\uD83D\uDCC5'}
+          emoji={'📅'}
         />
         <StatCard
           label="Рейтинг"
           value={masterData?.rating_avg?.toFixed(1) || '—'}
-          emoji={'\u2B50'}
+          emoji={'\⭐'}
         />
         <StatCard
           label="Выручка"
           value={`${(stats?.today_revenue ?? 0).toLocaleString('ru')} ₽`}
-          emoji={'\uD83D\uDCB0'}
+          emoji={'💰'}
         />
       </div>
 
@@ -68,7 +68,7 @@ export default function Dashboard() {
       {confirmed.length === 0 ? (
         <Card>
           <EmptyState
-            emoji={'\uD83D\uDCC5'}
+            emoji={'📅'}
             title="Записей на сегодня нет"
             description="Свободный день!"
           />
@@ -82,7 +82,7 @@ export default function Dashboard() {
                   {appt.time}
                 </div>
                 <div className="text-micro text-tg-hint flex items-center gap-0.5 mt-0.5">
-                  {'\u23F0'} {appt.duration_min}м
+                  {'\⏰'} {appt.duration_min}м
                 </div>
               </div>
 
@@ -93,7 +93,7 @@ export default function Dashboard() {
                   {appt.service_name}
                 </div>
                 <div className="text-aux text-tg-hint flex items-center gap-1.5 mt-0.5">
-                  {'\uD83D\uDC64'} {appt.client_name}
+                  {'👤'} {appt.client_name}
                 </div>
               </div>
 
