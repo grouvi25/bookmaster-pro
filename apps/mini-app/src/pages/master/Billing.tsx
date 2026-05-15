@@ -135,7 +135,7 @@ export default function Billing() {
   };
 
   return (
-    <div className="p-5 pb-24 animate-fade-in">
+    <div className="px-screen-x pt-section-y pb-24 animate-fade-in">
       <button
         onClick={() => navigate(-1)}
         className="flex items-center gap-0.5 text-tg-link text-sm mb-3"
@@ -168,7 +168,7 @@ export default function Billing() {
       )}
 
       {/* Billing period toggle */}
-      <div className="flex bg-tg-secondary rounded-2xl p-1 mb-5">
+      <div className="flex bg-tg-secondary rounded-btn p-1 mb-5">
         {(['monthly', 'yearly'] as const).map((period) => (
           <button
             key={period}
@@ -176,7 +176,7 @@ export default function Billing() {
             className={clsx(
               'flex-1 py-2 rounded-xl text-sm font-semibold transition-all',
               billingPeriod === period
-                ? 'bg-tg-bg text-tg-text shadow-card'
+                ? 'bg-tg-bg text-tg-text'
                 : 'text-tg-hint'
             )}
           >

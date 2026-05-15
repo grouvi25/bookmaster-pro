@@ -83,10 +83,10 @@ export default function WorkSchedule() {
     );
   };
 
-  if (isLoading && !initialized) return <div className="p-5"><ListSkeleton count={7} /></div>;
+  if (isLoading && !initialized) return <div className="px-screen-x py-section-y"><ListSkeleton count={7} /></div>;
 
   return (
-    <div className="p-5 pb-24 animate-fade-in">
+    <div className="px-screen-x pt-section-y pb-24 animate-fade-in">
       <SectionBack onBack={() => navigate(-1)} />
       <h1 className="text-2xl font-bold tracking-tight mb-1">Рабочее расписание</h1>
       <p className="text-sm text-tg-hint mb-5">Настройте рабочие часы по дням недели</p>

@@ -48,7 +48,7 @@ export default function Locations() {
           <p className="text-tg-hint text-center py-8">Нет локаций</p>
         ) : (
           locations.map((loc) => (
-            <div key={loc.id} className="bg-surface-elevated shadow-card rounded-2xl p-4 flex justify-between items-center">
+            <div key={loc.id} className="bg-surface-elevated rounded-card p-4 flex justify-between items-center">
               <div className="flex items-start gap-3">
                 <MapPin className="w-5 h-5 text-tg-link mt-0.5 flex-shrink-0" />
                 <div>
@@ -95,7 +95,7 @@ function CreateLocation({ onClose }: { onClose: () => void }) {
   });
 
   return (
-    <div className="bg-surface-elevated shadow-card-lg rounded-2xl p-4 mb-5">
+    <div className="bg-surface-elevated rounded-card p-4 mb-5">
       <h3 className="text-sm font-semibold mb-3">Новая локация</h3>
 
       <input

@@ -31,7 +31,7 @@ export default function Broadcast() {
   }>;
 
   return (
-    <div className="p-5 animate-fade-in">
+    <div className="px-screen-x pt-section-y animate-fade-in">
       <div className="flex justify-between items-center mb-5">
         <h1 className="text-2xl font-bold tracking-tight">Рассылки</h1>
         <button
@@ -50,7 +50,7 @@ export default function Broadcast() {
           <p className="text-tg-hint text-center py-8">Нет рассылок</p>
         ) : (
           broadcasts.map((b) => (
-            <div key={b.id} className="bg-surface-elevated shadow-card rounded-2xl p-4">
+            <div key={b.id} className="bg-surface-elevated rounded-card p-4">
               <div className="flex justify-between items-start mb-2">
                 <div>
                   <h3 className="font-medium text-sm">{b.title}</h3>
@@ -121,7 +121,7 @@ function CreateBroadcast({ onClose }: { onClose: () => void }) {
   });
 
   return (
-    <div className="bg-surface-elevated shadow-card-lg rounded-2xl p-4 mb-5">
+    <div className="bg-surface-elevated rounded-card p-4 mb-5">
       <h3 className="text-sm font-semibold mb-3">Новая рассылка</h3>
 
       <input
