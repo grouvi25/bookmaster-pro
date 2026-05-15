@@ -103,7 +103,14 @@ class PaymentService:
         }
 
     async def handle_webhook(self, event_type: str, payment_data: dict) -> None:
-        """Обработать webhook от ЮKassa."""
+        """Обработать webhook от ЮKassa.
+
+        Статусу из тела запроса не доверяем — перезапрашиваем платёж
+        по API и сличаем статус с ожидаемым для event_type. Для refund.succeeded
+        это невозможно (refund — отдельный объект), доверяем статусу.
+        """
+        from app.modules.payments.security import fetch_yookassa_payment
+
         yookassa_id = payment_data.get("id")
         if not yookassa_id:
             return
@@ -115,6 +122,24 @@ class PaymentService:
         if not payment:
             logger.warning(f"Payment not found for yookassa_id: {yookassa_id}")
             return
+
+        if event_type in ("payment.succeeded", "payment.canceled"):
+            fetched = await fetch_yookassa_payment(yookassa_id)
+            if fetched is None:
+                logger.warning(
+                    f"YooKassa webhook {event_type} for {yookassa_id}: "
+                    f"verification fetch returned None; ignoring"
+                )
+                return
+            fetched_status = fetched.get("status") if isinstance(fetched, dict) else None
+            expected = "succeeded" if event_type == "payment.succeeded" else "canceled"
+            if fetched_status != expected:
+                logger.warning(
+                    f"YooKassa webhook {event_type} for {yookassa_id}: "
+                    f"verification mismatch (got status={fetched_status!r}, "
+                    f"expected {expected!r}); ignoring"
+                )
+                return
 
         if event_type == "payment.succeeded":
             payment.status = "succeeded"
@@ -143,18 +168,30 @@ class PaymentService:
             price = price * 12 * Decimal("0.8")
         period_days = 365 if billing_period == "yearly" else 30
 
+        yookassa_configured = bool(
+            settings.YOOKASSA_SHOP_ID and settings.YOOKASSA_SECRET_KEY
+        )
+        if not yookassa_configured and not settings.ALLOW_DEV_PAYMENTS:
+            raise ValueError(
+                "YooKassa is not configured. Set YOOKASSA_SHOP_ID/SECRET_KEY "
+                "or enable ALLOW_DEV_PAYMENTS=true for local development."
+            )
+
         subscription = MasterSubscription(
             master_id=master_id,
             plan=plan,
             price=price,
             billing_period=billing_period,
-            status="active",
+            status="pending" if yookassa_configured else "active",
             started_at=date.today(),
             next_billing=date.today() + timedelta(days=period_days),
         )
-
-        if settings.YOOKASSA_SHOP_ID and settings.YOOKASSA_SECRET_KEY:
-            subscription.status = "pending"
+        if not yookassa_configured:
+            logger.warning(
+                "ALLOW_DEV_PAYMENTS=true \u2014 activating master %s subscription "
+                "(%s) without payment",
+                master_id, plan,
+            )
         self.db.add(subscription)
 
         # Обновляем тариф мастера
@@ -198,7 +235,18 @@ class PaymentService:
     ) -> str:
         """Создать платёж в ЮKassa API."""
         if not settings.YOOKASSA_SHOP_ID or not settings.YOOKASSA_SECRET_KEY:
-            # Dev mode — без реального ЮKassa
+            # Локальный dev-режим: имитируем успешный платёж без вызова ЮKassa.
+            # Опасно в проде — требуем явный ALLOW_DEV_PAYMENTS=true.
+            if not settings.ALLOW_DEV_PAYMENTS:
+                raise ValueError(
+                    "YooKassa is not configured. Set YOOKASSA_SHOP_ID/SECRET_KEY "
+                    "or enable ALLOW_DEV_PAYMENTS=true for local development."
+                )
+            logger.warning(
+                "ALLOW_DEV_PAYMENTS=true — marking payment %s as succeeded "
+                "without contacting YooKassa",
+                payment.id,
+            )
             payment.yookassa_payment_id = f"dev_{payment.id}"
             payment.status = "succeeded"
             return return_url or settings.APP_URL

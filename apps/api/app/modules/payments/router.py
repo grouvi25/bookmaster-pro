@@ -68,9 +68,12 @@ async def create_subscription(
         raise HTTPException(status_code=403, detail="Not a master")
 
     service = PaymentService(db)
-    sub = await service.create_master_subscription(
-        master.id, body.plan, body.billing_period
-    )
+    try:
+        sub = await service.create_master_subscription(
+            master.id, body.plan, body.billing_period
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     await db.commit()
 
     result = {
@@ -106,10 +109,15 @@ async def create_subscription(
             await db.commit()
 
             result["confirmation_url"] = yk_payment.confirmation.confirmation_url
+            result["status"] = sub.status
         except Exception as e:
             logger.error(f"YooKassa subscription payment error: {e}")
-            sub.status = "active"
-            await db.commit()
+            # НЕ активируем подписку при сбое создания платежа —
+            # клиент должен повторить попытку.
+            raise HTTPException(
+                status_code=502,
+                detail="Failed to create YooKassa payment. Please try again.",
+            )
 
     return result
 
@@ -281,11 +289,29 @@ async def yookassa_webhook(
     request: Request,
     db: AsyncSession = Depends(get_db),
 ):
-    """Webhook от ЮKassa — обновление статуса платежа."""
-    body = await request.json()
+    """Webhook от ЮKassa — обновление статуса платежа.
+
+    Безопасность (ЮKassa не подписывает webhook'и HMAC):
+    1. IP отправителя должен быть в списке доверенных подсетей ЮKassa.
+    2. Статус из тела запроса не доверяем — перезапрашиваем платёж по API
+       для подтверждения (см. PaymentService.handle_webhook).
+    """
+    from app.modules.payments.security import verify_yookassa_ip
+
+    verify_yookassa_ip(request)
+
+    try:
+        body = await request.json()
+    except Exception as e:
+        logger.warning(f"YooKassa webhook: invalid JSON: {e}")
+        raise HTTPException(status_code=400, detail="Invalid JSON")
+
     event_type = body.get("event")
-    payment_data = body.get("object", {})
+    payment_data = body.get("object", {}) or {}
+    if not isinstance(payment_data, dict) or not event_type:
+        raise HTTPException(status_code=400, detail="Malformed notification")
 
     service = PaymentService(db)
     await service.handle_webhook(event_type, payment_data)
+    await db.commit()
     return {"status": "ok"}
