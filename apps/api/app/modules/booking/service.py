@@ -2,20 +2,25 @@
 Booking service — создание, отмена, завершение записей.
 """
 
+import logging
 from datetime import date, datetime, timedelta, timezone
 from typing import Optional, List
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import settings
 from app.modules.booking.models import (
     Appointment,
     AppointmentStatus,
     BlockedSlot,
 )
 from app.modules.booking.slot_service import SlotService
+from app.modules.notifications.service import NotificationService
 from app.modules.services.models import Service
 from app.modules.clients.models import Client
+
+logger = logging.getLogger(__name__)
 
 
 class BookingService:
@@ -99,6 +104,12 @@ class BookingService:
         )
         self.db.add(appointment)
         await self.db.flush()
+
+        await self._notify_master_new_booking(
+            appointment=appointment,
+            service=service,
+        )
+
         return appointment
 
     async def get_appointments_for_master(
@@ -146,6 +157,7 @@ class BookingService:
         price_final: Optional[int] = None,
     ) -> Appointment:
         """Обновить статус записи."""
+        previous_status = appointment.status
         appointment.status = new_status
 
         if new_status in (
@@ -168,6 +180,10 @@ class BookingService:
             appointment.price_final = price_final
 
         await self.db.flush()
+
+        if new_status != previous_status:
+            await self._notify_status_change(appointment, new_status, cancel_reason)
+
         return appointment
 
     async def _on_complete(self, appointment: Appointment) -> None:
@@ -175,9 +191,9 @@ class BookingService:
         if not appointment.client_id:
             return
 
+        from app.modules.clients.service import ClientService
         from app.modules.loyalty.service import LoyaltyService
         from app.modules.masters.models import Master
-        from app.modules.clients.models import ClientMasterLink
 
         loyalty = LoyaltyService(self.db)
 
@@ -203,15 +219,14 @@ class BookingService:
                     note=f"Кэшбэк за визит ({price}₽)",
                 )
 
-        # Первый визит — бонус
-        result = await self.db.execute(
-            select(ClientMasterLink).where(
-                ClientMasterLink.master_id == appointment.master_id,
-                ClientMasterLink.client_id == appointment.client_id,
-            )
+        client_service = ClientService(self.db)
+        link = await client_service.get_or_create_link(
+            master_id=appointment.master_id,
+            client_id=appointment.client_id,
+            source=appointment.source or "direct",
         )
-        link = result.scalar_one_or_none()
-        is_first = link and (link.visit_count or 0) <= 1
+
+        is_first = (link.visit_count or 0) == 0
         if is_first:
             first_bonus = master.loyalty_first_visit_bonus or 200
             if first_bonus > 0:
@@ -224,11 +239,116 @@ class BookingService:
                     note="Бонус за первый визит",
                 )
 
+        today = date.today()
+        link.visit_count = (link.visit_count or 0) + 1
+        link.total_spent = (link.total_spent or 0) + price
+        link.last_visit_date = today
+        if not link.first_visit_date:
+            link.first_visit_date = today
+
         # Проверка стрика
         await loyalty.check_streak(
             master_id=appointment.master_id,
             client_id=appointment.client_id,
         )
+
+    async def _notify_master_new_booking(
+        self,
+        appointment: Appointment,
+        service: Service,
+    ) -> None:
+        """Отправить push мастеру при создании записи клиентом."""
+        if not appointment.client_id:
+            return
+        try:
+            time_str = (
+                appointment.time_start.strftime("%d.%m в %H:%M")
+                if appointment.time_start
+                else ""
+            )
+            client_name = appointment.client_name or "Клиент"
+            text = (
+                f"📅 Новая запись!\n"
+                f"Клиент: {client_name}\n"
+                f"Услуга: {service.name}\n"
+                f"{time_str}"
+            ).strip()
+            await NotificationService.send_by_master_id(
+                self.db,
+                appointment.master_id,
+                text,
+                button_text="Открыть расписание",
+                button_url=f"{settings.APP_URL}?startParam=dashboard",
+            )
+        except Exception as e:
+            logger.error(
+                f"Failed to notify master {appointment.master_id} "
+                f"about new booking {appointment.id}: {e}"
+            )
+
+    async def _notify_status_change(
+        self,
+        appointment: Appointment,
+        new_status: str,
+        cancel_reason: Optional[str],
+    ) -> None:
+        """Отправить push при изменении статуса."""
+        try:
+            time_str = (
+                appointment.time_start.strftime("%d.%m в %H:%M")
+                if appointment.time_start
+                else ""
+            )
+            client_name = appointment.client_name or "Клиент"
+
+            if new_status == AppointmentStatus.CANCELLED_BY_CLIENT.value:
+                reason_line = f"\nПричина: {cancel_reason}" if cancel_reason else ""
+                text = (
+                    f"❌ Клиент отменил запись\n"
+                    f"{client_name} — {time_str}{reason_line}"
+                )
+                await NotificationService.send_by_master_id(
+                    self.db,
+                    appointment.master_id,
+                    text,
+                    button_text="Открыть расписание",
+                    button_url=f"{settings.APP_URL}?startParam=dashboard",
+                )
+
+            elif new_status == AppointmentStatus.CANCELLED_BY_MASTER.value:
+                if not appointment.client_id:
+                    return
+                reason_line = f"\nПричина: {cancel_reason}" if cancel_reason else ""
+                text = (
+                    f"❌ Мастер отменил вашу запись\n"
+                    f"{time_str}{reason_line}"
+                )
+                await NotificationService.send_by_client_id(
+                    self.db,
+                    appointment.client_id,
+                    text,
+                    button_text="Мои записи",
+                    button_url=f"{settings.APP_URL}?startParam=my_bookings",
+                )
+
+            elif new_status == AppointmentStatus.CONFIRMED.value:
+                if not appointment.client_id:
+                    return
+                text = (
+                    f"✅ Ваша запись подтверждена\n{time_str}"
+                ).strip()
+                await NotificationService.send_by_client_id(
+                    self.db,
+                    appointment.client_id,
+                    text,
+                    button_text="Мои записи",
+                    button_url=f"{settings.APP_URL}?startParam=my_bookings",
+                )
+        except Exception as e:
+            logger.error(
+                f"Failed to send status-change notification "
+                f"for appointment {appointment.id} (-> {new_status}): {e}"
+            )
 
     async def _on_no_show(self, appointment: Appointment) -> None:
         """При no-show: увеличить счётчик клиента."""

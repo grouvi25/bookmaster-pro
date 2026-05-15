@@ -57,10 +57,9 @@ services:
   scheduler:
     build:
       context: ..
-      dockerfile: apps/api/Dockerfile
+      dockerfile: apps/scheduler/Dockerfile
     container_name: bookmaster_scheduler
     restart: unless-stopped
-    command: ["python", "-m", "app.scheduler_runner"]
     env_file: ../.env
     depends_on:
       db:

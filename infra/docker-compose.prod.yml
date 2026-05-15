@@ -63,8 +63,7 @@ services:
     <<: [*restart, *env]
     build:
       context: ..
-      dockerfile: apps/api/Dockerfile
-    command: python -m app.scheduler.runner
+      dockerfile: apps/scheduler/Dockerfile
     depends_on:
       db: { condition: service_healthy }
       redis: { condition: service_healthy }
