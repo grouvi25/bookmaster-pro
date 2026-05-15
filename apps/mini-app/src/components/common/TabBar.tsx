@@ -74,10 +74,10 @@ export default function TabBar() {
               onMouseEnter={() => handlePrefetch(tab.path)}
               className="flex flex-col items-center justify-center flex-1 h-full min-w-0 px-0.5"
             >
-              <span className="text-[20px] leading-none mb-0.5">{tab.emoji}</span>
+              <span className="text-[24px] leading-none mb-0.5">{tab.emoji}</span>
               <span
                 className={clsx(
-                  'text-[9px] font-medium leading-tight truncate max-w-full',
+                  'text-[10px] font-medium leading-tight truncate max-w-full',
                   active
                     ? 'text-tg-button'
                     : 'text-tg-hint'
