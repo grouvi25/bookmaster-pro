@@ -162,7 +162,7 @@ function SubscriptionPackagesContent() {
 
         {packages.length === 0 && !showForm ? (
           <EmptyState
-            emoji="\uD83D\uDCE6"
+            emoji="📦"
             title="Нет абонементов"
             description="Создайте пакет визитов для клиентов — они смогут купить их со скидкой"
             action={

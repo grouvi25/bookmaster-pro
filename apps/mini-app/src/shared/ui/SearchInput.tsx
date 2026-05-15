@@ -9,7 +9,7 @@ export default function SearchInput({
 }: Props) {
   return (
     <div className="relative">
-      <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[16px]">{'\uD83D\uDD0D'}</span>
+      <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[16px]">{'🔍'}</span>
       <input
         type="text"
         value={value}

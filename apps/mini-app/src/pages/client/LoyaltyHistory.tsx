@@ -42,9 +42,9 @@ const TYPE_LABELS: Record<string, { label: string; icon: 'up' | 'down' | 'gift' 
 };
 
 const EMOJI_MAP = {
-  up: '\u2B06\uFE0F',
-  down: '\u2B07\uFE0F',
-  gift: '\uD83C\uDF81',
+  up: '\⬆\️',
+  down: '\⬇\️',
+  gift: '🎁',
 } as const;
 
 export default function LoyaltyHistory() {
@@ -83,7 +83,7 @@ export default function LoyaltyHistory() {
               </div>
               <div className="text-right">
                 <div className={`flex items-center gap-1 font-medium ${tier.color}`}>
-                  {'\u2B50'} {tier.label}
+                  {'\⭐'} {tier.label}
                 </div>
                 <div className="text-xs text-tg-hint">кешбэк {tier.cashback}%</div>
               </div>
@@ -99,7 +99,7 @@ export default function LoyaltyHistory() {
           {balance.streak_threshold && (
             <Card className="mb-4 !bg-[#FF9500]/10 border border-[#FF9500]/20">
               <div className="flex items-center gap-3">
-                <span className="text-[24px]">{'\uD83D\uDD25'}</span>
+                <span className="text-[24px]">{'🔥'}</span>
                 <div className="flex-1">
                   <div className="text-sm font-medium">
                     Серия визитов: {balance.streak_count || 0}/{balance.streak_threshold}
@@ -125,7 +125,7 @@ export default function LoyaltyHistory() {
       <h2 className="text-h3 mb-2">История баллов</h2>
 
       {!history || history.length === 0 ? (
-        <EmptyState emoji="\uD83D\uDCDC" title="Нет операций" />
+        <EmptyState emoji="📜" title="Нет операций" />
       ) : (
         <div className="flex flex-col gap-2">
           {history.map((tx) => {

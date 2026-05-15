@@ -229,7 +229,7 @@ export default function ModeratorPanel() {
               </div>
             ) : tickets.length === 0 ? (
               <EmptyState
-                emoji="\u2705"
+                emoji="\✅"
                 title="Нет тикетов"
                 description="Все тикеты обработаны"
               />
@@ -384,13 +384,13 @@ export default function ModeratorPanel() {
 
             {!reviewMasterId ? (
               <EmptyState
-                emoji="\u2B50"
+                emoji="\⭐"
                 title="Введите ID мастера"
                 description="Для просмотра отзывов укажите ID мастера"
               />
             ) : reviews.length === 0 ? (
               <EmptyState
-                emoji="\u2B50"
+                emoji="\⭐"
                 title="Нет отзывов"
                 description="У этого мастера пока нет отзывов"
               />
@@ -482,7 +482,7 @@ export default function ModeratorPanel() {
           <>
             {pendingMasters.length === 0 ? (
               <EmptyState
-                emoji="\u2705"
+                emoji="\✅"
                 title="Нет заявок"
                 description="Все мастера верифицированы"
               />

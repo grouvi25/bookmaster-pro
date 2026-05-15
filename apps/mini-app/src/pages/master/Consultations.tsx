@@ -140,7 +140,7 @@ function ConsultationsList() {
                       hour: '2-digit',
                       minute: '2-digit',
                     })}
-                    {' \u2013 '}
+                    {' \– '}
                     {new Date(c.slot_end).toLocaleTimeString('ru-RU', {
                       hour: '2-digit',
                       minute: '2-digit',
@@ -148,7 +148,7 @@ function ConsultationsList() {
                   </div>
                   {c.price != null && (
                     <div className="text-xs text-tg-hint">
-                      {c.price.toLocaleString('ru')} \u20bd
+                      {c.price.toLocaleString('ru')} \₽
                     </div>
                   )}
                 </div>
