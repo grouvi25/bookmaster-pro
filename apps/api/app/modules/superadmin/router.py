@@ -1,11 +1,13 @@
 """
 Superadmin router — /api/v1/superadmin
 Платформенный дашборд, управление мастерами, health checks, настройки.
+Промо-коды платформы, ручная выдача доступа.
 """
 
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel as PydanticBaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
@@ -17,6 +19,21 @@ from app.modules.superadmin.schemas import (
     MasterAdminUpdate,
     HealthCheckResponse,
 )
+
+
+class CreatePromoCodeRequest(PydanticBaseModel):
+    code: str = Field(..., min_length=2, max_length=50)
+    plan: str = "pro"
+    duration_days: int = Field(..., ge=1, le=365)
+    max_uses: Optional[int] = None
+    valid_until: Optional[str] = None  # ISO date string
+    note: Optional[str] = None
+
+
+class GrantAccessRequest(PydanticBaseModel):
+    plan: str = "pro"
+    duration_days: int = Field(..., ge=1, le=365)
+    note: Optional[str] = None
 
 router = APIRouter()
 
@@ -223,3 +240,167 @@ async def get_growth_analytics(
     """Воронка регистрации, retention-когорты, revenue waterfall."""
     svc = SuperadminService(db)
     return await svc.get_growth_analytics(period_days)
+
+
+# ── Промо-коды платформы ─────────────────────────────────────
+
+@router.get("/promo-codes")
+async def list_promo_codes(
+    user: dict = Depends(_require_superadmin),
+    db: AsyncSession = Depends(get_db),
+):
+    """Список промо-кодов платформы."""
+    from sqlalchemy import select
+    from app.modules.core.models import PlatformPromoCode
+
+    result = await db.execute(
+        select(PlatformPromoCode).order_by(PlatformPromoCode.created_at.desc())
+    )
+    codes = result.scalars().all()
+    return [
+        {
+            "id": c.id,
+            "code": c.code,
+            "plan": c.plan,
+            "duration_days": c.duration_days,
+            "max_uses": c.max_uses,
+            "used_count": c.used_count,
+            "valid_until": str(c.valid_until) if c.valid_until else None,
+            "is_active": c.is_active,
+            "created_by": c.created_by,
+            "note": c.note,
+            "created_at": str(c.created_at),
+        }
+        for c in codes
+    ]
+
+
+@router.post("/promo-codes")
+async def create_promo_code(
+    req: CreatePromoCodeRequest,
+    user: dict = Depends(_require_superadmin),
+    db: AsyncSession = Depends(get_db),
+):
+    """Создать промо-код платформы."""
+    from datetime import date as date_type
+    from sqlalchemy import select
+    from app.modules.core.models import PlatformPromoCode
+
+    existing = await db.execute(
+        select(PlatformPromoCode).where(PlatformPromoCode.code == req.code.upper())
+    )
+    if existing.scalar_one_or_none():
+        raise HTTPException(status_code=409, detail="Promo code already exists")
+
+    valid_until = None
+    if req.valid_until:
+        valid_until = date_type.fromisoformat(req.valid_until)
+
+    admin_id = str(user.get("platform_id") or user.get("identity_id", "system"))
+    code = PlatformPromoCode(
+        code=req.code.upper(),
+        plan=req.plan,
+        duration_days=req.duration_days,
+        max_uses=req.max_uses,
+        valid_until=valid_until,
+        created_by=admin_id,
+        note=req.note,
+    )
+    db.add(code)
+    await db.commit()
+    return {"id": code.id, "code": code.code, "created": True}
+
+
+@router.patch("/promo-codes/{code_id}/deactivate")
+async def deactivate_promo_code(
+    code_id: int,
+    user: dict = Depends(_require_superadmin),
+    db: AsyncSession = Depends(get_db),
+):
+    """Деактивировать промо-код."""
+    from sqlalchemy import select
+    from app.modules.core.models import PlatformPromoCode
+
+    result = await db.execute(
+        select(PlatformPromoCode).where(PlatformPromoCode.id == code_id)
+    )
+    code = result.scalar_one_or_none()
+    if not code:
+        raise HTTPException(status_code=404, detail="Promo code not found")
+
+    code.is_active = False
+    await db.commit()
+    return {"id": code.id, "is_active": False}
+
+
+# ── Ручная выдача доступа ────────────────────────────────────
+
+@router.post("/masters/{master_id}/grant-access")
+async def grant_access_to_master(
+    master_id: int,
+    req: GrantAccessRequest,
+    user: dict = Depends(_require_superadmin),
+    db: AsyncSession = Depends(get_db),
+):
+    """Выдать доступ мастеру вручную (trial/manual/gift)."""
+    from datetime import date, timedelta
+    from sqlalchemy import select
+    from app.modules.core.models import AccessGrant
+    from app.modules.masters.models import Master
+
+    result = await db.execute(
+        select(Master).where(Master.id == master_id)
+    )
+    master = result.scalar_one_or_none()
+    if not master:
+        raise HTTPException(status_code=404, detail="Master not found")
+
+    admin_id = str(user.get("platform_id") or user.get("identity_id", "system"))
+    grant = AccessGrant(
+        master_id=master_id,
+        grant_type="manual",
+        plan=req.plan,
+        valid_until=date.today() + timedelta(days=req.duration_days),
+        granted_by=admin_id,
+        note=req.note,
+    )
+    db.add(grant)
+    await db.commit()
+    return {
+        "id": grant.id,
+        "master_id": master_id,
+        "plan": req.plan,
+        "valid_until": str(grant.valid_until),
+        "granted": True,
+    }
+
+
+@router.get("/masters/{master_id}/access-grants")
+async def get_master_access_grants(
+    master_id: int,
+    user: dict = Depends(_require_superadmin),
+    db: AsyncSession = Depends(get_db),
+):
+    """Список грантов доступа мастера."""
+    from sqlalchemy import select
+    from app.modules.core.models import AccessGrant
+
+    result = await db.execute(
+        select(AccessGrant)
+        .where(AccessGrant.master_id == master_id)
+        .order_by(AccessGrant.created_at.desc())
+    )
+    grants = result.scalars().all()
+    return [
+        {
+            "id": g.id,
+            "grant_type": g.grant_type,
+            "plan": g.plan,
+            "valid_until": str(g.valid_until),
+            "promo_code": g.promo_code,
+            "granted_by": g.granted_by,
+            "note": g.note,
+            "created_at": str(g.created_at),
+        }
+        for g in grants
+    ]

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { authApi } from '@/api/endpoints';
+import { authApi, promoApi } from '@/api/endpoints';
 import { useAuthStore } from '@/stores/auth';
 import { PlatformAdapter } from '@/platform/platform-adapter';
 import { Scissors, UserCircle, ChevronLeft } from 'lucide-react';
@@ -25,6 +25,8 @@ export default function Register() {
   const [specialization, setSpecialization] = useState('');
   const [city, setCity] = useState('');
   const [phone, setPhone] = useState('');
+  const [promoCode, setPromoCode] = useState('');
+  const [promoApplying, setPromoApplying] = useState(false);
 
   const handleRegisterMaster = async () => {
     if (!name.trim() || !specialization || !city.trim()) {
@@ -43,6 +45,19 @@ export default function Register() {
       });
       const data = resp.data;
       setAuth(data.access_token, data.role, data.master_id);
+
+      if (promoCode.trim()) {
+        setPromoApplying(true);
+        try {
+          await promoApi.apply(promoCode.trim());
+          toast.success('Промо-код применён!');
+        } catch {
+          toast.error('Промо-код недействителен');
+        } finally {
+          setPromoApplying(false);
+        }
+      }
+
       toast.success('Добро пожаловать!');
       navigate('/master', { replace: true });
     } catch {
@@ -185,11 +200,21 @@ export default function Register() {
               className="input-field !text-base !p-4"
             />
           </div>
+          <div>
+            <label className="text-sm text-tg-hint mb-1 block">Промо-код (необязательно)</label>
+            <input
+              value={promoCode}
+              onChange={e => setPromoCode(e.target.value.toUpperCase())}
+              placeholder="PARTNER30"
+              className="input-field !text-base !p-4"
+            />
+            <p className="text-xs text-tg-hint mt-1">Если есть промо-код, введите для бесплатного доступа</p>
+          </div>
         </div>
 
         <div className="flex-1" />
 
-        <Button onClick={handleRegisterMaster} loading={loading} fullWidth size="lg">
+        <Button onClick={handleRegisterMaster} loading={loading || promoApplying} fullWidth size="lg">
           Начать работу
         </Button>
       </div>

@@ -1,13 +1,49 @@
 """
 Feature flag checker — проверяет доступ мастера к модулю по тарифу.
 Использование: Depends(require_feature("ai_advisor"))
+
+check_master_access() — определяет активный план мастера по приоритету:
+  1. Активный grant (trial/promo/manual/gift)
+  2. Активная платная подписка
+  3. Дефолт — 'start'
 """
 
+from datetime import date
+
 from fastapi import Depends, HTTPException, status
-from sqlalchemy import select
+from sqlalchemy import select, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
+
+
+async def check_master_access(master_id: int, db: AsyncSession) -> str:
+    """
+    Определяет активный план мастера.
+
+    Приоритет:
+    1. Активный grant (trial/promo/manual/gift) — перекрывает всё
+    2. Активная платная подписка
+    3. Дефолт — тариф 'start' (минимальный)
+    """
+    from app.modules.core.models import AccessGrant
+
+    result = await db.execute(
+        select(AccessGrant).where(
+            and_(
+                AccessGrant.master_id == master_id,
+                AccessGrant.valid_until >= date.today(),
+            )
+        ).order_by(AccessGrant.valid_until.desc())
+    )
+    active_grant = result.scalar_one_or_none()
+
+    if active_grant:
+        return active_grant.plan
+
+    # TODO: check active paid subscription when billing is implemented
+
+    return "start"
 
 
 async def check_feature(

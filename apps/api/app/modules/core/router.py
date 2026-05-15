@@ -1,6 +1,7 @@
 """
 Feature Flags router — /api/v1/feature-flags
 Возвращает текущие флаги для авторизованного мастера.
+Использует check_master_access для определения активного плана.
 """
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -9,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth import get_current_user
 from app.core.database import get_db
+from app.core.feature_flags import check_master_access
 from app.modules.core.models import FeatureFlags
 from app.modules.masters.service import MasterService
 
@@ -25,6 +27,8 @@ async def get_feature_flags(
     if not master:
         raise HTTPException(status_code=403, detail="Not a master")
 
+    active_plan = await check_master_access(master.id, db)
+
     result = await db.execute(
         select(FeatureFlags).where(FeatureFlags.master_id == master.id)
     )
@@ -32,7 +36,7 @@ async def get_feature_flags(
 
     if not flags:
         return {
-            "tariff_plan": master.current_plan or "start",
+            "tariff_plan": active_plan,
             "ai_advisor": False,
             "ai_voice": False,
             "ai_content": False,
@@ -49,7 +53,7 @@ async def get_feature_flags(
         }
 
     return {
-        "tariff_plan": master.current_plan or "start",
+        "tariff_plan": active_plan,
         "ai_advisor": flags.ai_advisor,
         "ai_voice": flags.ai_voice,
         "ai_content": flags.ai_advisor,

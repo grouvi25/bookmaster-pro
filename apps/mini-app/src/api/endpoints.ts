@@ -251,6 +251,7 @@ export const promoApi = {
     api.post('/promo/validate', { code, master_id: masterId }),
   list: () => api.get('/promo/'),
   create: (data: PromoPayload) => api.post('/promo/', data),
+  apply: (code: string) => api.post('/auth/apply-promo-code', { code }),
 };
 
 // ── Loyalty ──
@@ -468,4 +469,22 @@ export const superadminApi = {
     api.post(`/superadmin/tickets/${id}/escalate`),
   settings: () => api.get('/superadmin/settings'),
   growth: () => api.get('/superadmin/growth'),
+  promoCodes: () => api.get('/superadmin/promo-codes'),
+  createPromoCode: (data: {
+    code: string;
+    plan?: string;
+    duration_days: number;
+    max_uses?: number | null;
+    valid_until?: string | null;
+    note?: string | null;
+  }) => api.post('/superadmin/promo-codes', data),
+  deactivatePromoCode: (id: number) =>
+    api.patch(`/superadmin/promo-codes/${id}/deactivate`),
+  grantAccess: (masterId: number, data: {
+    plan?: string;
+    duration_days: number;
+    note?: string | null;
+  }) => api.post(`/superadmin/masters/${masterId}/grant-access`, data),
+  masterAccessGrants: (masterId: number) =>
+    api.get(`/superadmin/masters/${masterId}/access-grants`),
 };

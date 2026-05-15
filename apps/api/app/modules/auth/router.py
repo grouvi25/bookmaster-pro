@@ -134,3 +134,77 @@ async def switch_role(
         display_name=result["display_name"],
         master_id=result.get("master_id"),
     )
+
+
+@router.post("/apply-promo-code")
+async def apply_promo_code(
+    body: dict,
+    user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Применить промо-код платформы (после регистрации / на онбординге)."""
+    from datetime import date, timedelta
+    from sqlalchemy import select, and_
+    from app.modules.core.models import AccessGrant, PlatformPromoCode
+    from app.modules.masters.models import Master
+
+    code_str = body.get("code", "").strip().upper()
+    if not code_str:
+        raise HTTPException(status_code=400, detail="Promo code is required")
+
+    result = await db.execute(
+        select(Master).where(Master.identity_id == int(user["sub"]))
+    )
+    master = result.scalar_one_or_none()
+    if not master:
+        raise HTTPException(status_code=403, detail="Not a master")
+
+    promo = await db.execute(
+        select(PlatformPromoCode).where(
+            and_(
+                PlatformPromoCode.code == code_str,
+                PlatformPromoCode.is_active.is_(True),
+            )
+        )
+    )
+    promo_code = promo.scalar_one_or_none()
+    if not promo_code:
+        raise HTTPException(status_code=404, detail="Промо-код не найден или деактивирован")
+
+    if promo_code.valid_until and promo_code.valid_until < date.today():
+        raise HTTPException(status_code=410, detail="Промо-код истёк")
+
+    if promo_code.max_uses and promo_code.used_count >= promo_code.max_uses:
+        raise HTTPException(status_code=410, detail="Промо-код исчерпан")
+
+    existing_grant = await db.execute(
+        select(AccessGrant).where(
+            and_(
+                AccessGrant.master_id == master.id,
+                AccessGrant.promo_code == code_str,
+            )
+        )
+    )
+    if existing_grant.scalar_one_or_none():
+        raise HTTPException(status_code=409, detail="Промо-код уже был использован")
+
+    grant = AccessGrant(
+        master_id=master.id,
+        grant_type="promo_code",
+        plan=promo_code.plan,
+        valid_until=date.today() + timedelta(days=promo_code.duration_days),
+        promo_code=code_str,
+        granted_by="system",
+        note=f"Промо-код {code_str}",
+    )
+    db.add(grant)
+
+    promo_code.used_count = (promo_code.used_count or 0) + 1
+    await db.commit()
+
+    return {
+        "applied": True,
+        "plan": promo_code.plan,
+        "valid_until": str(grant.valid_until),
+        "duration_days": promo_code.duration_days,
+    }
