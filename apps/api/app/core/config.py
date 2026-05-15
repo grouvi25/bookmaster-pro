@@ -55,6 +55,12 @@ class Settings(BaseSettings):
     YOOKASSA_SECRET_KEY: str = ""
     YOOKASSA_WEBHOOK_URL: str = ""
     YOOKASSA_AGENT_ID: str = ""
+    # CSV-список подсетей/IP, с которых принимаются webhook-уведомления.
+    # Пусто = использовать дефолт-список ЮKassa (см. yookassa.security).
+    YOOKASSA_WEBHOOK_TRUSTED_IPS: str = ""
+    # Разрешить локальные "fake" платежи без обращения к ЮKassa
+    # (status сразу = succeeded). Должно быть False в production.
+    ALLOW_DEV_PAYMENTS: bool = False
 
     # === Хранилище S3 ===
     S3_ENDPOINT_URL: str = "https://storage.yandexcloud.net"
