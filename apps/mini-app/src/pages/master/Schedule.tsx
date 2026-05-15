@@ -56,7 +56,7 @@ export default function Schedule() {
                 className={clsx(
                   'px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200',
                   viewMode === mode
-                    ? 'bg-white text-tg-text shadow-sm'
+                    ? 'bg-tg-bg text-tg-text shadow-sm'
                     : 'text-tg-hint'
                 )}
               >
