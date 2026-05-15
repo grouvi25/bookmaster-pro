@@ -1,10 +1,13 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { broadcastApi } from '@/api/endpoints';
 import Loading from '@/components/common/Loading';
-import { Send, Plus, Users } from 'lucide-react';
+import PageHeader from '@/shared/ui/PageHeader';
+import { ArrowLeft, Send, Plus, Users } from 'lucide-react';
 
 export default function Broadcast() {
+  const navigate = useNavigate();
   const [showCreate, setShowCreate] = useState(false);
   const queryClient = useQueryClient();
 
@@ -31,17 +34,26 @@ export default function Broadcast() {
   }>;
 
   return (
-    <div className="px-screen-x pt-section-y animate-fade-in">
-      <div className="flex justify-between items-center mb-5">
-        <h1 className="text-2xl font-bold tracking-tight">Рассылки</h1>
-        <button
-          onClick={() => setShowCreate(!showCreate)}
-          className="flex items-center gap-1.5 bg-brand-500 text-white px-3.5 py-2 rounded-xl text-sm font-semibold shadow-button active:scale-[0.97] transition-all"
-        >
-          <Plus className="w-4 h-4" />
-          Новая
-        </button>
-      </div>
+    <div className="min-h-screen bg-tg-bg text-tg-text pb-24 animate-fade-in">
+      <PageHeader
+        title="Рассылки"
+        left={
+          <button onClick={() => navigate('/master/settings')} className="p-2">
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+        }
+        right={
+          <button
+            onClick={() => setShowCreate(!showCreate)}
+            className="flex items-center gap-1.5 bg-brand-500 text-white px-3.5 py-2 rounded-xl text-sm font-semibold shadow-button active:scale-[0.97] transition-all"
+          >
+            <Plus className="w-4 h-4" />
+            Новая
+          </button>
+        }
+      />
+
+      <div className="px-screen-x">
 
       {showCreate && <CreateBroadcast onClose={() => setShowCreate(false)} />}
 
@@ -87,6 +99,7 @@ export default function Broadcast() {
             </div>
           ))
         )}
+      </div>
       </div>
     </div>
   );

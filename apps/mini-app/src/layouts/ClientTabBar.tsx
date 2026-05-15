@@ -13,7 +13,7 @@ interface Tab {
 const CLIENT_TABS: Tab[] = [
   { path: '/client',         label: 'Записи',  emoji: '📅' },
   { path: '/client/nearby',  label: 'Поиск',   emoji: '📍' },
-  { path: '/client/loyalty', label: 'Баллы',   emoji: '\⭐' },
+  { path: '/client/loyalty', label: 'Баллы',   emoji: '⭐' },
   { path: '/client/profile', label: 'Профиль', emoji: '👤' },
 ];
 

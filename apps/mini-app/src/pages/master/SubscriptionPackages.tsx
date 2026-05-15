@@ -91,7 +91,7 @@ function SubscriptionPackagesContent() {
       <PageHeader
         title="Абонементы"
         left={
-          <button onClick={() => navigate('/master/tools')} className="p-2">
+          <button onClick={() => navigate('/master/settings')} className="p-2">
             <ArrowLeft className="w-5 h-5" />
           </button>
         }

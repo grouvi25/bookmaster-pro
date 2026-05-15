@@ -9,7 +9,7 @@ export default function SectionBack({ onBack, label = 'Назад' }: Props) {
       onClick={onBack}
       className="flex items-center gap-0.5 text-tg-link text-body mb-3 interactive"
     >
-      <span className="text-[14px]">{'\←'}</span>
+      <span className="text-[14px]">{'←'}</span>
       {label}
     </button>
   );
