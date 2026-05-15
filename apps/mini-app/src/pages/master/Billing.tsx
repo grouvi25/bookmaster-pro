@@ -6,7 +6,8 @@ import Loading from '@/components/common/Loading';
 import Card from '@/shared/ui/Card';
 import Button from '@/shared/ui/Button';
 import { toast } from '@/shared/ui/Toast';
-import { ChevronLeft, Check, Crown, Zap, Sparkles, Rocket, Building2 } from 'lucide-react';
+import { ArrowLeft, Check, Crown, Zap, Sparkles, Rocket, Building2 } from 'lucide-react';
+import PageHeader from '@/shared/ui/PageHeader';
 import type { LucideIcon } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -135,15 +136,17 @@ export default function Billing() {
   };
 
   return (
-    <div className="px-screen-x pt-section-y pb-24 animate-fade-in">
-      <button
-        onClick={() => navigate(-1)}
-        className="flex items-center gap-0.5 text-tg-link text-sm mb-3"
-      >
-        <ChevronLeft className="w-4 h-4" /> Назад
-      </button>
+    <div className="min-h-screen bg-tg-bg text-tg-text pb-24 animate-fade-in">
+      <PageHeader
+        title="Тарифы и подписка"
+        left={
+          <button onClick={() => navigate('/master/settings')} className="p-2">
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+        }
+      />
 
-      <h1 className="text-2xl font-bold tracking-tight mb-1">Тарифы и подписка</h1>
+      <div className="px-screen-x">
       <p className="text-tg-hint text-sm mb-5">Выберите подходящий тариф</p>
 
       {currentPlan && (
@@ -246,6 +249,7 @@ export default function Billing() {
             </Card>
           );
         })}
+      </div>
       </div>
     </div>
   );

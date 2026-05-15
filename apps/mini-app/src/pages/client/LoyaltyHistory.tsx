@@ -42,8 +42,8 @@ const TYPE_LABELS: Record<string, { label: string; icon: 'up' | 'down' | 'gift' 
 };
 
 const EMOJI_MAP = {
-  up: '\⬆\️',
-  down: '\⬇\️',
+  up: '⬆️',
+  down: '⬇️',
   gift: '🎁',
 } as const;
 
@@ -83,7 +83,7 @@ export default function LoyaltyHistory() {
               </div>
               <div className="text-right">
                 <div className={`flex items-center gap-1 font-medium ${tier.color}`}>
-                  {'\⭐'} {tier.label}
+                  {'⭐'} {tier.label}
                 </div>
                 <div className="text-xs text-tg-hint">кешбэк {tier.cashback}%</div>
               </div>
