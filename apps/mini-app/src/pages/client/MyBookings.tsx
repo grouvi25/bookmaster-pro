@@ -93,7 +93,7 @@ export default function MyBookings({ hideBack }: { hideBack?: boolean } = {}) {
 
       {filtered.length === 0 ? (
         <EmptyState
-          emoji="\uD83D\uDCC5"
+          emoji="📅"
           title={activeTab === 'upcoming' ? 'Нет предстоящих записей' : 'Нет прошедших записей'}
         />
       ) : (
@@ -106,7 +106,7 @@ export default function MyBookings({ hideBack }: { hideBack?: boolean } = {}) {
                   <div>
                     <div className="font-medium text-sm">{b.service_name || 'Услуга'}</div>
                     <div className="text-aux text-tg-hint mt-0.5 flex items-center gap-1">
-                      {'\uD83D\uDC64'}
+                      {'👤'}
                       {b.master_name || b.client_name || 'Мастер'}
                     </div>
                   </div>
@@ -116,8 +116,8 @@ export default function MyBookings({ hideBack }: { hideBack?: boolean } = {}) {
                   />
                 </div>
                 <div className="flex items-center gap-2 text-aux text-tg-hint">
-                  {'\uD83D\uDCC5'} {b.date ? format(parseISO(b.date), 'd MMM, EEE', { locale: ru }) : ''}
-                  <span className="ml-1">{'\u23F0'}</span>
+                  {'📅'} {b.date ? format(parseISO(b.date), 'd MMM, EEE', { locale: ru }) : ''}
+                  <span className="ml-1">{'\⏰'}</span>
                   {b.time || (b.time_start ? b.time_start.slice(11, 16) : '')}
                   {b.duration_min ? ` · ${b.duration_min} мин` : ''}
                 </div>
@@ -126,7 +126,7 @@ export default function MyBookings({ hideBack }: { hideBack?: boolean } = {}) {
                     onClick={() => handleCancel(b.id)}
                     className="flex items-center gap-1 mt-2 text-aux text-status-danger interactive"
                   >
-                    {'\u274C'} Отменить
+                    {'\❌'} Отменить
                   </button>
                 )}
               </Card>

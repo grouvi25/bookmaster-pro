@@ -11,10 +11,10 @@ interface Tab {
 }
 
 const CLIENT_TABS: Tab[] = [
-  { path: '/client',         label: 'Записи',  emoji: '\uD83D\uDCC5' },
-  { path: '/client/nearby',  label: 'Поиск',   emoji: '\uD83D\uDCCD' },
-  { path: '/client/loyalty', label: 'Баллы',   emoji: '\u2B50' },
-  { path: '/client/profile', label: 'Профиль', emoji: '\uD83D\uDC64' },
+  { path: '/client',         label: 'Записи',  emoji: '📅' },
+  { path: '/client/nearby',  label: 'Поиск',   emoji: '📍' },
+  { path: '/client/loyalty', label: 'Баллы',   emoji: '\⭐' },
+  { path: '/client/profile', label: 'Профиль', emoji: '👤' },
 ];
 
 const PREFETCH_MAP: Record<string, { key: string[]; fn: () => Promise<unknown> }[]> = {

@@ -49,51 +49,51 @@ function SettingsMain({ onNavigate }: { onNavigate: (tab: SettingsTab) => void }
     <div className="flex flex-col gap-card-gap">
       {analyticsEnabled && (
         <MenuItem
-          emoji={'\uD83D\uDCCA'}
+          emoji={'📊'}
           label="Аналитика"
           description="Статистика и отчёты"
           onClick={() => onNavigate('analytics')}
         />
       )}
       <MenuItem
-        emoji={'\u23F0'}
+        emoji={'\⏰'}
         label="Рабочее расписание"
         description="Часы работы по дням недели"
         onClick={() => navigate('/master/work-schedule')}
       />
       <MenuItem
-        emoji={'\uD83D\uDCCB'}
+        emoji={'📋'}
         label="Мои услуги"
         description="Управление услугами"
         onClick={() => onNavigate('services')}
       />
       <MenuItem
-        emoji={'\uD83D\uDC64'}
+        emoji={'👤'}
         label="Профиль"
         description="Настройки профиля"
         onClick={() => onNavigate('profile')}
       />
       <MenuItem
-        emoji={'\uD83D\uDCAC'}
+        emoji={'💬'}
         label="Поддержка"
         description="Помощь и обратная связь"
         onClick={() => onNavigate('support')}
       />
       <MenuItem
-        emoji={'\uD83D\uDD17'}
+        emoji={'🔗'}
         label="Моя страница-визитка"
         description="TapLink-аналог"
         onClick={() => navigate('/link-page/edit')}
       />
       <MenuItem
-        emoji={'\uD83D\uDCB3'}
+        emoji={'💳'}
         label="Тарифы и подписка"
         description="Управление подпиской"
         onClick={() => navigate('/billing')}
       />
       {broadcastEnabled && (
         <MenuItem
-          emoji={'\uD83D\uDCE2'}
+          emoji={'📢'}
           label="Рассылки"
           description="Рассылки по сегментам"
           onClick={() => navigate('/master/broadcast')}
@@ -101,7 +101,7 @@ function SettingsMain({ onNavigate }: { onNavigate: (tab: SettingsTab) => void }
       )}
       {widgetEnabled && (
         <MenuItem
-          emoji={'\uD83D\uDCBB'}
+          emoji={'💻'}
           label="Виджет для сайта"
           description="Встройте запись на свой сайт"
           onClick={() => navigate('/master/widget')}
@@ -109,7 +109,7 @@ function SettingsMain({ onNavigate }: { onNavigate: (tab: SettingsTab) => void }
       )}
       {clientSubscriptions && (
         <MenuItem
-          emoji={'\uD83D\uDCE6'}
+          emoji={'📦'}
           label="Абонементы"
           description="Пакеты визитов для клиентов"
           onClick={() => navigate('/master/subscription-packages')}
@@ -117,7 +117,7 @@ function SettingsMain({ onNavigate }: { onNavigate: (tab: SettingsTab) => void }
       )}
       {locationsEnabled && (
         <MenuItem
-          emoji={'\uD83D\uDCCD'}
+          emoji={'📍'}
           label="Локации"
           description="Управление адресами"
           onClick={() => navigate('/master/locations')}
@@ -218,7 +218,7 @@ function ServicesSection({ onBack }: { onBack: () => void }) {
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-h2">Мои услуги</h2>
         <button onClick={() => setShowForm(!showForm)} className="flex items-center gap-1 text-tg-link text-body">
-          {'\u2795'} Добавить
+          {'\➕'} Добавить
         </button>
       </div>
 
@@ -250,7 +250,7 @@ function ServicesSection({ onBack }: { onBack: () => void }) {
                 {svc.price ? `${Number(svc.price).toLocaleString('ru')} ₽` : 'Дог.'}
               </span>
               <button onClick={() => handleDelete(svc.id)} className="text-status-danger interactive">
-                {'\uD83D\uDDD1\uFE0F'}
+                {'🗑\️'}
               </button>
             </div>
           </Card>
@@ -323,7 +323,7 @@ function ProfileSection({ onBack }: { onBack: () => void }) {
             {profile?.avatar_url ? (
               <img src={profile.avatar_url} alt="" className="w-full h-full rounded-full object-cover" />
             ) : (
-              <span className="text-[32px]">{'\uD83D\uDC64'}</span>
+              <span className="text-[32px]">{'👤'}</span>
             )}
           </div>
           <div>
@@ -386,7 +386,7 @@ function ProfileSection({ onBack }: { onBack: () => void }) {
             <div className="flex justify-between">
               <span className="text-tg-hint">Рейтинг</span>
               <span className="flex items-center gap-1">
-                {'\u2B50'} {profile?.rating_avg?.toFixed(1) || '—'} ({profile?.rating_count || 0})
+                {'\⭐'} {profile?.rating_avg?.toFixed(1) || '—'} ({profile?.rating_count || 0})
               </span>
             </div>
             {(profile?.noshow_deposit_amount || profile?.noshow_prepay_percent) ? (
@@ -480,7 +480,7 @@ function SupportSection({ onBack }: { onBack: () => void }) {
           style={{ padding: '12px 14px', height: '96px' }}
         />
         <Button onClick={handleSubmit} disabled={!message.trim() || !subject.trim()} fullWidth size="sm">
-          {'\uD83D\uDCE8'} Отправить
+          {'📨'} Отправить
         </Button>
       </div>
 

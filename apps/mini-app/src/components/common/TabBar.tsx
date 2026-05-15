@@ -11,13 +11,13 @@ interface Tab {
 }
 
 const MASTER_TABS: Tab[] = [
-  { path: '/master',          label: 'Главная',       emoji: '\uD83C\uDFE0' },
-  { path: '/master/schedule', label: 'Расписание',    emoji: '\uD83D\uDCC5' },
-  { path: '/master/services', label: 'Услуги',        emoji: '\u2702\uFE0F' },
-  { path: '/master/clients',  label: 'Клиенты',       emoji: '\uD83D\uDC65' },
-  { path: '/master/tools',    label: 'Инструменты',   emoji: '\uD83C\uDFAB' },
-  { path: '/master/ai',       label: 'AI',             emoji: '\u2728' },
-  { path: '/master/settings', label: 'Настройки',     emoji: '\u2699\uFE0F' },
+  { path: '/master',          label: 'Главная',       emoji: '🏠' },
+  { path: '/master/schedule', label: 'Расписание',    emoji: '📅' },
+  { path: '/master/services', label: 'Услуги',        emoji: '\✂\️' },
+  { path: '/master/clients',  label: 'Клиенты',       emoji: '👥' },
+  { path: '/master/tools',    label: 'Инструменты',   emoji: '🎫' },
+  { path: '/master/ai',       label: 'AI',             emoji: '\✨' },
+  { path: '/master/settings', label: 'Настройки',     emoji: '\⚙\️' },
 ];
 
 const PREFETCH_MAP: Record<string, { key: string[]; fn: () => Promise<unknown> }[]> = {
