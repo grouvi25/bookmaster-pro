@@ -117,7 +117,7 @@ export default function MyBookings({ hideBack }: { hideBack?: boolean } = {}) {
                 </div>
                 <div className="flex items-center gap-2 text-aux text-tg-hint">
                   {'📅'} {b.date ? format(parseISO(b.date), 'd MMM, EEE', { locale: ru }) : ''}
-                  <span className="ml-1">{'\⏰'}</span>
+                  <span className="ml-1">{'⏰'}</span>
                   {b.time || (b.time_start ? b.time_start.slice(11, 16) : '')}
                   {b.duration_min ? ` · ${b.duration_min} мин` : ''}
                 </div>

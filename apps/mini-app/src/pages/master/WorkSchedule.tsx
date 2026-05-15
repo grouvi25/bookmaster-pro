@@ -4,10 +4,10 @@ import { useNavigate } from 'react-router-dom';
 import { mastersApi } from '@/api/endpoints';
 import { ListSkeleton } from '@/shared/ui/Skeleton';
 import Card from '@/shared/ui/Card';
-import SectionBack from '@/shared/ui/SectionBack';
+import PageHeader from '@/shared/ui/PageHeader';
 import Button from '@/shared/ui/Button';
 import { toast } from '@/shared/ui/Toast';
-import { Clock, Save } from 'lucide-react';
+import { ArrowLeft, Clock, Save } from 'lucide-react';
 import clsx from 'clsx';
 
 const DAYS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'] as const;
@@ -86,9 +86,16 @@ export default function WorkSchedule() {
   if (isLoading && !initialized) return <div className="px-screen-x py-section-y"><ListSkeleton count={7} /></div>;
 
   return (
-    <div className="px-screen-x pt-section-y pb-24 animate-fade-in">
-      <SectionBack onBack={() => navigate(-1)} />
-      <h1 className="text-2xl font-bold tracking-tight mb-1">Рабочее расписание</h1>
+    <div className="min-h-screen bg-tg-bg text-tg-text pb-24 animate-fade-in">
+      <PageHeader
+        title="Рабочее расписание"
+        left={
+          <button onClick={() => navigate('/master/settings')} className="p-2">
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+        }
+      />
+      <div className="px-screen-x">
       <p className="text-sm text-tg-hint mb-5">Настройте рабочие часы по дням недели</p>
 
       <div className="flex flex-col gap-3">
@@ -164,6 +171,7 @@ export default function WorkSchedule() {
           <Save className="w-4 h-4 mr-2" />
           Сохранить расписание
         </Button>
+      </div>
       </div>
     </div>
   );

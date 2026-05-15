@@ -1,10 +1,13 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { locationsApi } from '@/api/endpoints';
 import Loading from '@/components/common/Loading';
-import { MapPin, Plus, Trash2, Check } from 'lucide-react';
+import PageHeader from '@/shared/ui/PageHeader';
+import { ArrowLeft, MapPin, Plus, Trash2, Check } from 'lucide-react';
 
 export default function Locations() {
+  const navigate = useNavigate();
   const [showCreate, setShowCreate] = useState(false);
   const queryClient = useQueryClient();
 
@@ -29,17 +32,26 @@ export default function Locations() {
   }>;
 
   return (
-    <div className="p-4 animate-fade-in">
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-xl font-bold">Локации</h1>
-        <button
-          onClick={() => setShowCreate(!showCreate)}
-          className="flex items-center gap-1.5 bg-tg-button text-tg-button-text px-3 py-2 rounded-xl text-sm font-medium"
-        >
-          <Plus className="w-4 h-4" />
-          Добавить
-        </button>
-      </div>
+    <div className="min-h-screen bg-tg-bg text-tg-text pb-24 animate-fade-in">
+      <PageHeader
+        title="Локации"
+        left={
+          <button onClick={() => navigate('/master/settings')} className="p-2">
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+        }
+        right={
+          <button
+            onClick={() => setShowCreate(!showCreate)}
+            className="flex items-center gap-1.5 bg-tg-button text-tg-button-text px-3 py-2 rounded-xl text-sm font-medium"
+          >
+            <Plus className="w-4 h-4" />
+            Добавить
+          </button>
+        }
+      />
+
+      <div className="px-4">
 
       {showCreate && <CreateLocation onClose={() => setShowCreate(false)} />}
 
@@ -74,6 +86,7 @@ export default function Locations() {
             </div>
           ))
         )}
+      </div>
       </div>
     </div>
   );

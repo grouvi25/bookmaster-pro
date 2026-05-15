@@ -384,13 +384,13 @@ export default function ModeratorPanel() {
 
             {!reviewMasterId ? (
               <EmptyState
-                emoji="\⭐"
+                emoji="⭐"
                 title="Введите ID мастера"
                 description="Для просмотра отзывов укажите ID мастера"
               />
             ) : reviews.length === 0 ? (
               <EmptyState
-                emoji="\⭐"
+                emoji="⭐"
                 title="Нет отзывов"
                 description="У этого мастера пока нет отзывов"
               />

@@ -28,7 +28,7 @@ export default function ClientLoyalty() {
 
       {masterIds.length === 0 ? (
         <EmptyState
-          emoji="\⭐"
+          emoji="⭐"
           title="Нет мастеров"
           description="После первого визита здесь появятся ваши баллы"
         />
@@ -52,8 +52,8 @@ export default function ClientLoyalty() {
                     </div>
                   </div>
                   <div className="flex items-center gap-1 text-tg-hint">
-                    <span className="text-[16px]">\⭐</span>
-                    <span className="text-aux">\›</span>
+                    <span className="text-[16px]">⭐</span>
+                    <span className="text-aux">›</span>
                   </div>
                 </div>
               </Card>
