@@ -34,17 +34,17 @@ export default function Schedule() {
       bookingApi.masterBookings({ date: selectedDate }).then((r) => r.data),
   });
 
-  if (isLoading) return <div className="p-5"><ListSkeleton count={5} /></div>;
+  if (isLoading) return <div className="px-screen-x py-section-y"><ListSkeleton count={5} /></div>;
 
   const bookings = toArray<Booking>(data);
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
 
   return (
-    <div className="p-5 pb-24 animate-fade-in">
+    <div className="px-screen-x pt-section-y pb-24 animate-fade-in">
       <PageHeader
         title="Расписание"
         right={
-          <div className="flex bg-tg-secondary rounded-2xl p-1">
+          <div className="flex bg-tg-secondary rounded-card p-1">
             {(['week', 'month'] as const).map((mode) => (
               <button
                 key={mode}
@@ -52,7 +52,7 @@ export default function Schedule() {
                 className={clsx(
                   'px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200',
                   viewMode === mode
-                    ? 'bg-tg-secondary text-tg-text shadow-card'
+                    ? 'bg-tg-secondary text-tg-text'
                     : 'text-tg-hint'
                 )}
               >
@@ -92,12 +92,12 @@ export default function Schedule() {
               key={key}
               onClick={() => setSelectedDate(key)}
               className={clsx(
-                'flex flex-col items-center min-w-[46px] py-2 px-1.5 rounded-2xl transition-all duration-200',
+                'flex flex-col items-center min-w-[46px] py-2 px-1.5 rounded-card transition-all duration-200',
                 isSelected
                   ? 'bg-brand-500 text-white shadow-button'
                   : isToday
                     ? 'bg-brand-500/10 text-brand-600'
-                    : 'bg-tg-secondary shadow-card text-tg-text'
+                    : 'bg-tg-secondary text-tg-text'
               )}
             >
               <span className="text-2xs font-medium uppercase">
@@ -111,7 +111,7 @@ export default function Schedule() {
 
       <button
         onClick={() => navigate('/master/blocked-slots')}
-        className="w-full mb-4 flex items-center gap-2.5 px-4 py-3 bg-surface-elevated shadow-card rounded-2xl text-sm font-medium active:scale-[0.98] transition-transform"
+        className="w-full mb-4 flex items-center gap-2.5 px-4 py-3 bg-surface-elevated rounded-card text-sm font-medium active:scale-[0.98] transition-transform"
       >
         <CalendarOff className="w-4 h-4 text-tg-hint" />
         Выходные и перерывы
@@ -122,7 +122,7 @@ export default function Schedule() {
       </div>
 
       {bookings.length === 0 ? (
-        <div className="bg-tg-secondary shadow-card rounded-2xl p-8 text-center">
+        <div className="bg-tg-secondary rounded-card p-8 text-center">
           <p className="text-sm text-tg-hint">Нет записей</p>
         </div>
       ) : (
@@ -130,7 +130,7 @@ export default function Schedule() {
           {bookings.map((b) => (
             <div
               key={b.id}
-              className="bg-surface-elevated shadow-card rounded-2xl p-3.5"
+              className="bg-surface-elevated rounded-card p-3.5"
             >
               <div className="flex justify-between items-start">
                 <div className="flex items-start gap-3">

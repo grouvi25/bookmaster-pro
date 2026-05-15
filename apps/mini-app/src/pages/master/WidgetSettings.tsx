@@ -54,7 +54,7 @@ function WidgetSettingsContent() {
       />
 
       <div className="px-4 space-y-4">
-        <div className="bg-surface-elevated rounded-2xl p-4 shadow-card">
+        <div className="bg-surface-elevated rounded-card p-4">
           <div className="flex items-center gap-3 mb-3">
             <Globe className="w-5 h-5 text-brand-500" />
             <div>
@@ -65,7 +65,7 @@ function WidgetSettingsContent() {
         </div>
 
         {!slug ? (
-          <div className="bg-surface-elevated rounded-2xl p-4 shadow-card text-center">
+          <div className="bg-surface-elevated rounded-card p-4 text-center">
             <p className="text-sm text-tg-hint">
               Заполните профиль и получите slug для генерации виджета
             </p>
@@ -73,7 +73,7 @@ function WidgetSettingsContent() {
         ) : (
           <>
             {/* JS Widget */}
-            <div className="bg-surface-elevated rounded-2xl p-4 shadow-card space-y-3">
+            <div className="bg-surface-elevated rounded-card p-4 space-y-3">
               <div className="flex items-center gap-2">
                 <Code className="w-4 h-4 text-brand-500" />
                 <h3 className="font-semibold text-sm">JavaScript виджет</h3>
@@ -94,7 +94,7 @@ function WidgetSettingsContent() {
             </div>
 
             {/* iframe */}
-            <div className="bg-surface-elevated rounded-2xl p-4 shadow-card space-y-3">
+            <div className="bg-surface-elevated rounded-card p-4 space-y-3">
               <div className="flex items-center gap-2">
                 <Code className="w-4 h-4 text-blue-500" />
                 <h3 className="font-semibold text-sm">iframe (альтернатива)</h3>

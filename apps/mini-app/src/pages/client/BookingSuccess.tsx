@@ -43,7 +43,7 @@ export default function BookingSuccess() {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-6 animate-bounce-in">
-      <div className="w-20 h-20 bg-accent-emerald/10 rounded-3xl flex items-center justify-center mb-5 shadow-card-lg">
+      <div className="w-20 h-20 bg-accent-emerald/10 rounded-3xl flex items-center justify-center mb-5">
         <CircleCheck className="w-10 h-10 text-accent-emerald" strokeWidth={1.8} />
       </div>
       <h1 className="text-2xl font-bold tracking-tight mb-2 text-tg-text">Вы записаны!</h1>
@@ -51,7 +51,7 @@ export default function BookingSuccess() {
         Напоминание придёт автоматически
       </p>
 
-      <div className="w-full bg-surface-elevated shadow-card-lg rounded-2xl p-4 mb-6">
+      <div className="w-full bg-surface-elevated rounded-card p-4 mb-6">
         <div className="flex flex-col gap-2 text-sm">
           <div className="flex justify-between">
             <span className="text-tg-hint">Мастер</span>
@@ -78,7 +78,7 @@ export default function BookingSuccess() {
             href={calUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="w-full bg-brand-500 text-white py-3.5 rounded-2xl font-bold shadow-button active:scale-[0.97] transition-all flex items-center justify-center gap-2"
+            className="w-full bg-brand-500 text-white py-3.5 rounded-btn font-bold shadow-button active:scale-[0.97] transition-all flex items-center justify-center gap-2"
           >
             <CalendarPlus className="w-5 h-5" />
             Добавить в календарь
@@ -86,7 +86,7 @@ export default function BookingSuccess() {
         )}
         <button
           onClick={() => navigate('/client')}
-          className="w-full bg-tg-secondary text-tg-text py-3.5 rounded-2xl font-bold active:scale-[0.97] transition-all"
+          className="w-full bg-tg-secondary text-tg-text py-3.5 rounded-btn font-bold active:scale-[0.97] transition-all"
         >
           Мои записи
         </button>

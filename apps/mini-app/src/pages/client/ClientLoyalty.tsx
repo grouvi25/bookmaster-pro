@@ -16,7 +16,7 @@ export default function ClientLoyalty() {
     queryFn: () => bookingApi.myBookings().then((r) => r.data),
   });
 
-  if (isLoading) return <div className="p-5"><ListSkeleton count={3} /></div>;
+  if (isLoading) return <div className="px-screen-x py-section-y"><ListSkeleton count={3} /></div>;
 
   const bookings = toArray<Booking>(data);
   const masterIds = [...new Set(bookings.map((b) => b.master_id))];

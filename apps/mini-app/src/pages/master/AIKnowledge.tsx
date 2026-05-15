@@ -151,7 +151,7 @@ function AIKnowledgeInner() {
   const docs = data || [];
 
   return (
-    <div className="p-5 pb-24 animate-fade-in">
+    <div className="px-screen-x pt-section-y pb-24 animate-fade-in">
       <SectionBack onBack={() => navigate('/master/ai')} />
 
       <div className="flex justify-between items-start mb-1 gap-3">

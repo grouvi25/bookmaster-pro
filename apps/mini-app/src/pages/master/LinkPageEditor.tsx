@@ -133,14 +133,14 @@ export default function LinkPageEditor() {
   };
 
   if (isLoading) return <Loading />;
-  if (!master) return <div className="p-5 text-center text-tg-hint">Профиль не найден</div>;
+  if (!master) return <div className="px-screen-x py-section-y text-center text-tg-hint">Профиль не найден</div>;
 
   const servicesList: Service[] = toArray<Service>(services);
   const portfolioItems: PortfolioItem[] = toArray<PortfolioItem>(portfolio);
   const previewPath = `/p/${master.slug}`;
 
   return (
-    <div className="p-5 pb-24 animate-fade-in">
+    <div className="px-screen-x pt-section-y pb-24 animate-fade-in">
       <SectionBack onBack={() => navigate(-1)} />
 
       <h1 className="text-2xl font-bold tracking-tight mb-1">Моя страница-визитка</h1>
@@ -205,7 +205,7 @@ export default function LinkPageEditor() {
       {/* Profile preview */}
       <Card className="mb-4">
         <div className="flex items-center gap-3 mb-3">
-          <div className="w-12 h-12 rounded-2xl bg-tg-secondary flex items-center justify-center overflow-hidden">
+          <div className="w-12 h-12 rounded-card bg-tg-secondary flex items-center justify-center overflow-hidden">
             {master.avatar_url ? (
               <img src={master.avatar_url} alt="" className="w-full h-full object-cover" />
             ) : (

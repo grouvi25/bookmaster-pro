@@ -6,11 +6,11 @@ export default {
       colors: {
         tg: {
           bg:          'var(--tg-theme-bg-color, #ffffff)',
-          secondary:   'var(--tg-theme-secondary-bg-color, #f7f7f8)',
-          text:        'var(--tg-theme-text-color, #1a1a1a)',
-          hint:        'var(--tg-theme-hint-color, #8e8e93)',
-          link:        'var(--tg-theme-link-color, #007aff)',
-          button:      'var(--tg-theme-button-color, #007aff)',
+          secondary:   'var(--tg-theme-secondary-bg-color, #f4f4f5)',
+          text:        'var(--tg-theme-text-color, #000000)',
+          hint:        'var(--tg-theme-hint-color, #999999)',
+          link:        'var(--tg-theme-link-color, #2481cc)',
+          button:      'var(--tg-theme-button-color, #2481cc)',
           'button-text': 'var(--tg-theme-button-text-color, #ffffff)',
         },
         brand: {
@@ -32,10 +32,16 @@ export default {
           teal:    '#5ac8fa',
           indigo:  '#5856d6',
         },
+        status: {
+          success: '#34C759',
+          warning: '#FF9500',
+          danger:  '#FF3B30',
+          info:    '#007AFF',
+        },
         surface: {
           primary:   'var(--tg-theme-bg-color, #ffffff)',
-          secondary: 'var(--tg-theme-secondary-bg-color, #f7f7f8)',
-          elevated:  'var(--tg-theme-secondary-bg-color, #f7f7f8)',
+          secondary: 'var(--tg-theme-secondary-bg-color, #f4f4f5)',
+          elevated:  'var(--tg-theme-secondary-bg-color, #f4f4f5)',
         },
       },
       fontFamily: {
@@ -45,17 +51,31 @@ export default {
         ],
       },
       fontSize: {
-        '2xs': ['0.625rem', { lineHeight: '0.875rem' }],
+        '2xs':   ['0.625rem', { lineHeight: '0.875rem' }],
+        'micro': ['11px',  { lineHeight: '1.4', fontWeight: '500' }],
+        'aux':   ['13px',  { lineHeight: '1.4' }],
+        'body':  ['15px',  { lineHeight: '1.4' }],
+        'h3':    ['15px',  { lineHeight: '1.4', fontWeight: '600' }],
+        'h2':    ['17px',  { lineHeight: '1.4', fontWeight: '600' }],
+        'h1':    ['20px',  { lineHeight: '1.4', fontWeight: '700' }],
+      },
+      spacing: {
+        'screen-x':   '16px',
+        'section-y':  '24px',
+        'card-inner': '14px',
+        'card-gap':   '8px',
       },
       borderRadius: {
-        '2xl': '1rem',
-        '3xl': '1.25rem',
-        '4xl': '1.5rem',
+        'badge':    '6px',
+        'btn':      '12px',
+        'card':     '16px',
+        'chip':     '20px',
+        'sheet':    '20px',
+        '2xl':      '1rem',
+        '3xl':      '1.25rem',
+        '4xl':      '1.5rem',
       },
       boxShadow: {
-        'card':     '0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06)',
-        'card-lg':  '0 4px 12px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04)',
-        'float':    '0 8px 24px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04)',
         'tab-bar':  '0 -1px 12px rgba(0, 0, 0, 0.06)',
         'button':   '0 2px 8px rgba(0, 122, 255, 0.2)',
         'input':    '0 0 0 3px rgba(0, 122, 255, 0.12)',
@@ -68,6 +88,7 @@ export default {
         'slide-down':   'slideDown 0.3s cubic-bezier(0.22, 1, 0.36, 1)',
         'pulse-soft':   'pulseSoft 2s ease-in-out infinite',
         'shimmer':      'shimmer 1.5s ease-in-out infinite',
+        'spin-fast':    'spin 0.8s linear infinite',
       },
       keyframes: {
         slideUp: {

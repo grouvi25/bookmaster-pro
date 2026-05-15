@@ -236,7 +236,7 @@ export default function ModeratorPanel() {
             ) : (
               <div className="space-y-2">
                 {tickets.map((ticket) => (
-                  <div key={ticket.id} className="bg-surface-elevated rounded-xl shadow-card overflow-hidden">
+                  <div key={ticket.id} className="bg-surface-elevated rounded-xl overflow-hidden">
                     <button
                       onClick={() => setExpandedTicket(expandedTicket === ticket.id ? null : ticket.id)}
                       className="w-full p-4 flex items-start gap-3 text-left"
@@ -399,7 +399,7 @@ export default function ModeratorPanel() {
                 {reviews.map((review) => (
                   <div
                     key={review.id}
-                    className={`bg-surface-elevated rounded-xl p-4 shadow-card ${
+                    className={`bg-surface-elevated rounded-xl p-4 ${
                       review.is_hidden ? 'opacity-60' : ''
                     }`}
                   >
@@ -489,7 +489,7 @@ export default function ModeratorPanel() {
             ) : (
               <div className="space-y-2">
                 {pendingMasters.map((master: { id: number; display_name?: string; name?: string; specialization?: string; created_at?: string }) => (
-                  <div key={master.id} className="bg-surface-elevated rounded-xl p-4 shadow-card flex items-center gap-3">
+                  <div key={master.id} className="bg-surface-elevated rounded-xl p-4 flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-brand-100 flex items-center justify-center text-brand-600 font-bold">
                       {(master.display_name || master.name || '?')[0]}
                     </div>

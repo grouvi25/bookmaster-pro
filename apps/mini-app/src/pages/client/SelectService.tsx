@@ -35,7 +35,7 @@ export default function SelectService() {
     : allServices;
 
   return (
-    <div className="p-5 pb-24 animate-slide-up">
+    <div className="px-screen-x pt-section-y pb-24 animate-slide-up">
       <BackButton />
       <h1 className="text-2xl font-bold tracking-tight mb-1">Выберите услугу</h1>
       <p className="text-tg-hint text-sm mb-5">Шаг 1 из 5</p>
@@ -69,7 +69,7 @@ export default function SelectService() {
           <button
             key={svc.id}
             onClick={() => handleSelect(svc)}
-            className="flex items-center p-4 bg-surface-elevated shadow-card rounded-2xl text-left active:scale-[0.98] transition-all duration-200"
+            className="flex items-center p-4 bg-surface-elevated rounded-card text-left active:scale-[0.98] transition-all duration-200"
           >
             <div className="flex-1 min-w-0">
               <div className="font-medium text-tg-text">{svc.name}</div>
