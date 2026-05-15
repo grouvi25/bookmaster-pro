@@ -10,11 +10,6 @@ import StatCard from '@/shared/ui/StatCard';
 import SectionBack from '@/shared/ui/SectionBack';
 import MenuItem from '@/shared/ui/MenuItem';
 import { toast } from '@/shared/ui/Toast';
-import {
-  BarChart3, ClipboardList, User, MessageCircle,
-  Link2, CreditCard, Star, Plus, Trash2, Send,
-  MapPin, Megaphone, Code, Package, Clock,
-} from 'lucide-react';
 import type { Service, SupportTicket, MasterProfile } from '@/shared/types/api';
 import { useFeatureFlag } from '@/hooks/useFeatureFlag';
 
@@ -24,8 +19,8 @@ export default function Settings() {
   const [tab, setTab] = useState<SettingsTab>('main');
 
   return (
-    <div className="p-5 pb-24 animate-fade-in">
-      <h1 className="text-2xl font-bold tracking-tight mb-5">Настройки</h1>
+    <div className="px-screen-x py-section-y pb-24 screen-enter">
+      <h1 className="text-h1 mb-section-y">Настройки</h1>
 
       {tab === 'main' ? (
         <SettingsMain onNavigate={setTab} />
@@ -51,96 +46,81 @@ function SettingsMain({ onNavigate }: { onNavigate: (tab: SettingsTab) => void }
   const clientSubscriptions = useFeatureFlag('client_subscriptions');
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-card-gap">
       {analyticsEnabled && (
         <MenuItem
-          Icon={BarChart3}
+          emoji={'\uD83D\uDCCA'}
           label="Аналитика"
           description="Статистика и отчёты"
           onClick={() => onNavigate('analytics')}
         />
       )}
       <MenuItem
-        Icon={Clock}
+        emoji={'\u23F0'}
         label="Рабочее расписание"
         description="Часы работы по дням недели"
         onClick={() => navigate('/master/work-schedule')}
-        iconBg="bg-brand-500/10"
-        iconColor="text-brand-500"
       />
       <MenuItem
-        Icon={ClipboardList}
+        emoji={'\uD83D\uDCCB'}
         label="Мои услуги"
         description="Управление услугами"
         onClick={() => onNavigate('services')}
       />
       <MenuItem
-        Icon={User}
+        emoji={'\uD83D\uDC64'}
         label="Профиль"
         description="Настройки профиля"
         onClick={() => onNavigate('profile')}
       />
       <MenuItem
-        Icon={MessageCircle}
+        emoji={'\uD83D\uDCAC'}
         label="Поддержка"
         description="Помощь и обратная связь"
         onClick={() => onNavigate('support')}
       />
       <MenuItem
-        Icon={Link2}
+        emoji={'\uD83D\uDD17'}
         label="Моя страница-визитка"
         description="TapLink-аналог"
         onClick={() => navigate('/link-page/edit')}
-        iconBg="bg-tg-bg"
-        iconColor="text-brand-500"
-        className="!bg-brand-500/10"
       />
       <MenuItem
-        Icon={CreditCard}
+        emoji={'\uD83D\uDCB3'}
         label="Тарифы и подписка"
         description="Управление подпиской"
         onClick={() => navigate('/billing')}
-        iconBg="bg-amber-500/10"
-        iconColor="text-accent-orange"
       />
       {broadcastEnabled && (
         <MenuItem
-          Icon={Megaphone}
+          emoji={'\uD83D\uDCE2'}
           label="Рассылки"
           description="Рассылки по сегментам"
           onClick={() => navigate('/master/broadcast')}
-          iconBg="bg-accent-purple/10"
-          iconColor="text-accent-purple"
         />
       )}
       {widgetEnabled && (
         <MenuItem
-          Icon={Code}
+          emoji={'\uD83D\uDCBB'}
           label="Виджет для сайта"
           description="Встройте запись на свой сайт"
           onClick={() => navigate('/master/widget')}
-          iconBg="bg-blue-500/10"
-          iconColor="text-blue-500"
         />
       )}
       {clientSubscriptions && (
         <MenuItem
-          Icon={Package}
+          emoji={'\uD83D\uDCE6'}
           label="Абонементы"
           description="Пакеты визитов для клиентов"
           onClick={() => navigate('/master/subscription-packages')}
-          iconBg="bg-green-500/10"
-          iconColor="text-green-500"
         />
       )}
       {locationsEnabled && (
         <MenuItem
-          Icon={MapPin}
+          emoji={'\uD83D\uDCCD'}
           label="Локации"
           description="Управление адресами"
           onClick={() => navigate('/master/locations')}
-          iconBg="bg-accent-emerald/10"
-          iconColor="text-accent-emerald"
         />
       )}
     </div>
@@ -161,11 +141,11 @@ function AnalyticsSection({ onBack }: { onBack: () => void }) {
   if (isLoading) return <StatGridSkeleton count={4} />;
 
   return (
-    <div className="animate-slide-up">
+    <div className="screen-enter">
       <SectionBack onBack={onBack} />
-      <h2 className="font-bold text-lg mb-3">Аналитика за 30 дней</h2>
+      <h2 className="text-h2 mb-3">Аналитика за 30 дней</h2>
 
-      <div className="grid grid-cols-2 gap-3 mb-4">
+      <div className="grid grid-cols-2 gap-card-gap mb-4">
         <StatCard label="Выручка" value={`${(data?.total_revenue ?? 0).toLocaleString('ru')} ₽`} />
         <StatCard label="Записей" value={data?.total_bookings ?? 0} />
         <StatCard label="Клиентов" value={data?.unique_clients ?? 0} />
@@ -174,8 +154,8 @@ function AnalyticsSection({ onBack }: { onBack: () => void }) {
 
       {funnel && (
         <>
-          <h3 className="font-semibold text-sm mb-2">Воронка записей</h3>
-          <div className="grid grid-cols-3 gap-2 mb-4">
+          <h3 className="text-h3 mb-2">Воронка записей</h3>
+          <div className="grid grid-cols-3 gap-card-gap mb-4">
             <StatCard label="Завершённые" value={funnel.completed ?? 0} />
             <StatCard label="Отмены" value={funnel.cancelled ?? 0} />
             <StatCard label="No-show" value={funnel.no_show ?? 0} />
@@ -233,12 +213,12 @@ function ServicesSection({ onBack }: { onBack: () => void }) {
   };
 
   return (
-    <div className="animate-slide-up">
+    <div className="screen-enter">
       <SectionBack onBack={onBack} />
       <div className="flex items-center justify-between mb-3">
-        <h2 className="font-bold text-lg">Мои услуги</h2>
-        <button onClick={() => setShowForm(!showForm)} className="flex items-center gap-1 text-tg-link text-sm">
-          <Plus className="w-4 h-4" /> Добавить
+        <h2 className="text-h2">Мои услуги</h2>
+        <button onClick={() => setShowForm(!showForm)} className="flex items-center gap-1 text-tg-link text-body">
+          {'\u2795'} Добавить
         </button>
       </div>
 
@@ -246,31 +226,31 @@ function ServicesSection({ onBack }: { onBack: () => void }) {
         <Card className="mb-3">
           <div className="flex flex-col gap-3">
             <input value={formName} onChange={e => setFormName(e.target.value)}
-              placeholder="Название услуги" className="w-full p-3 rounded-xl text-sm outline-none bg-tg-bg" />
+              placeholder="Название услуги" className="input-field" />
             <div className="flex gap-2">
               <input value={formPrice} onChange={e => setFormPrice(e.target.value)}
-                placeholder="Цена, ₽" type="number" className="flex-1 p-3 rounded-xl text-sm outline-none bg-tg-bg" />
+                placeholder="Цена, ₽" type="number" className="input-field flex-1" />
               <input value={formDuration} onChange={e => setFormDuration(e.target.value)}
-                placeholder="Мин" type="number" className="w-20 p-3 rounded-xl text-sm outline-none bg-tg-bg" />
+                placeholder="Мин" type="number" className="input-field w-20" />
             </div>
             <Button onClick={handleCreate} loading={formLoading} fullWidth size="sm">Создать</Button>
           </div>
         </Card>
       )}
 
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-card-gap">
         {services.map((svc) => (
           <Card key={svc.id} className="flex justify-between items-center">
             <div>
-              <div className="font-medium text-sm">{svc.name}</div>
-              <div className="text-xs text-tg-hint">{svc.duration_min} мин</div>
+              <div className="font-medium text-body">{svc.name}</div>
+              <div className="text-aux text-tg-hint">{svc.duration_min} мин</div>
             </div>
             <div className="flex items-center gap-3">
-              <span className="font-bold text-sm text-brand-600">
+              <span className="font-bold text-body text-tg-link">
                 {svc.price ? `${Number(svc.price).toLocaleString('ru')} ₽` : 'Дог.'}
               </span>
-              <button onClick={() => handleDelete(svc.id)} className="text-red-400 active:text-red-600">
-                <Trash2 className="w-4 h-4" />
+              <button onClick={() => handleDelete(svc.id)} className="text-status-danger interactive">
+                {'\uD83D\uDDD1\uFE0F'}
               </button>
             </div>
           </Card>
@@ -326,12 +306,12 @@ function ProfileSection({ onBack }: { onBack: () => void }) {
   };
 
   return (
-    <div className="animate-slide-up">
+    <div className="screen-enter">
       <SectionBack onBack={onBack} />
       <div className="flex items-center justify-between mb-3">
-        <h2 className="font-bold text-lg">Профиль</h2>
+        <h2 className="text-h2">Профиль</h2>
         {!editing && (
-          <button onClick={startEdit} className="flex items-center gap-1 text-tg-link text-sm">
+          <button onClick={startEdit} className="text-tg-link text-body interactive">
             Редактировать
           </button>
         )}
@@ -339,54 +319,50 @@ function ProfileSection({ onBack }: { onBack: () => void }) {
 
       <Card>
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-16 h-16 bg-brand-500/10 rounded-full flex items-center justify-center overflow-hidden">
+          <div className="w-16 h-16 bg-tg-secondary rounded-full flex items-center justify-center overflow-hidden">
             {profile?.avatar_url ? (
               <img src={profile.avatar_url} alt="" className="w-full h-full rounded-full object-cover" />
             ) : (
-              <User className="w-8 h-8 text-brand-400" strokeWidth={1.5} />
+              <span className="text-[32px]">{'\uD83D\uDC64'}</span>
             )}
           </div>
           <div>
-            <div className="font-bold">{profile?.display_name}</div>
-            <div className="text-sm text-tg-hint">{profile?.specialization}</div>
+            <div className="font-bold text-body">{profile?.display_name}</div>
+            <div className="text-aux text-tg-hint">{profile?.specialization}</div>
           </div>
         </div>
 
         {editing ? (
           <div className="flex flex-col gap-3">
             <div>
-              <label className="text-xs text-tg-hint mb-1 block">Имя</label>
-              <input value={name} onChange={e => setName(e.target.value)}
-                className="w-full p-3 rounded-xl text-sm outline-none bg-tg-bg border border-transparent focus:border-brand-500" />
+              <label className="text-micro text-tg-hint mb-1 block">Имя</label>
+              <input value={name} onChange={e => setName(e.target.value)} className="input-field" />
             </div>
             <div>
-              <label className="text-xs text-tg-hint mb-1 block">О себе</label>
+              <label className="text-micro text-tg-hint mb-1 block">О себе</label>
               <textarea value={bio} onChange={e => setBio(e.target.value)} rows={3}
-                className="w-full p-3 rounded-xl text-sm outline-none bg-tg-bg border border-transparent focus:border-brand-500 resize-none" />
+                className="input-field !h-auto resize-none" style={{ padding: '12px 14px' }} />
             </div>
             <div>
-              <label className="text-xs text-tg-hint mb-1 block">Город</label>
-              <input value={city} onChange={e => setCity(e.target.value)}
-                className="w-full p-3 rounded-xl text-sm outline-none bg-tg-bg border border-transparent focus:border-brand-500" />
+              <label className="text-micro text-tg-hint mb-1 block">Город</label>
+              <input value={city} onChange={e => setCity(e.target.value)} className="input-field" />
             </div>
 
-            <div className="pt-2 border-t border-tg-bg">
-              <label className="text-xs font-medium text-tg-text mb-2 block">Антино-шоу: депозит и предоплата</label>
+            <div className="pt-2 border-t border-tg-secondary">
+              <label className="text-micro font-medium text-tg-text mb-2 block">Антино-шоу: депозит и предоплата</label>
               <div className="flex gap-2">
                 <div className="flex-1">
-                  <label className="text-xs text-tg-hint mb-1 block">Депозит, ₽</label>
+                  <label className="text-micro text-tg-hint mb-1 block">Депозит, ₽</label>
                   <input value={depositAmount} onChange={e => setDepositAmount(e.target.value)}
-                    type="number" placeholder="0"
-                    className="w-full p-3 rounded-xl text-sm outline-none bg-tg-bg border border-transparent focus:border-brand-500" />
+                    type="number" placeholder="0" className="input-field" />
                 </div>
                 <div className="flex-1">
-                  <label className="text-xs text-tg-hint mb-1 block">Предоплата, %</label>
+                  <label className="text-micro text-tg-hint mb-1 block">Предоплата, %</label>
                   <input value={prepayPercent} onChange={e => setPrepayPercent(e.target.value)}
-                    type="number" placeholder="0" min="0" max="100"
-                    className="w-full p-3 rounded-xl text-sm outline-none bg-tg-bg border border-transparent focus:border-brand-500" />
+                    type="number" placeholder="0" min="0" max="100" className="input-field" />
                 </div>
               </div>
-              <p className="text-xs text-tg-hint mt-1">При высоком риске no-show система запросит оплату</p>
+              <p className="text-micro text-tg-hint mt-1">При высоком риске no-show система запросит оплату</p>
             </div>
 
             <div className="flex gap-2">
@@ -395,13 +371,13 @@ function ProfileSection({ onBack }: { onBack: () => void }) {
             </div>
           </div>
         ) : (
-          <div className="flex flex-col gap-2 text-sm">
+          <div className="flex flex-col gap-2 text-body">
             {profile?.description && (
-              <p className="text-tg-text text-sm mb-2">{profile.description}</p>
+              <p className="text-tg-text mb-2">{profile.description}</p>
             )}
             <div className="flex justify-between">
               <span className="text-tg-hint">Slug</span>
-              <span className="font-mono">{profile?.slug}</span>
+              <span className="font-mono text-aux">{profile?.slug}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-tg-hint">Город</span>
@@ -410,8 +386,7 @@ function ProfileSection({ onBack }: { onBack: () => void }) {
             <div className="flex justify-between">
               <span className="text-tg-hint">Рейтинг</span>
               <span className="flex items-center gap-1">
-                <Star className="w-3.5 h-3.5 text-yellow-400 fill-yellow-400" />
-                {profile?.rating_avg?.toFixed(1) || '—'} ({profile?.rating_count || 0})
+                {'\u2B50'} {profile?.rating_avg?.toFixed(1) || '—'} ({profile?.rating_count || 0})
               </span>
             </div>
             {(profile?.noshow_deposit_amount || profile?.noshow_prepay_percent) ? (
@@ -474,15 +449,15 @@ function SupportSection({ onBack }: { onBack: () => void }) {
   };
 
   return (
-    <div className="animate-slide-up">
+    <div className="screen-enter">
       <SectionBack onBack={onBack} />
-      <h2 className="font-bold text-lg mb-3">Поддержка</h2>
+      <h2 className="text-h2 mb-3">Поддержка</h2>
 
       <div className="mb-4 space-y-2">
         <select
           value={category}
           onChange={(e) => setCategory(e.target.value)}
-          className="input-field text-sm"
+          className="input-field"
         >
           <option value="technical">Техническая проблема</option>
           <option value="billing">Оплата / биллинг</option>
@@ -495,44 +470,42 @@ function SupportSection({ onBack }: { onBack: () => void }) {
           value={subject}
           onChange={(e) => setSubject(e.target.value)}
           placeholder="Тема обращения..."
-          className="input-field text-sm"
+          className="input-field"
         />
         <textarea
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           placeholder="Опишите вашу проблему..."
-          className="input-field resize-none h-24"
+          className="input-field resize-none !h-24"
+          style={{ padding: '12px 14px', height: '96px' }}
         />
         <Button onClick={handleSubmit} disabled={!message.trim() || !subject.trim()} fullWidth size="sm">
-          <Send className="w-4 h-4" /> Отправить
+          {'\uD83D\uDCE8'} Отправить
         </Button>
       </div>
 
       {tickets.length > 0 && (
         <>
-          <h3 className="font-medium text-sm mb-2">Ваши обращения</h3>
-          <div className="flex flex-col gap-2">
+          <h3 className="text-h3 mb-2">Ваши обращения</h3>
+          <div className="flex flex-col gap-card-gap">
             {tickets.map((t) => (
-              <div
-                key={t.id}
-                className="bg-surface-elevated shadow-card rounded-2xl p-3.5"
-              >
-                <div className="flex justify-between text-sm">
+              <Card key={t.id}>
+                <div className="flex justify-between text-body">
                   <span className="font-medium">{t.subject}</span>
-                  <span className={`text-xs px-2 py-0.5 rounded-full ${
+                  <span className={`text-micro px-2 py-0.5 rounded-badge ${
                     t.status === 'resolved' || t.status === 'closed'
-                      ? 'bg-green-100 text-green-700'
+                      ? 'bg-[#34C759]/15 text-[#34C759]'
                       : t.status === 'in_progress'
-                        ? 'bg-blue-100 text-blue-700'
-                        : 'bg-yellow-100 text-yellow-700'
+                        ? 'bg-[#007AFF]/15 text-[#007AFF]'
+                        : 'bg-[#FF9500]/15 text-[#FF9500]'
                   }`}>
                     {statusLabel(t.status)}
                   </span>
                 </div>
-                <p className="text-xs text-tg-hint mt-1">
+                <p className="text-micro text-tg-hint mt-1">
                   {t.ticket_code} · {t.category}
                 </p>
-              </div>
+              </Card>
             ))}
           </div>
         </>

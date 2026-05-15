@@ -109,7 +109,7 @@ function ClientsList() {
       ) : null}
 
       {clients.length === 0 ? (
-        <EmptyState Icon={User} title="Клиенты не найдены" />
+        <EmptyState emoji="\uD83D\uDC64" title="Клиенты не найдены" />
       ) : (
         <div className="flex flex-col gap-1">
           {clients.map((c) => (

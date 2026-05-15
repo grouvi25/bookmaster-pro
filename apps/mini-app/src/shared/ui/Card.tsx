@@ -15,12 +15,12 @@ export default function Card({
     <div
       onClick={onClick}
       className={clsx(
-        'rounded-2xl bg-surface-elevated shadow-card',
+        'rounded-card bg-tg-secondary',
         {
-          'cursor-pointer active:scale-[0.98] transition-all duration-200': onClick,
+          'cursor-pointer interactive': onClick,
           '': padding === 'none',
-          'p-3': padding === 'sm',
-          'p-4': padding === 'md',
+          'p-[10px]': padding === 'sm',
+          'p-card-inner': padding === 'md',
         },
         className
       )}
