@@ -8,10 +8,10 @@ interface Props {
 
 export default function PageHeader({ title, left, right }: Props) {
   return (
-    <div className="flex justify-between items-center mb-5">
+    <div className="flex justify-between items-center mb-section-y">
       <div className="flex items-center gap-2">
         {left}
-        <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
+        <h1 className="text-h1">{title}</h1>
       </div>
       {right}
     </div>

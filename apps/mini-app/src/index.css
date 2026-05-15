@@ -14,13 +14,13 @@
   body {
     margin: 0;
     padding: 0;
-    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+    font-size: 15px;
+    line-height: 1.4;
     background-color: var(--tg-theme-bg-color, #ffffff);
-    color: var(--tg-theme-text-color, #1a1a1a);
+    color: var(--tg-theme-text-color, #000000);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    line-height: 1.5;
-    letter-spacing: -0.01em;
   }
 
   ::-webkit-scrollbar {
@@ -29,8 +29,12 @@
 
   input, textarea, select {
     font-family: inherit;
-    letter-spacing: inherit;
   }
+
+  /* Типографика из ТЗ */
+  h1 { font-size: 20px; font-weight: 700; line-height: 1.4; }
+  h2 { font-size: 17px; font-weight: 600; line-height: 1.4; }
+  h3 { font-size: 15px; font-weight: 600; line-height: 1.4; }
 }
 
 @layer components {
@@ -42,26 +46,79 @@
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 
+  /* Интерактивный элемент — тап-эффект из ТЗ */
+  .interactive {
+    transition: transform 100ms ease, opacity 100ms ease;
+  }
+  .interactive:active {
+    transform: scale(0.96);
+    opacity: 0.8;
+  }
+
+  /* Секция-заголовок по ТЗ: 11px Medium uppercase */
   .section-title {
-    @apply text-xs font-semibold uppercase tracking-wider text-tg-hint mb-2 px-1;
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--tg-theme-hint-color, #999999);
+    margin-bottom: 8px;
+    padding-left: 4px;
   }
 
+  /* Input field по ТЗ: 50px height, 12px radius, secondary-bg */
   .input-field {
-    @apply w-full px-4 py-3 bg-tg-secondary rounded-2xl text-sm text-tg-text outline-none
-           border-2 border-transparent transition-all duration-200
-           placeholder:text-tg-hint placeholder:opacity-60
-           focus:border-brand-500 focus:shadow-input focus:bg-tg-bg;
+    width: 100%;
+    height: 50px;
+    padding: 0 14px;
+    background: var(--tg-theme-secondary-bg-color, #f4f4f5);
+    border: none;
+    border-radius: 12px;
+    font-size: 15px;
+    color: var(--tg-theme-text-color, #000000);
+    outline: none;
+    transition: border 200ms ease;
+  }
+  .input-field::placeholder {
+    color: var(--tg-theme-hint-color, #999999);
+  }
+  .input-field:focus {
+    border: 2px solid var(--tg-theme-link-color, #2481cc);
   }
 
+  /* Chip/Tag по ТЗ: 20px pill radius */
   .chip {
-    @apply inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium transition-all;
+    @apply inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium transition-all;
+    border-radius: 20px;
   }
 
   .chip-active {
-    @apply bg-brand-500 text-white shadow-button;
+    background: var(--tg-theme-button-color, #2481cc);
+    color: var(--tg-theme-button-text-color, #ffffff);
   }
 
   .chip-inactive {
-    @apply bg-tg-secondary text-tg-text;
+    background: var(--tg-theme-secondary-bg-color, #f4f4f5);
+    color: var(--tg-theme-text-color, #000000);
   }
+
+  /* Появление экрана — из ТЗ */
+  .screen-enter {
+    animation: slideUp 250ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+
+  /* Появление карточки в списке (stagger через delay) */
+  .card-enter {
+    animation: fadeSlide 200ms ease-out both;
+  }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(16px); opacity: 0; }
+  to   { transform: translateY(0);   opacity: 1; }
+}
+
+@keyframes fadeSlide {
+  from { transform: translateY(8px); opacity: 0; }
+  to   { transform: translateY(0);  opacity: 1; }
 }

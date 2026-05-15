@@ -246,7 +246,7 @@ function AuditTab() {
   return (
     <div className="flex flex-col gap-2">
       {logs.length === 0 ? (
-        <EmptyState Icon={ScrollText} title="Нет записей" />
+        <EmptyState emoji="\uD83D\uDCDC" title="Нет записей" />
       ) : (
         logs.map((log, i) => (
           <div key={i} className="bg-surface-elevated shadow-card rounded-2xl p-3.5">
@@ -355,7 +355,7 @@ function TicketsTab() {
 
       <div className="flex flex-col gap-2">
         {tickets.length === 0 ? (
-          <EmptyState Icon={MessageSquare} title="Нет тикетов" />
+          <EmptyState emoji="\uD83D\uDCE8" title="Нет тикетов" />
         ) : (
           tickets.map((t) => (
             <div key={t.id} className="bg-surface-elevated shadow-card rounded-2xl p-3.5">

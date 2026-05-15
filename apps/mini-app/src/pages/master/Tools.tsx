@@ -7,25 +7,26 @@ import { ListSkeleton } from '@/shared/ui/Skeleton';
 import PageHeader from '@/shared/ui/PageHeader';
 import ChipTabs from '@/shared/ui/ChipTabs';
 import EmptyState from '@/shared/ui/EmptyState';
-import { Ticket, Star, Plus, Tag } from 'lucide-react';
+import Button from '@/shared/ui/Button';
+import Card from '@/shared/ui/Card';
 import type { Promo, LoyaltyTransaction } from '@/shared/types/api';
 import FeatureGate from '@/shared/ui/FeatureGate';
 
 type ToolsTab = 'promo' | 'loyalty';
 
-const TABS: { key: ToolsTab; label: string; Icon: typeof Ticket }[] = [
-  { key: 'promo', label: 'Промокоды', Icon: Ticket },
-  { key: 'loyalty', label: 'Лояльность', Icon: Star },
+const TABS: { key: ToolsTab; label: string; emoji?: string }[] = [
+  { key: 'promo', label: 'Промокоды', emoji: '\uD83C\uDFAB' },
+  { key: 'loyalty', label: 'Лояльность', emoji: '\u2B50' },
 ];
 
 export default function Tools() {
   const [tab, setTab] = useState<ToolsTab>('promo');
 
   return (
-    <div className="p-5 pb-24 animate-fade-in">
+    <div className="px-screen-x py-section-y pb-24 screen-enter">
       <PageHeader title="Инструменты" />
 
-      <div className="mb-5">
+      <div className="mb-section-y">
         <ChipTabs tabs={TABS} active={tab} onChange={setTab} />
       </div>
 
@@ -62,24 +63,24 @@ function PromoSection() {
     },
   });
 
-  if (isLoading) return <div className="p-5"><ListSkeleton count={3} /></div>;
+  if (isLoading) return <div className="px-screen-x"><ListSkeleton count={3} /></div>;
 
   const promos = toArray<Promo>(data);
 
   return (
     <div>
       <div className="flex justify-between items-center mb-3">
-        <h2 className="font-medium">Активные промокоды</h2>
+        <h2 className="text-h3">Активные промокоды</h2>
         <button
           onClick={() => setShowForm(!showForm)}
-          className="flex items-center gap-1 text-tg-link text-sm"
+          className="flex items-center gap-1 text-tg-link text-body interactive"
         >
-          {showForm ? 'Отмена' : <><Plus className="w-4 h-4" /> Создать</>}
+          {showForm ? 'Отмена' : '\u2795 Создать'}
         </button>
       </div>
 
       {showForm && (
-        <div className="bg-surface-elevated shadow-card-lg rounded-2xl p-4 mb-3 animate-slide-up">
+        <Card className="mb-3 screen-enter">
           <input
             value={code}
             onChange={(e) => setCode(e.target.value.toUpperCase())}
@@ -92,7 +93,7 @@ function PromoSection() {
             placeholder="Скидка (10% или 500)"
             className="input-field mb-2"
           />
-          <button
+          <Button
             onClick={() =>
               createMutation.mutate({
                 code,
@@ -105,35 +106,33 @@ function PromoSection() {
               })
             }
             disabled={!code || !discount}
-            className="w-full bg-brand-500 text-white py-2.5 rounded-xl text-sm font-semibold shadow-button disabled:opacity-40 active:scale-[0.97] transition-all"
+            fullWidth
+            size="sm"
           >
             Создать
-          </button>
-        </div>
+          </Button>
+        </Card>
       )}
 
       {promos.length === 0 ? (
-        <EmptyState Icon={Tag} title="Нет активных промокодов" />
+        <EmptyState emoji={'\uD83C\uDFF7\uFE0F'} title="Нет активных промокодов" />
       ) : (
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-card-gap">
           {promos.map((p) => (
-            <div
-              key={p.id}
-              className="bg-surface-elevated shadow-card rounded-2xl p-3.5 flex justify-between items-center"
-            >
+            <Card key={p.id} className="flex justify-between items-center">
               <div>
-                <div className="font-mono font-bold text-sm">{p.code}</div>
-                <div className="text-xs text-tg-hint">
+                <div className="font-mono font-bold text-body">{p.code}</div>
+                <div className="text-aux text-tg-hint">
                   Использований: {p.usage_count ?? p.used_count ?? 0}
                   {p.max_uses ? ` / ${p.max_uses}` : null}
                 </div>
               </div>
-              <div className="font-medium text-brand-600 text-sm">
+              <div className="font-medium text-tg-link text-body">
                 {p.discount_percent
                   ? `-${p.discount_percent}%`
                   : `-${Number(p.discount_amount ?? p.discount_value).toLocaleString('ru')} ₽`}
               </div>
-            </div>
+            </Card>
           ))}
         </div>
       )}
@@ -149,33 +148,33 @@ function LoyaltySection() {
     enabled: !!masterId,
   });
 
-  if (isLoading) return <div className="p-5"><ListSkeleton count={3} /></div>;
+  if (isLoading) return <div className="px-screen-x"><ListSkeleton count={3} /></div>;
 
   const history = toArray<LoyaltyTransaction>(data);
 
   return (
     <div>
-      <div className="bg-brand-500/10 rounded-xl p-4 mb-4">
-        <div className="text-sm text-brand-700 mb-1">Программа лояльности</div>
-        <p className="text-xs text-brand-600">
+      <Card className="mb-4">
+        <div className="text-body text-tg-text mb-1">{'\u2B50'} Программа лояльности</div>
+        <p className="text-aux text-tg-hint">
           Клиенты получают баллы за каждый визит и могут оплачивать ими услуги.
         </p>
-      </div>
+      </Card>
 
       {history.length === 0 ? (
-        <EmptyState Icon={Star} title="История начислений пуста" />
+        <EmptyState emoji={'\u2B50'} title="История начислений пуста" />
       ) : (
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-card-gap">
           {history.map((h) => (
-            <div key={h.id} className="bg-surface-elevated shadow-card rounded-2xl p-3.5 flex justify-between items-center">
+            <Card key={h.id} className="flex justify-between items-center">
               <div>
-                <div className="text-sm font-medium">{h.description}</div>
-                <div className="text-xs text-tg-hint">{h.type}</div>
+                <div className="text-body font-medium">{h.description}</div>
+                <div className="text-aux text-tg-hint">{h.type}</div>
               </div>
-              <span className={`font-bold text-sm ${h.amount > 0 ? 'text-green-600' : 'text-red-500'}`}>
+              <span className={`font-bold text-body ${h.amount > 0 ? 'text-status-success' : 'text-status-danger'}`}>
                 {h.amount > 0 ? '+' : ''}{h.amount}
               </span>
-            </div>
+            </Card>
           ))}
         </div>
       )}

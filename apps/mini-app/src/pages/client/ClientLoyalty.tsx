@@ -4,7 +4,7 @@ import { bookingApi } from '@/api/endpoints';
 import { ListSkeleton } from '@/shared/ui/Skeleton';
 import Card from '@/shared/ui/Card';
 import EmptyState from '@/shared/ui/EmptyState';
-import { Star, ChevronRight } from 'lucide-react';
+
 import type { Booking } from '@/shared/types/api';
 import { toArray } from '@/shared/lib/normalize';
 
@@ -22,13 +22,13 @@ export default function ClientLoyalty() {
   const masterIds = [...new Set(bookings.map((b) => b.master_id))];
 
   return (
-    <div className="p-5 pb-24 animate-fade-in">
-      <h1 className="text-2xl font-bold tracking-tight mb-2">Баллы лояльности</h1>
-      <p className="text-sm text-tg-hint mb-5">Копите баллы за каждый визит к мастеру</p>
+    <div className="px-screen-x py-section-y pb-24 screen-enter">
+      <h1 className="text-h1 mb-2">Баллы лояльности</h1>
+      <p className="text-aux text-tg-hint mb-section-y">Копите баллы за каждый визит к мастеру</p>
 
       {masterIds.length === 0 ? (
         <EmptyState
-          Icon={Star}
+          emoji="\u2B50"
           title="Нет мастеров"
           description="После первого визита здесь появятся ваши баллы"
         />
@@ -52,8 +52,8 @@ export default function ClientLoyalty() {
                     </div>
                   </div>
                   <div className="flex items-center gap-1 text-tg-hint">
-                    <Star className="w-4 h-4 text-yellow-500" />
-                    <ChevronRight className="w-4 h-4" />
+                    <span className="text-[16px]">\u2B50</span>
+                    <span className="text-aux">\u203A</span>
                   </div>
                 </div>
               </Card>

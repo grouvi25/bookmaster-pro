@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import api from '@/api/client';
 import Loading from '@/components/common/Loading';
 import EmptyState from '@/shared/ui/EmptyState';
-import { MapPin, Star, Navigation, Search } from 'lucide-react';
+import { MapPin, Star, Navigation } from 'lucide-react';
 
 interface NearbyMaster {
   id: number;
@@ -98,7 +98,7 @@ export default function NearbyMasters() {
             <Loading />
           ) : !masters || masters.length === 0 ? (
             <EmptyState
-              Icon={Search}
+              emoji="\uD83D\uDD0D"
               title="Мастеров не найдено"
               description="Попробуйте увеличить радиус поиска"
             />

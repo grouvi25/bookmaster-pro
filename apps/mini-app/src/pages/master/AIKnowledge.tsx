@@ -9,7 +9,7 @@ import EmptyState from '@/shared/ui/EmptyState';
 import { ListSkeleton } from '@/shared/ui/Skeleton';
 import { toast } from '@/shared/ui/Toast';
 import FeatureGate from '@/shared/ui/FeatureGate';
-import { FileText, Plus, Trash2, BookOpen, Loader2 } from 'lucide-react';
+import { FileText, Plus, Trash2, Loader2 } from 'lucide-react';
 
 interface KnowledgeDoc {
   id: number;
@@ -191,7 +191,7 @@ function AIKnowledgeInner() {
       ) : docs.length === 0 ? (
         <Card className="!py-10">
           <EmptyState
-            icon={<BookOpen className="w-10 h-10 text-tg-hint" strokeWidth={1.5} />}
+            emoji="\uD83D\uDCDA"
             title="Пока ничего не загружено"
             description="Добавьте PDF или TXT — например прайс с описаниями, правила работы, FAQ — и AI начнёт ссылаться на них."
           />
