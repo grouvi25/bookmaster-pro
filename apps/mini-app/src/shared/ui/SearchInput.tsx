@@ -1,5 +1,3 @@
-import { Search } from 'lucide-react';
-
 interface Props {
   value: string;
   onChange: (value: string) => void;
@@ -11,7 +9,7 @@ export default function SearchInput({
 }: Props) {
   return (
     <div className="relative">
-      <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-tg-hint" />
+      <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[16px]">{'\uD83D\uDD0D'}</span>
       <input
         type="text"
         value={value}

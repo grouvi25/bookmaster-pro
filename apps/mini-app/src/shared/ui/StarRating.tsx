@@ -1,4 +1,3 @@
-import { Star } from 'lucide-react';
 import clsx from 'clsx';
 
 interface Props {
@@ -8,7 +7,7 @@ interface Props {
 }
 
 export default function StarRating({ value, onChange, size = 'md' }: Props) {
-  const sizes = { sm: 'w-4 h-4', md: 'w-6 h-6', lg: 'w-8 h-8' };
+  const emojiSizes = { sm: 'text-[16px]', md: 'text-[24px]', lg: 'text-[32px]' };
 
   return (
     <div className="flex gap-0.5">
@@ -17,18 +16,12 @@ export default function StarRating({ value, onChange, size = 'md' }: Props) {
           key={star}
           onClick={() => onChange?.(star)}
           className={clsx(
-            'transition-transform active:scale-110',
-            onChange ? 'cursor-pointer' : 'cursor-default'
+            'interactive',
+            onChange ? 'cursor-pointer' : 'cursor-default',
+            emojiSizes[size],
           )}
         >
-          <Star
-            className={clsx(
-              sizes[size],
-              star <= value
-                ? 'text-yellow-400 fill-yellow-400'
-                : 'text-gray-300'
-            )}
-          />
+          {star <= value ? '\u2B50' : '\u2606'}
         </button>
       ))}
     </div>

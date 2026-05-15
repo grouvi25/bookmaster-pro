@@ -10,7 +10,7 @@ import StatusBadge from '@/shared/ui/StatusBadge';
 import { toast } from '@/shared/ui/Toast';
 import { format, parseISO } from 'date-fns';
 import { ru } from 'date-fns/locale';
-import { CalendarDays, Clock, User, XCircle } from 'lucide-react';
+
 import type { Booking } from '@/shared/types/api';
 
 const STATUS_VARIANT: Record<string, 'success' | 'warning' | 'danger' | 'neutral'> = {
@@ -93,7 +93,7 @@ export default function MyBookings({ hideBack }: { hideBack?: boolean } = {}) {
 
       {filtered.length === 0 ? (
         <EmptyState
-          Icon={CalendarDays}
+          emoji="\uD83D\uDCC5"
           title={activeTab === 'upcoming' ? 'Нет предстоящих записей' : 'Нет прошедших записей'}
         />
       ) : (
@@ -105,8 +105,8 @@ export default function MyBookings({ hideBack }: { hideBack?: boolean } = {}) {
                 <div className="flex justify-between items-start mb-2">
                   <div>
                     <div className="font-medium text-sm">{b.service_name || 'Услуга'}</div>
-                    <div className="text-xs text-tg-hint mt-0.5 flex items-center gap-1">
-                      <User className="w-3 h-3" />
+                    <div className="text-aux text-tg-hint mt-0.5 flex items-center gap-1">
+                      {'\uD83D\uDC64'}
                       {b.master_name || b.client_name || 'Мастер'}
                     </div>
                   </div>
@@ -115,20 +115,18 @@ export default function MyBookings({ hideBack }: { hideBack?: boolean } = {}) {
                     variant={STATUS_VARIANT[b.status] || 'neutral'}
                   />
                 </div>
-                <div className="flex items-center gap-2 text-sm text-tg-hint">
-                  <CalendarDays className="w-3.5 h-3.5" />
-                  {b.date ? format(parseISO(b.date), 'd MMM, EEE', { locale: ru }) : ''}
-                  <Clock className="w-3.5 h-3.5 ml-1" />
+                <div className="flex items-center gap-2 text-aux text-tg-hint">
+                  {'\uD83D\uDCC5'} {b.date ? format(parseISO(b.date), 'd MMM, EEE', { locale: ru }) : ''}
+                  <span className="ml-1">{'\u23F0'}</span>
                   {b.time || (b.time_start ? b.time_start.slice(11, 16) : '')}
                   {b.duration_min ? ` · ${b.duration_min} мин` : ''}
                 </div>
                 {canCancel && (
                   <button
                     onClick={() => handleCancel(b.id)}
-                    className="flex items-center gap-1 mt-2 text-xs text-red-500"
+                    className="flex items-center gap-1 mt-2 text-aux text-status-danger interactive"
                   >
-                    <XCircle className="w-3.5 h-3.5" />
-                    Отменить
+                    {'\u274C'} Отменить
                   </button>
                 )}
               </Card>

@@ -19,22 +19,25 @@ export default function Button({
   className, type = 'button',
 }: Props) {
   const base = clsx(
-    'inline-flex items-center justify-center gap-2 font-semibold',
-    'rounded-2xl transition-all duration-200 active:scale-[0.97]',
+    'inline-flex items-center justify-center gap-2',
+    'font-semibold text-[16px] rounded-btn',
+    'transition-transform transition-opacity duration-100',
+    'active:opacity-80 active:scale-[0.97]',
     'disabled:opacity-40 disabled:pointer-events-none',
-    {
-      'w-full': fullWidth,
-      'px-4 py-2 text-sm': size === 'sm',
-      'px-5 py-3.5 text-[15px]': size === 'md',
-      'px-6 py-4 text-base': size === 'lg',
-    }
+    { 'w-full': fullWidth },
   );
 
-  const variants = {
-    primary: 'bg-tg-button text-tg-button-text shadow-button',
+  const sizes = {
+    sm: 'h-[44px] px-4 text-[15px]',
+    md: 'h-[52px] px-5 text-[16px]',
+    lg: 'h-[52px] px-6 text-[16px]',
+  };
+
+  const variants: Record<string, string> = {
+    primary:   'bg-tg-button text-tg-button-text',
     secondary: 'bg-tg-secondary text-tg-text',
-    ghost: 'bg-transparent text-tg-link active:bg-tg-secondary',
-    danger: 'bg-accent-red text-white shadow-sm',
+    ghost:     'bg-transparent text-tg-link h-[44px] text-[15px] font-medium',
+    danger:    'bg-status-danger text-white',
   };
 
   return (
@@ -42,10 +45,10 @@ export default function Button({
       type={type}
       onClick={onClick}
       disabled={disabled || loading}
-      className={clsx(base, variants[variant], className)}
+      className={clsx(base, variant !== 'ghost' && sizes[size], variants[variant], className)}
     >
       {loading ? (
-        <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin-fast" />
       ) : children}
     </button>
   );

@@ -7,7 +7,7 @@ import Button from '@/shared/ui/Button';
 import SectionBack from '@/shared/ui/SectionBack';
 import EmptyState from '@/shared/ui/EmptyState';
 import { toast } from '@/shared/ui/Toast';
-import { CalendarOff, Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 import api from '@/api/client';
 
 interface BlockedSlot {
@@ -58,7 +58,7 @@ export default function BlockedSlots() {
       {slots.length === 0 ? (
         <Card className="!py-10">
           <EmptyState
-            Icon={CalendarOff}
+            emoji="\uD83D\uDEAB"
             title="Нет блокировок"
             description="Добавьте выходные или перерывы"
           />

@@ -1,6 +1,5 @@
 import { type ReactNode, useEffect } from 'react';
 import clsx from 'clsx';
-import { X } from 'lucide-react';
 
 interface Props {
   isOpen: boolean;
@@ -26,28 +25,32 @@ export default function BottomSheet({
 
   return (
     <div className="fixed inset-0 z-50">
+      {/* Backdrop: rgba(0,0,0,0.4) + blur 4px per TZ */}
       <div
-        className="absolute inset-0 bg-black/30 backdrop-blur-[2px] animate-fade-in"
+        className="absolute inset-0 bg-black/40 backdrop-blur-[4px] animate-fade-in"
         onClick={onClose}
       />
+      {/* Sheet: border-radius top 20px per TZ */}
       <div
         className={clsx(
           'absolute bottom-0 left-0 right-0 animate-slide-up',
-          'rounded-t-3xl shadow-float bg-surface-primary',
+          'rounded-t-sheet bg-surface-primary',
           fullHeight ? 'top-12' : 'max-h-[85vh]',
         )}
+        style={{ transition: 'transform 300ms cubic-bezier(0.25, 0.46, 0.45, 0.94)' }}
       >
+        {/* Drag handle: 4px x 36px per TZ */}
         <div className="flex justify-center pt-3 pb-1">
-          <div className="w-9 h-1 rounded-full bg-black/10" />
+          <div className="w-9 h-1 rounded-[2px] bg-black/20" />
         </div>
         {title && (
-          <div className="flex items-center justify-between px-5 py-2.5">
-            <h3 className="text-[17px] font-bold">{title}</h3>
+          <div className="flex items-center justify-between px-screen-x py-2.5">
+            <h3 className="text-h2 font-semibold">{title}</h3>
             <button
               onClick={onClose}
-              className="w-8 h-8 rounded-full bg-tg-secondary flex items-center justify-center active:scale-90 transition-transform"
+              className="w-8 h-8 rounded-full bg-tg-secondary flex items-center justify-center interactive text-sm"
             >
-              <X className="w-4 h-4 text-tg-hint" />
+              ✕
             </button>
           </div>
         )}
