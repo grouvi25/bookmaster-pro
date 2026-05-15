@@ -11,11 +11,13 @@ interface Tab {
 }
 
 const MASTER_TABS: Tab[] = [
-  { path: '/master',          label: 'Главная',      emoji: '\uD83C\uDFE0' },
-  { path: '/master/schedule', label: 'Расписание',   emoji: '\uD83D\uDCC5' },
-  { path: '/master/clients',  label: 'Клиенты',      emoji: '\uD83D\uDC65' },
-  { path: '/master/ai',       label: 'AI',            emoji: '\u2728' },
-  { path: '/master/settings', label: 'Настройки',    emoji: '\u2699\uFE0F' },
+  { path: '/master',          label: 'Главная',       emoji: '\uD83C\uDFE0' },
+  { path: '/master/schedule', label: 'Расписание',    emoji: '\uD83D\uDCC5' },
+  { path: '/master/services', label: 'Услуги',        emoji: '\u2702\uFE0F' },
+  { path: '/master/clients',  label: 'Клиенты',       emoji: '\uD83D\uDC65' },
+  { path: '/master/tools',    label: 'Инструменты',   emoji: '\uD83C\uDFAB' },
+  { path: '/master/ai',       label: 'AI',             emoji: '\u2728' },
+  { path: '/master/settings', label: 'Настройки',     emoji: '\u2699\uFE0F' },
 ];
 
 const PREFETCH_MAP: Record<string, { key: string[]; fn: () => Promise<unknown> }[]> = {
@@ -27,6 +29,9 @@ const PREFETCH_MAP: Record<string, { key: string[]; fn: () => Promise<unknown> }
   ],
   '/master/clients': [
     { key: ['clients'], fn: () => clientsApi.list().then((r) => r.data) },
+  ],
+  '/master/services': [
+    { key: ['services'], fn: () => mastersApi.getProfile().then((r) => r.data) },
   ],
   '/master/settings': [
     { key: ['master-profile'], fn: () => mastersApi.getProfile().then((r) => r.data) },
@@ -67,12 +72,12 @@ export default function TabBar() {
               onClick={() => navigate(tab.path)}
               onTouchStart={() => handlePrefetch(tab.path)}
               onMouseEnter={() => handlePrefetch(tab.path)}
-              className="flex flex-col items-center justify-center flex-1 h-full"
+              className="flex flex-col items-center justify-center flex-1 h-full min-w-0 px-0.5"
             >
-              <span className="text-[24px] leading-none mb-0.5">{tab.emoji}</span>
+              <span className="text-[20px] leading-none mb-0.5">{tab.emoji}</span>
               <span
                 className={clsx(
-                  'text-[10px] font-medium',
+                  'text-[9px] font-medium leading-tight truncate max-w-full',
                   active
                     ? 'text-tg-button'
                     : 'text-tg-hint'
