@@ -54,7 +54,7 @@ export default function Dashboard() {
         <StatCard
           label="Рейтинг"
           value={masterData?.rating_avg?.toFixed(1) || '—'}
-          emoji={'\⭐'}
+          emoji={'⭐'}
         />
         <StatCard
           label="Выручка"
@@ -82,7 +82,7 @@ export default function Dashboard() {
                   {appt.time}
                 </div>
                 <div className="text-micro text-tg-hint flex items-center gap-0.5 mt-0.5">
-                  {'\⏰'} {appt.duration_min}м
+                  {'⏰'} {appt.duration_min}м
                 </div>
               </div>
 

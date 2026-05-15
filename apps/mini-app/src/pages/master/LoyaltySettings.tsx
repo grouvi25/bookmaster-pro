@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { loyaltyApi } from '@/api/endpoints';
 import Loading from '@/components/common/Loading';
 import Card from '@/shared/ui/Card';
-import { ChevronLeft, Star, Users, Gift, Clock } from 'lucide-react';
+import PageHeader from '@/shared/ui/PageHeader';
+import { ArrowLeft, Star, Users, Gift, Clock } from 'lucide-react';
 
 interface TierInfo {
   threshold: number;
@@ -42,15 +43,17 @@ export default function LoyaltySettings() {
   if (!settings) return null;
 
   return (
-    <div className="p-4 pb-20 animate-fade-in">
-      <button
-        onClick={() => navigate(-1)}
-        className="flex items-center gap-0.5 text-tg-link text-sm mb-3"
-      >
-        <ChevronLeft className="w-4 h-4" /> Назад
-      </button>
+    <div className="min-h-screen bg-tg-bg text-tg-text pb-24 animate-fade-in">
+      <PageHeader
+        title="Настройки лояльности"
+        left={
+          <button onClick={() => navigate('/master/settings')} className="p-2">
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+        }
+      />
 
-      <h1 className="text-xl font-bold mb-4">Настройки лояльности</h1>
+      <div className="px-4">
 
       <Card className="mb-4">
         <h2 className="font-medium text-sm mb-3 flex items-center gap-1.5">
@@ -112,6 +115,7 @@ export default function LoyaltySettings() {
         <Gift className="w-3 h-3 inline mr-1" />
         Настройки лояльности применяются ко всем клиентам
       </p>
+      </div>
     </div>
   );
 }

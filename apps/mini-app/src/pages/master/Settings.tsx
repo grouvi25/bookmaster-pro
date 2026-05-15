@@ -7,11 +7,20 @@ import { ListSkeleton, StatGridSkeleton } from '@/shared/ui/Skeleton';
 import Button from '@/shared/ui/Button';
 import Card from '@/shared/ui/Card';
 import StatCard from '@/shared/ui/StatCard';
-import SectionBack from '@/shared/ui/SectionBack';
+import PageHeader from '@/shared/ui/PageHeader';
 import MenuItem from '@/shared/ui/MenuItem';
 import { toast } from '@/shared/ui/Toast';
 import type { Service, SupportTicket, MasterProfile } from '@/shared/types/api';
 import { useFeatureFlag } from '@/hooks/useFeatureFlag';
+import { ArrowLeft } from 'lucide-react';
+
+const TAB_TITLES: Record<SettingsTab, string> = {
+  main: 'Настройки',
+  analytics: 'Аналитика',
+  services: 'Мои услуги',
+  profile: 'Профиль',
+  support: 'Поддержка',
+};
 
 type SettingsTab = 'main' | 'analytics' | 'services' | 'profile' | 'support';
 
@@ -19,20 +28,31 @@ export default function Settings() {
   const [tab, setTab] = useState<SettingsTab>('main');
 
   return (
-    <div className="px-screen-x py-section-y pb-24 screen-enter">
-      <h1 className="text-h1 mb-section-y">Настройки</h1>
+    <div className="min-h-screen bg-tg-bg text-tg-text pb-24 screen-enter">
+      <PageHeader
+        title={TAB_TITLES[tab]}
+        left={
+          tab !== 'main' ? (
+            <button onClick={() => setTab('main')} className="p-2">
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+          ) : undefined
+        }
+      />
 
+      <div className="px-screen-x">
       {tab === 'main' ? (
         <SettingsMain onNavigate={setTab} />
       ) : tab === 'analytics' ? (
-        <AnalyticsSection onBack={() => setTab('main')} />
+        <AnalyticsSection />
       ) : tab === 'services' ? (
-        <ServicesSection onBack={() => setTab('main')} />
+        <ServicesSection />
       ) : tab === 'profile' ? (
-        <ProfileSection onBack={() => setTab('main')} />
+        <ProfileSection />
       ) : (
-        <SupportSection onBack={() => setTab('main')} />
+        <SupportSection />
       )}
+      </div>
     </div>
   );
 }
@@ -56,7 +76,7 @@ function SettingsMain({ onNavigate }: { onNavigate: (tab: SettingsTab) => void }
         />
       )}
       <MenuItem
-        emoji={'\⏰'}
+        emoji={'⏰'}
         label="Рабочее расписание"
         description="Часы работы по дням недели"
         onClick={() => navigate('/master/work-schedule')}
@@ -127,7 +147,7 @@ function SettingsMain({ onNavigate }: { onNavigate: (tab: SettingsTab) => void }
   );
 }
 
-function AnalyticsSection({ onBack }: { onBack: () => void }) {
+function AnalyticsSection() {
   const { data, isLoading } = useQuery({
     queryKey: ['analytics-revenue'],
     queryFn: () => analyticsApi.revenue({ period: '30d' }).then((r) => r.data),
@@ -142,7 +162,6 @@ function AnalyticsSection({ onBack }: { onBack: () => void }) {
 
   return (
     <div className="screen-enter">
-      <SectionBack onBack={onBack} />
       <h2 className="text-h2 mb-3">Аналитика за 30 дней</h2>
 
       <div className="grid grid-cols-2 gap-card-gap mb-4">
@@ -166,7 +185,7 @@ function AnalyticsSection({ onBack }: { onBack: () => void }) {
   );
 }
 
-function ServicesSection({ onBack }: { onBack: () => void }) {
+function ServicesSection() {
   const queryClient = useQueryClient();
   const { data, isLoading } = useQuery({
     queryKey: ['my-services'],
@@ -214,11 +233,10 @@ function ServicesSection({ onBack }: { onBack: () => void }) {
 
   return (
     <div className="screen-enter">
-      <SectionBack onBack={onBack} />
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-h2">Мои услуги</h2>
         <button onClick={() => setShowForm(!showForm)} className="flex items-center gap-1 text-tg-link text-body">
-          {'\➕'} Добавить
+          {'➕'} Добавить
         </button>
       </div>
 
@@ -250,7 +268,7 @@ function ServicesSection({ onBack }: { onBack: () => void }) {
                 {svc.price ? `${Number(svc.price).toLocaleString('ru')} ₽` : 'Дог.'}
               </span>
               <button onClick={() => handleDelete(svc.id)} className="text-status-danger interactive">
-                {'🗑\️'}
+                {'🗑️'}
               </button>
             </div>
           </Card>
@@ -260,7 +278,7 @@ function ServicesSection({ onBack }: { onBack: () => void }) {
   );
 }
 
-function ProfileSection({ onBack }: { onBack: () => void }) {
+function ProfileSection() {
   const queryClient = useQueryClient();
   const { data: profile, isLoading } = useQuery<MasterProfile>({
     queryKey: ['master-profile'],
@@ -307,7 +325,6 @@ function ProfileSection({ onBack }: { onBack: () => void }) {
 
   return (
     <div className="screen-enter">
-      <SectionBack onBack={onBack} />
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-h2">Профиль</h2>
         {!editing && (
@@ -386,7 +403,7 @@ function ProfileSection({ onBack }: { onBack: () => void }) {
             <div className="flex justify-between">
               <span className="text-tg-hint">Рейтинг</span>
               <span className="flex items-center gap-1">
-                {'\⭐'} {profile?.rating_avg?.toFixed(1) || '—'} ({profile?.rating_count || 0})
+                {'⭐'} {profile?.rating_avg?.toFixed(1) || '—'} ({profile?.rating_count || 0})
               </span>
             </div>
             {(profile?.noshow_deposit_amount || profile?.noshow_prepay_percent) ? (
@@ -408,7 +425,7 @@ function ProfileSection({ onBack }: { onBack: () => void }) {
   );
 }
 
-function SupportSection({ onBack }: { onBack: () => void }) {
+function SupportSection() {
   const [message, setMessage] = useState('');
   const [subject, setSubject] = useState('');
   const [category, setCategory] = useState('technical');
@@ -450,7 +467,6 @@ function SupportSection({ onBack }: { onBack: () => void }) {
 
   return (
     <div className="screen-enter">
-      <SectionBack onBack={onBack} />
       <h2 className="text-h2 mb-3">Поддержка</h2>
 
       <div className="mb-4 space-y-2">

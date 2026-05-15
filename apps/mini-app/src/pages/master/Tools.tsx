@@ -16,7 +16,7 @@ type ToolsTab = 'promo' | 'loyalty';
 
 const TABS: { key: ToolsTab; label: string; emoji?: string }[] = [
   { key: 'promo', label: 'Промокоды', emoji: '🎫' },
-  { key: 'loyalty', label: 'Лояльность', emoji: '\⭐' },
+  { key: 'loyalty', label: 'Лояльность', emoji: '⭐' },
 ];
 
 export default function Tools() {
@@ -75,7 +75,7 @@ function PromoSection() {
           onClick={() => setShowForm(!showForm)}
           className="flex items-center gap-1 text-tg-link text-body interactive"
         >
-          {showForm ? 'Отмена' : '\➕ Создать'}
+          {showForm ? 'Отмена' : '➕ Создать'}
         </button>
       </div>
 
@@ -115,7 +115,7 @@ function PromoSection() {
       )}
 
       {promos.length === 0 ? (
-        <EmptyState emoji={'🏷\️'} title="Нет активных промокодов" />
+        <EmptyState emoji={'🏷️'} title="Нет активных промокодов" />
       ) : (
         <div className="flex flex-col gap-card-gap">
           {promos.map((p) => (
@@ -155,14 +155,14 @@ function LoyaltySection() {
   return (
     <div>
       <Card className="mb-4">
-        <div className="text-body text-tg-text mb-1">{'\⭐'} Программа лояльности</div>
+        <div className="text-body text-tg-text mb-1">{'⭐'} Программа лояльности</div>
         <p className="text-aux text-tg-hint">
           Клиенты получают баллы за каждый визит и могут оплачивать ими услуги.
         </p>
       </Card>
 
       {history.length === 0 ? (
-        <EmptyState emoji={'\⭐'} title="История начислений пуста" />
+        <EmptyState emoji={'⭐'} title="История начислений пуста" />
       ) : (
         <div className="flex flex-col gap-card-gap">
           {history.map((h) => (
