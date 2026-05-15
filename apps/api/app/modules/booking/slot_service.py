@@ -131,7 +131,6 @@ class SlotService:
         """Генерация слотов из одного шаблона расписания."""
         slots = []
         step = 30  # шаг сетки в минутах
-        duration + buffer
 
         current_time = datetime.combine(target_date, template.start_time)
         end_time = datetime.combine(target_date, template.end_time)

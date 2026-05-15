@@ -242,7 +242,7 @@ async def birthday_promo():
                     acc.total_earned += master.loyalty_birthday_bonus
 
                 text = (
-                    f"🎂 {master.name or 'Ваш мастер'} поздравляет вас "
+                    f"🎂 {master.display_name or 'Ваш мастер'} поздравляет вас "
                     f"с наступающим днём рождения!\n"
                     f"Вам начислено {master.loyalty_birthday_bonus} бонусных баллов 🎁"
                 )
@@ -284,7 +284,7 @@ async def reactivation():
             days_inactive = (datetime.now(timezone.utc).date() - link.last_visit_date).days
             from app.modules.masters.models import Master
             master = await db.get(Master, link.master_id)
-            master_name = master.name if master else "Ваш мастер"
+            master_name = master.display_name if master else "Ваш мастер"
             text = (
                 f"💫 {master_name} давно вас не видел(а)!\n"
                 f"Прошло уже {days_inactive} дней. "
@@ -581,7 +581,7 @@ async def waitlist_notify():
             entry.slot_reserved_until = now + confirm_limit
 
             text = (
-                f"🎉 Освободилось место у мастера {master.name or 'вашего мастера'}!\n"
+                f"🎉 Освободилось место у мастера {master.display_name or 'вашего мастера'}!\n"
                 f"У вас есть {settings.WAITLIST_CONFIRM_MINUTES or 30} мин, чтобы записаться."
             )
             await notify.send_by_client_id(
