@@ -189,7 +189,7 @@ function VoiceDiaryContent() {
           <h3 className="font-semibold text-sm mb-2">История записей</h3>
           {entries.length === 0 ? (
             <EmptyState
-              icon={<FileText className="w-10 h-10" />}
+              emoji="\uD83D\uDCDD"
               title="Нет записей"
               description="Надиктуйте заметку после визита — AI структурирует её"
             />

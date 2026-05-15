@@ -1,27 +1,23 @@
 import type { ReactNode } from 'react';
-import type { LucideIcon } from 'lucide-react';
 
 interface Props {
-  Icon?: LucideIcon;
-  icon?: ReactNode;
+  emoji?: string;
   title: string;
   description?: string;
   action?: ReactNode;
 }
 
-export default function EmptyState({ Icon, icon, title, description, action }: Props) {
+export default function EmptyState({ emoji, title, description, action }: Props) {
   return (
-    <div className="text-center py-8">
-      {icon ? (
-        <div className="text-tg-hint mx-auto mb-3 flex justify-center">{icon}</div>
-      ) : Icon ? (
-        <Icon className="w-10 h-10 text-tg-hint mx-auto mb-3" strokeWidth={1.5} />
-      ) : null}
-      <p className="text-sm text-tg-hint">{title}</p>
-      {description && (
-        <p className="text-xs text-tg-hint/60 mt-1">{description}</p>
+    <div className="text-center py-12 px-screen-x">
+      {emoji && (
+        <div className="text-[48px] mb-3">{emoji}</div>
       )}
-      {action && <div className="mt-3">{action}</div>}
+      <p className="text-h2 font-bold">{title}</p>
+      {description && (
+        <p className="text-body text-tg-hint mt-1">{description}</p>
+      )}
+      {action && <div className="mt-4">{action}</div>}
     </div>
   );
 }

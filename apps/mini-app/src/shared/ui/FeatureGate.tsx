@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react';
 import { useFeatureFlag, type FeatureFlags } from '@/hooks/useFeatureFlag';
-import { Lock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const TARIFF_LABELS: Record<string, string> = {
@@ -42,18 +41,16 @@ function FeatureLockedScreen({ flag }: { flag: string }) {
   const tariff = TARIFF_LABELS[flag] || 'Профи';
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] bg-tg-bg text-tg-text p-6">
-      <div className="w-16 h-16 bg-amber-500/10 rounded-2xl flex items-center justify-center mb-4">
-        <Lock className="w-8 h-8 text-amber-500" strokeWidth={1.5} />
-      </div>
-      <h2 className="text-xl font-bold mb-2">Доступно на тарифе «{tariff}»</h2>
-      <p className="text-tg-hint text-center text-sm mb-6">
+    <div className="flex flex-col items-center justify-center min-h-[60vh] bg-tg-bg text-tg-text px-screen-x">
+      <div className="text-[48px] mb-4">{'\uD83D\uDD12'}</div>
+      <h2 className="text-h1 mb-2 text-center">Доступно на тарифе «{tariff}»</h2>
+      <p className="text-tg-hint text-center text-body mb-6">
         Эта функция недоступна на вашем текущем тарифе.
         Перейдите на тариф «{tariff}» или выше.
       </p>
       <button
         onClick={() => navigate('/billing')}
-        className="px-6 py-2.5 bg-brand-500 text-white rounded-xl text-sm font-semibold"
+        className="h-[52px] px-6 bg-tg-button text-tg-button-text rounded-btn text-[16px] font-semibold interactive"
       >
         Посмотреть тарифы
       </button>

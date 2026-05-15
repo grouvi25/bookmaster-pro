@@ -1,9 +1,7 @@
-import type { LucideIcon } from 'lucide-react';
-
 interface Tab<T extends string> {
   key: T;
   label: string;
-  Icon?: LucideIcon;
+  emoji?: string;
 }
 
 interface Props<T extends string> {
@@ -17,7 +15,7 @@ export default function ChipTabs<T extends string>({
 }: Props<T>) {
   return (
     <div className="flex gap-1.5 overflow-x-auto pb-1">
-      {tabs.map(({ key, label, Icon }) => (
+      {tabs.map(({ key, label, emoji }) => (
         <button
           key={key}
           onClick={() => onChange(key)}
@@ -25,7 +23,7 @@ export default function ChipTabs<T extends string>({
             active === key ? 'chip-active' : 'chip-inactive'
           }`}
         >
-          {Icon && <Icon className="w-3.5 h-3.5" />}
+          {emoji && <span className="text-[14px]">{emoji}</span>}
           {label}
         </button>
       ))}

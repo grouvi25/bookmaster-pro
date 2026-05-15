@@ -59,7 +59,7 @@ export default function Subscriptions() {
 
       {subscriptions.length === 0 ? (
         <EmptyState
-          Icon={CreditCard}
+          emoji="\uD83D\uDCB3"
           title="Нет абонементов"
           description="Абонементы появятся после покупки у мастера"
         />

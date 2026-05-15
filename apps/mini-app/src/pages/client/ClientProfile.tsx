@@ -3,7 +3,7 @@ import { reviewsApi } from '@/api/endpoints';
 import { ListSkeleton } from '@/shared/ui/Skeleton';
 import Card from '@/shared/ui/Card';
 import EmptyState from '@/shared/ui/EmptyState';
-import { Star, MessageSquare } from 'lucide-react';
+
 
 interface Review {
   id: number;
@@ -23,15 +23,15 @@ export default function ClientProfile() {
   });
 
   return (
-    <div className="p-5 pb-24 animate-fade-in">
-      <h1 className="text-2xl font-bold tracking-tight mb-5">Мой профиль</h1>
+    <div className="px-screen-x py-section-y pb-24 screen-enter">
+      <h1 className="text-h1 mb-section-y">Мой профиль</h1>
 
-      <h2 className="text-lg font-semibold mb-3">Мои отзывы</h2>
+      <h2 className="text-h2 mb-3">Мои отзывы</h2>
 
       {isLoading ? (
         <ListSkeleton count={3} />
       ) : !data || data.length === 0 ? (
-        <EmptyState Icon={MessageSquare} title="Нет отзывов" description="После визита вы сможете оставить отзыв мастеру" />
+        <EmptyState emoji="\uD83D\uDCAC" title="Нет отзывов" description="После визита вы сможете оставить отзыв мастеру" />
       ) : (
         <div className="flex flex-col gap-3">
           {data.map((review) => (
@@ -39,10 +39,9 @@ export default function ClientProfile() {
               <div className="flex items-center gap-2 mb-2">
                 <div className="flex items-center gap-0.5">
                   {Array.from({ length: 5 }).map((_, i) => (
-                    <Star
-                      key={i}
-                      className={`w-4 h-4 ${i < review.rating ? 'text-yellow-500 fill-yellow-500' : 'text-gray-300'}`}
-                    />
+                    <span key={i} className="text-[14px]">
+                      {i < review.rating ? '\u2B50' : '\u2606'}
+                    </span>
                   ))}
                 </div>
               </div>
