@@ -3,7 +3,7 @@ Auth service — identify user, register, create JWT.
 """
 
 import re
-from datetime import time
+from datetime import date, time, timedelta
 from typing import Optional
 
 from sqlalchemy import select
@@ -13,7 +13,7 @@ from app.core.auth import create_access_token, is_superadmin
 from app.modules.auth.models import Identity
 from app.modules.masters.models import Master
 from app.modules.clients.models import Client
-from app.modules.core.models import FeatureFlags
+from app.modules.core.models import AccessGrant, FeatureFlags
 from app.modules.booking.models import ScheduleTemplate
 
 
@@ -147,9 +147,41 @@ class AuthService:
             self.db.add(master)
             await self.db.flush()
 
-            # Создаём feature flags по умолчанию (тариф Start)
-            flags = FeatureFlags(master_id=master.id)
+            # Создаём feature flags с полным Pro-доступом (пробный период)
+            flags = FeatureFlags(
+                master_id=master.id,
+                crm_basic=True,
+                crm_advanced=True,
+                promo_enabled=True,
+                loyalty_enabled=True,
+                client_subscriptions=True,
+                waitlist_enabled=True,
+                analytics_enabled=True,
+                ai_advisor=True,
+                ai_client_bot=True,
+                ai_voice=True,
+                portfolio_enabled=True,
+                marketplace_enabled=True,
+                widget_enabled=True,
+                consultations_enabled=True,
+                reviews_enabled=True,
+                broadcast_enabled=True,
+                max_bookings_per_month=999,
+                max_services=50,
+                ai_tokens_monthly=50000,
+            )
             self.db.add(flags)
+
+            # Пробный период 14 дней — план Pro
+            trial_grant = AccessGrant(
+                master_id=master.id,
+                grant_type="trial",
+                plan="pro",
+                valid_until=date.today() + timedelta(days=14),
+                granted_by="system",
+                note="Пробный период 14 дней при регистрации",
+            )
+            self.db.add(trial_grant)
 
             # Расписание по умолчанию Пн-Сб 9:00-18:00
             for dow in range(6):

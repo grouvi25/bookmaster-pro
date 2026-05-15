@@ -19,11 +19,12 @@ import {
 } from 'lucide-react';
 import type { MasterProfile, AuditLogEntry, SupportTicket } from '@/shared/types/api';
 
-type Tab = 'dashboard' | 'masters' | 'health' | 'audit' | 'finance' | 'tickets' | 'settings' | 'growth';
+type Tab = 'dashboard' | 'masters' | 'promo' | 'health' | 'audit' | 'finance' | 'tickets' | 'settings' | 'growth';
 
 const TABS: { key: Tab; label: string; Icon: typeof BarChart3 }[] = [
   { key: 'dashboard', label: 'Обзор', Icon: BarChart3 },
   { key: 'masters', label: 'Мастера', Icon: Users },
+  { key: 'promo', label: 'Промо', Icon: Settings },
   { key: 'finance', label: 'Финансы', Icon: DollarSign },
   { key: 'tickets', label: 'Тикеты', Icon: MessageSquare },
   { key: 'growth', label: 'Рост', Icon: TrendingUp },
@@ -84,6 +85,7 @@ export default function SuperadminPanel() {
 
       {tab === 'dashboard' && <DashboardTab />}
       {tab === 'masters' && <MastersTab />}
+      {tab === 'promo' && <PromoCodesTab />}
       {tab === 'health' && <HealthTab />}
       {tab === 'audit' && <AuditTab />}
       {tab === 'finance' && <FinanceTab />}
@@ -157,10 +159,25 @@ function DashboardTab() {
 
 function MastersTab() {
   const [search, setSearch] = useState('');
+  const [grantMasterId, setGrantMasterId] = useState<number | null>(null);
+  const [grantPlan, setGrantPlan] = useState('pro');
+  const [grantDays, setGrantDays] = useState('30');
+  const [grantNote, setGrantNote] = useState('');
 
   const { data, isLoading } = useQuery({
     queryKey: ['superadmin-masters', search],
     queryFn: () => superadminApi.masters({ q: search }).then((r) => r.data),
+  });
+
+  const grantMutation = useMutation({
+    mutationFn: ({ masterId, plan, days, note }: { masterId: number; plan: string; days: number; note: string }) =>
+      superadminApi.grantAccess(masterId, { plan, duration_days: days, note: note || undefined }),
+    onSuccess: () => {
+      toast.success('Доступ выдан');
+      setGrantMasterId(null);
+      setGrantNote('');
+    },
+    onError: () => toast.error('Ошибка выдачи доступа'),
   });
 
   if (isLoading) return <Loading />;
@@ -177,18 +194,70 @@ function MastersTab() {
         {masters.map((m) => (
           <div
             key={m.id}
-            className="bg-surface-elevated shadow-card rounded-2xl p-3.5 flex justify-between items-center"
+            className="bg-surface-elevated shadow-card rounded-2xl p-3.5"
           >
-            <div>
-              <div className="font-medium text-sm">{m.display_name}</div>
-              <div className="text-xs text-tg-hint">
-                {m.specialization} &middot; {m.current_plan}
+            <div className="flex justify-between items-center">
+              <div>
+                <div className="font-medium text-sm">{m.display_name}</div>
+                <div className="text-xs text-tg-hint">
+                  {m.specialization} &middot; {m.current_plan}
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <StatusBadge
+                  label={m.is_verified ? 'Активен' : 'Неактивен'}
+                  variant={m.is_verified ? 'success' : 'danger'}
+                />
+                <button
+                  onClick={() => setGrantMasterId(grantMasterId === m.id ? null : m.id)}
+                  className="text-xs bg-tg-button text-tg-button-text px-2.5 py-1.5 rounded-lg"
+                >
+                  Выдать доступ
+                </button>
               </div>
             </div>
-            <StatusBadge
-              label={m.is_verified ? 'Активен' : 'Неактивен'}
-              variant={m.is_verified ? 'success' : 'danger'}
-            />
+
+            {grantMasterId === m.id && (
+              <div className="mt-3 pt-3 border-t border-tg-secondary flex flex-col gap-2">
+                <div className="flex gap-2">
+                  <select
+                    value={grantPlan}
+                    onChange={(e) => setGrantPlan(e.target.value)}
+                    className="flex-1 bg-tg-secondary text-tg-text rounded-lg px-3 py-2 text-sm"
+                  >
+                    <option value="start">Start</option>
+                    <option value="pro">Pro</option>
+                    <option value="business">Business</option>
+                  </select>
+                  <input
+                    type="number"
+                    value={grantDays}
+                    onChange={(e) => setGrantDays(e.target.value)}
+                    placeholder="Дней"
+                    className="w-20 bg-tg-secondary text-tg-text rounded-lg px-3 py-2 text-sm"
+                  />
+                </div>
+                <input
+                  type="text"
+                  value={grantNote}
+                  onChange={(e) => setGrantNote(e.target.value)}
+                  placeholder="Комментарий (необязательно)"
+                  className="bg-tg-secondary text-tg-text rounded-lg px-3 py-2 text-sm"
+                />
+                <button
+                  onClick={() => grantMutation.mutate({
+                    masterId: m.id,
+                    plan: grantPlan,
+                    days: parseInt(grantDays) || 30,
+                    note: grantNote,
+                  })}
+                  disabled={grantMutation.isPending}
+                  className="bg-tg-button text-tg-button-text py-2 rounded-lg text-sm font-medium disabled:opacity-50"
+                >
+                  {grantMutation.isPending ? 'Выдача...' : 'Подтвердить выдачу'}
+                </button>
+              </div>
+            )}
           </div>
         ))}
       </div>
@@ -429,6 +498,162 @@ function SettingsTab() {
           ))}
         </div>
       </div>
+    </div>
+  );
+}
+
+interface PromoCode {
+  id: number;
+  code: string;
+  plan: string;
+  duration_days: number;
+  max_uses: number | null;
+  used_count: number;
+  valid_until: string | null;
+  is_active: boolean;
+  note: string | null;
+  created_at: string;
+}
+
+function PromoCodesTab() {
+  const [showCreate, setShowCreate] = useState(false);
+  const [code, setCode] = useState('');
+  const [plan, setPlan] = useState('pro');
+  const [days, setDays] = useState('30');
+  const [maxUses, setMaxUses] = useState('');
+  const [note, setNote] = useState('');
+
+  const { data, isLoading, refetch } = useQuery<PromoCode[]>({
+    queryKey: ['superadmin-promo-codes'],
+    queryFn: () => superadminApi.promoCodes().then((r) => r.data),
+  });
+
+  const createMutation = useMutation({
+    mutationFn: () =>
+      superadminApi.createPromoCode({
+        code,
+        plan,
+        duration_days: parseInt(days) || 30,
+        max_uses: maxUses ? parseInt(maxUses) : null,
+        note: note || null,
+      }),
+    onSuccess: () => {
+      toast.success('Промо-код создан');
+      setShowCreate(false);
+      setCode('');
+      setNote('');
+      setMaxUses('');
+      refetch();
+    },
+    onError: () => toast.error('Ошибка создания промо-кода'),
+  });
+
+  const deactivateMutation = useMutation({
+    mutationFn: (id: number) => superadminApi.deactivatePromoCode(id),
+    onSuccess: () => {
+      toast.success('Промо-код деактивирован');
+      refetch();
+    },
+  });
+
+  if (isLoading) return <Loading />;
+
+  const codes = data || [];
+
+  return (
+    <div>
+      <button
+        onClick={() => setShowCreate(!showCreate)}
+        className="w-full bg-tg-button text-tg-button-text py-3 rounded-2xl font-semibold mb-4 active:scale-[0.97] transition-all"
+      >
+        {showCreate ? 'Отмена' : '+ Создать промо-код'}
+      </button>
+
+      {showCreate && (
+        <div className="bg-surface-elevated shadow-card rounded-2xl p-4 mb-4 flex flex-col gap-3">
+          <input
+            type="text"
+            value={code}
+            onChange={(e) => setCode(e.target.value.toUpperCase())}
+            placeholder="Код (напр. PARTNER30)"
+            className="bg-tg-secondary text-tg-text rounded-lg px-3 py-2.5 text-sm"
+          />
+          <div className="flex gap-2">
+            <select
+              value={plan}
+              onChange={(e) => setPlan(e.target.value)}
+              className="flex-1 bg-tg-secondary text-tg-text rounded-lg px-3 py-2.5 text-sm"
+            >
+              <option value="start">Start</option>
+              <option value="pro">Pro</option>
+              <option value="business">Business</option>
+            </select>
+            <input
+              type="number"
+              value={days}
+              onChange={(e) => setDays(e.target.value)}
+              placeholder="Дней"
+              className="w-20 bg-tg-secondary text-tg-text rounded-lg px-3 py-2.5 text-sm"
+            />
+          </div>
+          <input
+            type="number"
+            value={maxUses}
+            onChange={(e) => setMaxUses(e.target.value)}
+            placeholder="Макс. использований (пусто = без лимита)"
+            className="bg-tg-secondary text-tg-text rounded-lg px-3 py-2.5 text-sm"
+          />
+          <input
+            type="text"
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            placeholder="Заметка (для кого/зачем)"
+            className="bg-tg-secondary text-tg-text rounded-lg px-3 py-2.5 text-sm"
+          />
+          <button
+            onClick={() => createMutation.mutate()}
+            disabled={!code || createMutation.isPending}
+            className="bg-tg-button text-tg-button-text py-2.5 rounded-lg text-sm font-medium disabled:opacity-50"
+          >
+            {createMutation.isPending ? 'Создание...' : 'Создать'}
+          </button>
+        </div>
+      )}
+
+      {codes.length === 0 ? (
+        <EmptyState emoji={'\uD83C\uDFAB'} title="Нет промо-кодов" description="Создайте первый промо-код" />
+      ) : (
+        <div className="flex flex-col gap-2">
+          {codes.map((c) => (
+            <div key={c.id} className="bg-surface-elevated shadow-card rounded-2xl p-3.5">
+              <div className="flex justify-between items-start">
+                <div>
+                  <div className="font-semibold text-sm font-mono">{c.code}</div>
+                  <div className="text-xs text-tg-hint mt-0.5">
+                    {c.plan} &middot; {c.duration_days} дней
+                    {c.max_uses ? ` &middot; ${c.used_count}/${c.max_uses}` : ` &middot; ${c.used_count} исп.`}
+                  </div>
+                  {c.note && <div className="text-xs text-tg-hint mt-0.5">{c.note}</div>}
+                </div>
+                <div className="flex items-center gap-2">
+                  <StatusBadge
+                    label={c.is_active ? 'Активен' : 'Выкл'}
+                    variant={c.is_active ? 'success' : 'neutral'}
+                  />
+                  {c.is_active && (
+                    <button
+                      onClick={() => deactivateMutation.mutate(c.id)}
+                      className="text-xs text-red-500 underline"
+                    >
+                      Выкл
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
