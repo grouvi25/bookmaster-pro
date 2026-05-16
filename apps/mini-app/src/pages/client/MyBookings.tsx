@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import { bookingApi } from '@/api/endpoints';
 import { toArray } from '@/shared/lib/normalize';
+import { useBookingStore } from '@/stores/booking';
 import BackButton from '@/components/common/BackButton';
 import { ListSkeleton } from '@/shared/ui/Skeleton';
 import Card from '@/shared/ui/Card';
@@ -44,6 +46,8 @@ const UPCOMING_STATUSES = ['confirmed', 'paid', 'pending'];
 
 export default function MyBookings({ hideBack }: { hideBack?: boolean } = {}) {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const bookingStore = useBookingStore();
   const [activeTab, setActiveTab] = useState<'upcoming' | 'past'>('upcoming');
 
   const { data, isLoading } = useQuery({
@@ -115,20 +119,49 @@ export default function MyBookings({ hideBack }: { hideBack?: boolean } = {}) {
                     variant={STATUS_VARIANT[b.status] || 'neutral'}
                   />
                 </div>
-                <div className="flex items-center gap-2 text-aux text-tg-hint">
-                  {'📅'} {b.date ? format(parseISO(b.date), 'd MMM, EEE', { locale: ru }) : ''}
-                  <span className="ml-1">{'⏰'}</span>
-                  {b.time || (b.time_start ? b.time_start.slice(11, 16) : '')}
-                  {b.duration_min ? ` · ${b.duration_min} мин` : ''}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-aux text-tg-hint">
+                    {'📅'} {b.date ? format(parseISO(b.date), 'd MMM, EEE', { locale: ru }) : ''}
+                    <span className="ml-1">{'⏰'}</span>
+                    {b.time || (b.time_start ? b.time_start.slice(11, 16) : '')}
+                    {b.duration_min ? ` · ${b.duration_min} мин` : ''}
+                  </div>
+                  {b.price_final != null && (
+                    <span className="text-sm font-bold text-tg-text">
+                      {Number(b.price_final).toLocaleString('ru')} ₽
+                    </span>
+                  )}
                 </div>
-                {canCancel && (
-                  <button
-                    onClick={() => handleCancel(b.id)}
-                    className="flex items-center gap-1 mt-2 text-aux text-status-danger interactive"
-                  >
-                    {'\❌'} Отменить
-                  </button>
-                )}
+
+                <div className="flex items-center gap-3 mt-2.5 pt-2.5 border-t border-tg-secondary/50">
+                  {canCancel && (
+                    <button
+                      onClick={() => handleCancel(b.id)}
+                      className="flex items-center gap-1 text-aux text-status-danger interactive"
+                    >
+                      {'❌'} Отменить
+                    </button>
+                  )}
+                  {b.status === 'completed' && (
+                    <button
+                      onClick={() => navigate(`/review/${b.id}`)}
+                      className="flex items-center gap-1 text-aux text-tg-link interactive"
+                    >
+                      {'⭐'} Оставить отзыв
+                    </button>
+                  )}
+                  {!canCancel && b.master_id && (
+                    <button
+                      onClick={() => {
+                        bookingStore.setMaster('', b.master_id, b.master_name || '');
+                        navigate('/book/service');
+                      }}
+                      className="flex items-center gap-1 text-aux text-tg-link interactive"
+                    >
+                      {'🔄'} Записаться снова
+                    </button>
+                  )}
+                </div>
               </Card>
             );
           })}

@@ -182,6 +182,9 @@ export const mastersApi = {
   updateSchedule: (data: ScheduleTemplatePayload[]) =>
     api.put('/masters/me/schedule', data),
   getStats: () => api.get('/masters/me/stats'),
+  getNotificationSettings: () => api.get('/masters/me/notification-settings'),
+  updateNotificationSettings: (data: Record<string, boolean>) =>
+    api.patch('/masters/me/notification-settings', data),
 };
 
 // ── Services ──
@@ -208,14 +211,22 @@ export const bookingApi = {
       params: { master_id: masterId, service_id: serviceId, tz: Intl.DateTimeFormat().resolvedOptions().timeZone },
     }),
   create: (data: BookingPayload) => api.post('/booking/', data),
-  cancel: (id: number) =>
-    api.patch(`/booking/${id}`, { status: 'cancelled_by_client' }),
+  cancel: (id: number, reason?: string) =>
+    api.patch(`/booking/${id}`, { status: 'cancelled_by_client', cancel_reason: reason }),
   myBookings: (params?: Record<string, string>) =>
     api.get('/booking/client', { params }),
   masterBookings: (params?: Record<string, string>) =>
     api.get('/booking/master', { params }),
-  complete: (id: number) =>
-    api.patch(`/booking/${id}`, { status: 'completed' }),
+  complete: (id: number, priceFinal?: number) =>
+    api.patch(`/booking/${id}`, { status: 'completed', price_final: priceFinal }),
+  confirm: (id: number) =>
+    api.patch(`/booking/${id}`, { status: 'confirmed' }),
+  noShow: (id: number) =>
+    api.patch(`/booking/${id}`, { status: 'no_show' }),
+  cancelByMaster: (id: number, reason?: string) =>
+    api.patch(`/booking/${id}`, { status: 'cancelled_by_master', cancel_reason: reason }),
+  updateStatus: (id: number, data: { status: string; cancel_reason?: string; master_comment?: string; price_final?: number }) =>
+    api.patch(`/booking/${id}`, data),
 };
 
 // ── Payments ──

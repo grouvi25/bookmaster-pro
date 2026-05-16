@@ -1,16 +1,23 @@
-import { useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import { bookingApi, mastersApi } from '@/api/endpoints';
 import { toArray } from '@/shared/lib/normalize';
 import { PageSkeleton } from '@/shared/ui/Skeleton';
 import Card from '@/shared/ui/Card';
 import StatCard from '@/shared/ui/StatCard';
 import EmptyState from '@/shared/ui/EmptyState';
+import StatusBadge from '@/shared/ui/StatusBadge';
+import { toast } from '@/shared/ui/Toast';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import type { Booking, MasterProfile } from '@/shared/types/api';
 
 export default function Dashboard() {
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const today = format(new Date(), 'yyyy-MM-dd');
+  const [loadingId, setLoadingId] = useState<number | null>(null);
 
   const { data: masterData } = useQuery<MasterProfile>({
     queryKey: ['master-profile'],
@@ -30,9 +37,27 @@ export default function Dashboard() {
   if (isLoading) return <PageSkeleton />;
 
   const bookings = toArray<Booking>(data);
-  const confirmed = bookings.filter(
-    (b) => ['confirmed', 'paid'].includes(b.status)
+  const active = bookings.filter(
+    (b) => ['confirmed', 'paid', 'pending'].includes(b.status)
   );
+
+  const handleQuickAction = async (id: number, action: 'confirm' | 'complete') => {
+    setLoadingId(id);
+    try {
+      if (action === 'confirm') {
+        await bookingApi.confirm(id);
+        toast.success('Запись подтверждена');
+      } else {
+        await bookingApi.complete(id);
+        toast.success('Визит завершён');
+      }
+      await queryClient.invalidateQueries({ queryKey: ['master-bookings-today', today] });
+    } catch {
+      toast.error('Ошибка обновления');
+    } finally {
+      setLoadingId(null);
+    }
+  };
 
   return (
     <div className="px-screen-x py-section-y pb-24 screen-enter">
@@ -48,7 +73,7 @@ export default function Dashboard() {
       <div className="grid grid-cols-3 gap-card-gap mb-section-y">
         <StatCard
           label="Сегодня"
-          value={confirmed.length}
+          value={active.length}
           emoji={'📅'}
         />
         <StatCard
@@ -63,9 +88,17 @@ export default function Dashboard() {
         />
       </div>
 
-      <div className="section-title">Расписание на сегодня</div>
+      <div className="flex items-center justify-between mb-3">
+        <div className="section-title mb-0">Расписание на сегодня</div>
+        <button
+          onClick={() => navigate('/master/schedule')}
+          className="text-tg-link text-sm font-medium"
+        >
+          Всё расписание
+        </button>
+      </div>
 
-      {confirmed.length === 0 ? (
+      {active.length === 0 ? (
         <Card>
           <EmptyState
             emoji={'📅'}
@@ -75,33 +108,69 @@ export default function Dashboard() {
         </Card>
       ) : (
         <div className="flex flex-col gap-card-gap">
-          {confirmed.map((appt) => (
-            <Card key={appt.id} className="flex items-center gap-3.5">
-              <div className="flex flex-col items-center min-w-[48px]">
-                <div className="text-body font-bold text-tg-link">
-                  {appt.time}
+          {active.map((appt) => (
+            <Card key={appt.id}>
+              <div className="flex items-center gap-3.5">
+                <div className="flex flex-col items-center min-w-[48px]">
+                  <div className="text-body font-bold text-tg-link">
+                    {appt.time}
+                  </div>
+                  <div className="text-micro text-tg-hint flex items-center gap-0.5 mt-0.5">
+                    {'⏰'} {appt.duration_min}м
+                  </div>
                 </div>
-                <div className="text-micro text-tg-hint flex items-center gap-0.5 mt-0.5">
-                  {'⏰'} {appt.duration_min}м
+
+                <div className="w-[3px] h-9 rounded-full bg-tg-link/20" />
+
+                <div className="flex-1 min-w-0">
+                  <div className="font-semibold text-body truncate">
+                    {appt.service_name}
+                  </div>
+                  <div className="text-aux text-tg-hint flex items-center gap-1.5 mt-0.5">
+                    {'👤'} {appt.client_name}
+                  </div>
+                </div>
+
+                <div className="flex flex-col items-end gap-1">
+                  <StatusBadge
+                    label={appt.status === 'pending' ? 'Ожидает' : 'Подтверждена'}
+                    variant={appt.status === 'pending' ? 'warning' : 'success'}
+                  />
+                  {appt.price_final ? (
+                    <span className="text-micro font-bold text-tg-text">
+                      {Number(appt.price_final).toLocaleString('ru')} ₽
+                    </span>
+                  ) : null}
                 </div>
               </div>
 
-              <div className="w-[3px] h-9 rounded-full bg-tg-link/20" />
-
-              <div className="flex-1 min-w-0">
-                <div className="font-semibold text-body truncate">
-                  {appt.service_name}
-                </div>
-                <div className="text-aux text-tg-hint flex items-center gap-1.5 mt-0.5">
-                  {'👤'} {appt.client_name}
-                </div>
+              {/* Quick action buttons */}
+              <div className="flex gap-2 mt-3 pt-3 border-t border-tg-secondary">
+                {appt.status === 'pending' && (
+                  <button
+                    onClick={() => handleQuickAction(appt.id, 'confirm')}
+                    disabled={loadingId === appt.id}
+                    className="flex-1 py-2 rounded-lg bg-brand-500 text-white text-sm font-semibold active:scale-[0.97] transition-transform disabled:opacity-40"
+                  >
+                    {loadingId === appt.id ? '…' : 'Подтвердить'}
+                  </button>
+                )}
+                {['confirmed', 'paid'].includes(appt.status) && (
+                  <button
+                    onClick={() => handleQuickAction(appt.id, 'complete')}
+                    disabled={loadingId === appt.id}
+                    className="flex-1 py-2 rounded-lg bg-accent-emerald text-white text-sm font-semibold active:scale-[0.97] transition-transform disabled:opacity-40"
+                  >
+                    {loadingId === appt.id ? '…' : 'Завершить'}
+                  </button>
+                )}
+                <button
+                  onClick={() => navigate('/master/schedule')}
+                  className="py-2 px-3 rounded-lg bg-tg-secondary text-tg-text text-sm font-medium active:scale-[0.97] transition-transform"
+                >
+                  Подробнее
+                </button>
               </div>
-
-              {appt.price ? (
-                <div className="text-body font-bold text-tg-text whitespace-nowrap">
-                  {Number(appt.price).toLocaleString('ru')} ₽
-                </div>
-              ) : null}
             </Card>
           ))}
         </div>

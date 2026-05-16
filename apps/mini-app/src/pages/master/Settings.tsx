@@ -19,10 +19,11 @@ const TAB_TITLES: Record<SettingsTab, string> = {
   analytics: 'Аналитика',
   services: 'Мои услуги',
   profile: 'Профиль',
+  notifications: 'Уведомления',
   support: 'Поддержка',
 };
 
-type SettingsTab = 'main' | 'analytics' | 'services' | 'profile' | 'support';
+type SettingsTab = 'main' | 'analytics' | 'services' | 'profile' | 'notifications' | 'support';
 
 export default function Settings() {
   const [tab, setTab] = useState<SettingsTab>('main');
@@ -49,6 +50,8 @@ export default function Settings() {
         <ServicesSection />
       ) : tab === 'profile' ? (
         <ProfileSection />
+      ) : tab === 'notifications' ? (
+        <NotificationsSection />
       ) : (
         <SupportSection />
       )}
@@ -92,6 +95,12 @@ function SettingsMain({ onNavigate }: { onNavigate: (tab: SettingsTab) => void }
         label="Профиль"
         description="Настройки профиля"
         onClick={() => onNavigate('profile')}
+      />
+      <MenuItem
+        emoji={'🔔'}
+        label="Уведомления"
+        description="Настройка оповещений"
+        onClick={() => onNavigate('notifications')}
       />
       <MenuItem
         emoji={'💬'}
@@ -421,6 +430,68 @@ function ProfileSection() {
           </div>
         )}
       </Card>
+    </div>
+  );
+}
+
+const NOTIFICATION_OPTIONS = [
+  { key: 'notify_new_booking', label: 'Новая запись', description: 'Когда клиент записывается' },
+  { key: 'notify_cancel', label: 'Отмена записи', description: 'Когда клиент отменяет запись' },
+  { key: 'notify_reminder', label: 'Напоминания', description: 'Напоминание о предстоящей записи' },
+  { key: 'notify_review', label: 'Новый отзыв', description: 'Когда клиент оставляет отзыв' },
+  { key: 'notify_no_show', label: 'Неявка клиента', description: 'Когда клиент не пришёл' },
+] as const;
+
+function NotificationsSection() {
+  const queryClient = useQueryClient();
+  const [saving, setSaving] = useState(false);
+
+  const { data, isLoading } = useQuery({
+    queryKey: ['notification-settings'],
+    queryFn: () => mastersApi.getNotificationSettings().then((r) => r.data),
+  });
+
+  if (isLoading) return <ListSkeleton count={5} />;
+
+  const settings = (data || {}) as Record<string, boolean>;
+
+  const handleToggle = async (key: string, value: boolean) => {
+    setSaving(true);
+    try {
+      await mastersApi.updateNotificationSettings({ [key]: value });
+      await queryClient.invalidateQueries({ queryKey: ['notification-settings'] });
+    } catch {
+      toast.error('Ошибка сохранения');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="screen-enter">
+      <h2 className="text-h2 mb-1">Уведомления</h2>
+      <p className="text-aux text-tg-hint mb-4">Настройте, какие уведомления вы хотите получать</p>
+
+      <div className="flex flex-col gap-card-gap">
+        {NOTIFICATION_OPTIONS.map((opt) => (
+          <Card key={opt.key} className="flex items-center justify-between">
+            <div>
+              <div className="font-medium text-body">{opt.label}</div>
+              <div className="text-aux text-tg-hint mt-0.5">{opt.description}</div>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={settings[opt.key] !== false}
+                onChange={(e) => handleToggle(opt.key, e.target.checked)}
+                disabled={saving}
+                className="sr-only peer"
+              />
+              <div className="w-11 h-6 bg-tg-secondary rounded-full peer peer-checked:bg-brand-500 peer-disabled:opacity-40 after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full" />
+            </label>
+          </Card>
+        ))}
+      </div>
     </div>
   );
 }
