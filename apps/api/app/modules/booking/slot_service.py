@@ -130,7 +130,7 @@ class SlotService:
     ) -> List[dict]:
         """Генерация слотов из одного шаблона расписания."""
         slots = []
-        step = 30  # шаг сетки в минутах
+        step = template.slot_step_min or 30
 
         current_time = datetime.combine(target_date, template.start_time)
         end_time = datetime.combine(target_date, template.end_time)

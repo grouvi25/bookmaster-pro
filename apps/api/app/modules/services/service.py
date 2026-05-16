@@ -4,7 +4,7 @@ Services CRUD.
 
 from typing import Optional, List
 
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.services.models import Service
@@ -31,6 +31,26 @@ class ServiceService:
         return result.scalar_one_or_none()
 
     async def create(self, master_id: int, data: dict) -> Service:
+        from app.modules.core.models import FeatureFlags
+
+        flags_result = await self.db.execute(
+            select(FeatureFlags).where(FeatureFlags.master_id == master_id)
+        )
+        flags = flags_result.scalar_one_or_none()
+        if flags and flags.max_services:
+            count_result = await self.db.execute(
+                select(func.count(Service.id)).where(
+                    Service.master_id == master_id,
+                    Service.is_active.is_(True),
+                )
+            )
+            current_count = count_result.scalar() or 0
+            if current_count >= flags.max_services:
+                raise ValueError(
+                    f"Лимит услуг по тарифу исчерпан "
+                    f"({current_count}/{flags.max_services})"
+                )
+
         service = Service(master_id=master_id, **data)
         self.db.add(service)
         await self.db.flush()

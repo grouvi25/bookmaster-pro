@@ -199,7 +199,6 @@ async def birthday_promo():
     """
     async with async_session_factory() as db:
         from app.modules.clients.models import Client, ClientMasterLink
-        from app.modules.loyalty.models import LoyaltyAccount
         from app.modules.masters.models import Master
 
         target_date = datetime.now(timezone.utc).date() + timedelta(days=3)
@@ -229,17 +228,15 @@ async def birthday_promo():
                 if not master or not master.loyalty_birthday_bonus:
                     continue
 
-                # Начислить birthday_bonus
-                acc_result = await db.execute(
-                    select(LoyaltyAccount).where(
-                        LoyaltyAccount.master_id == link.master_id,
-                        LoyaltyAccount.client_id == client.id,
-                    )
+                from app.modules.loyalty.service import LoyaltyService
+                loyalty = LoyaltyService(db)
+                await loyalty.earn_points(
+                    master_id=link.master_id,
+                    client_id=client.id,
+                    points=master.loyalty_birthday_bonus,
+                    earn_type="earn_birthday",
+                    note="Бонус ко дню рождения",
                 )
-                acc = acc_result.scalar_one_or_none()
-                if acc:
-                    acc.balance += master.loyalty_birthday_bonus
-                    acc.total_earned += master.loyalty_birthday_bonus
 
                 text = (
                     f"🎂 {master.display_name or 'Ваш мастер'} поздравляет вас "

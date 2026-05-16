@@ -256,7 +256,7 @@ class PaymentService:
             Configuration.account_id = settings.YOOKASSA_SHOP_ID
             Configuration.secret_key = settings.YOOKASSA_SECRET_KEY
 
-            yk_payment = YKPayment.create({
+            yk_params = {
                 "amount": {
                     "value": str(amount),
                     "currency": "RUB",
@@ -271,7 +271,25 @@ class PaymentService:
                     "payment_id": payment.id,
                     "appointment_id": payment.appointment_id,
                 },
-            })
+            }
+
+            # Splits: для тарифа A (комиссионный) отправляем transfers
+            result = await self.db.execute(
+                select(Master).where(Master.id == payment.master_id)
+            )
+            master = result.scalar_one_or_none()
+            if master and master.tariff_type == "A" and master.yookassa_account_id:
+                yk_params["transfers"] = [
+                    {
+                        "account_id": master.yookassa_account_id,
+                        "amount": {
+                            "value": str(payment.amount_master),
+                            "currency": "RUB",
+                        },
+                    }
+                ]
+
+            yk_payment = YKPayment.create(yk_params)
 
             payment.yookassa_payment_id = yk_payment.id
             return yk_payment.confirmation.confirmation_url

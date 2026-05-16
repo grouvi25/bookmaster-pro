@@ -91,12 +91,12 @@ async def search_nearby_masters(
         if dist <= radius_km:
             nearby.append({
                 "id": m.id,
-                "display_name": m.display_name or m.name,
+                "display_name": m.display_name,
                 "specialization": m.specialization,
                 "slug": m.slug,
                 "avatar_url": m.avatar_url,
-                "rating": m.rating,
-                "review_count": m.review_count,
+                "rating_avg": m.rating_avg,
+                "rating_count": m.rating_count,
                 "distance_km": round(dist, 1),
                 "latitude": m.latitude,
                 "longitude": m.longitude,

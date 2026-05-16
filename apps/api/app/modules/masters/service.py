@@ -5,7 +5,7 @@ Masters service — профиль, расписание.
 from datetime import time
 from typing import Optional, List
 
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.masters.models import Master
@@ -97,6 +97,25 @@ class MasterService:
 
     async def create_location(self, master_id: int, data: dict):
         from app.modules.masters.models import MasterLocation
+        from app.modules.core.models import FeatureFlags
+
+        flags_result = await self.db.execute(
+            select(FeatureFlags).where(FeatureFlags.master_id == master_id)
+        )
+        flags = flags_result.scalar_one_or_none()
+        if flags and flags.max_locations:
+            count_result = await self.db.execute(
+                select(func.count(MasterLocation.id)).where(
+                    MasterLocation.master_id == master_id,
+                    MasterLocation.is_active.is_(True),
+                )
+            )
+            current_count = count_result.scalar() or 0
+            if current_count >= flags.max_locations:
+                raise ValueError(
+                    f"Лимит локаций по тарифу исчерпан ({current_count}/{flags.max_locations})"
+                )
+
         loc = MasterLocation(
             master_id=master_id,
             name=data.get("name", ""),
