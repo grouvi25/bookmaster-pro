@@ -47,6 +47,13 @@ class Master(BaseModel):
     noshow_blacklist_count = Column(Integer, default=2)
     buffer_minutes = Column(Integer, default=0)
 
+    # Уведомления — настройки
+    notify_new_booking = Column(Boolean, default=True)
+    notify_cancel = Column(Boolean, default=True)
+    notify_reminder = Column(Boolean, default=True)
+    notify_review = Column(Boolean, default=True)
+    notify_no_show = Column(Boolean, default=True)
+
     # Лояльность — настройки
     loyalty_earn_rate = Column(Integer, default=10)  # 1 балл = N рублей
     loyalty_first_visit_bonus = Column(Integer, default=200)

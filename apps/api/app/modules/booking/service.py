@@ -370,6 +370,37 @@ class BookingService:
                     button_text="Мои записи",
                     button_url=f"{settings.APP_URL}?startParam=my_bookings",
                 )
+
+            elif new_status == AppointmentStatus.COMPLETED.value:
+                if not appointment.client_id:
+                    return
+                text = (
+                    f"✅ Визит завершён\n{time_str}\n"
+                    f"Спасибо, что были у нас! Оставьте отзыв 🌟"
+                )
+                await NotificationService.send_by_client_id(
+                    self.db,
+                    appointment.client_id,
+                    text,
+                    button_text="Оставить отзыв",
+                    button_url=f"{settings.APP_URL}?startParam=review_{appointment.id}",
+                )
+
+            elif new_status == AppointmentStatus.NO_SHOW.value:
+                if not appointment.client_id:
+                    return
+                text = (
+                    f"⚠️ Вы не пришли на запись\n{time_str}\n"
+                    f"Пожалуйста, отменяйте запись заранее, "
+                    f"если не можете прийти."
+                )
+                await NotificationService.send_by_client_id(
+                    self.db,
+                    appointment.client_id,
+                    text,
+                    button_text="Записаться снова",
+                    button_url=f"{settings.APP_URL}?startParam=my_bookings",
+                )
         except Exception as e:
             logger.error(
                 f"Failed to send status-change notification "

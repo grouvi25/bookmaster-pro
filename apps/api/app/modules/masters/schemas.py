@@ -31,6 +31,11 @@ class MasterProfileOut(BaseModel):
     rating_count: int = 0
     total_clients: int = 0
     total_appointments: int = 0
+    notify_new_booking: bool = True
+    notify_cancel: bool = True
+    notify_reminder: bool = True
+    notify_review: bool = True
+    notify_no_show: bool = True
 
     @field_validator(
         "accept_online_payment", "link_page_enabled", "is_verified",
@@ -84,6 +89,29 @@ class MasterProfileUpdate(BaseModel):
     link_page_enabled: Optional[bool] = None
     link_page_theme: Optional[str] = None
     link_page_links: Optional[list] = None
+    notify_new_booking: Optional[bool] = None
+    notify_cancel: Optional[bool] = None
+    notify_reminder: Optional[bool] = None
+    notify_review: Optional[bool] = None
+    notify_no_show: Optional[bool] = None
+
+
+class NotificationSettingsOut(BaseModel):
+    notify_new_booking: bool = True
+    notify_cancel: bool = True
+    notify_reminder: bool = True
+    notify_review: bool = True
+    notify_no_show: bool = True
+
+    model_config = {"from_attributes": True}
+
+
+class NotificationSettingsUpdate(BaseModel):
+    notify_new_booking: Optional[bool] = None
+    notify_cancel: Optional[bool] = None
+    notify_reminder: Optional[bool] = None
+    notify_review: Optional[bool] = None
+    notify_no_show: Optional[bool] = None
 
 
 class ScheduleTemplateIn(BaseModel):

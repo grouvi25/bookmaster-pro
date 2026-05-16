@@ -18,6 +18,8 @@ from app.modules.masters.models import Master
 from app.modules.masters.schemas import (
     MasterProfileOut,
     MasterProfileUpdate,
+    NotificationSettingsOut,
+    NotificationSettingsUpdate,
     ScheduleTemplateIn,
     ScheduleTemplateOut,
 )
@@ -117,6 +119,36 @@ async def get_master_by_slug(
     if not master:
         raise HTTPException(status_code=404, detail="Master not found")
     return master
+
+
+# ── Настройки уведомлений ──────────────────────────────────
+
+@router.get("/me/notification-settings", response_model=NotificationSettingsOut)
+async def get_notification_settings(
+    user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Получить настройки уведомлений мастера."""
+    service = MasterService(db)
+    master = await service.get_by_identity(int(user["sub"]))
+    if not master:
+        raise HTTPException(status_code=404, detail="Master not found")
+    return master
+
+
+@router.patch("/me/notification-settings", response_model=NotificationSettingsOut)
+async def update_notification_settings(
+    body: NotificationSettingsUpdate,
+    user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Обновить настройки уведомлений мастера."""
+    service = MasterService(db)
+    master = await service.get_by_identity(int(user["sub"]))
+    if not master:
+        raise HTTPException(status_code=404, detail="Master not found")
+    updated = await service.update_profile(master, body.model_dump(exclude_unset=True))
+    return updated
 
 
 # ── Расписание ─────────────────────────────────────────────

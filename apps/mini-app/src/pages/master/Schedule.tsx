@@ -1,11 +1,14 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { bookingApi } from '@/api/endpoints';
 import { toArray } from '@/shared/lib/normalize';
 import { ListSkeleton } from '@/shared/ui/Skeleton';
 import PageHeader from '@/shared/ui/PageHeader';
 import StatusBadge from '@/shared/ui/StatusBadge';
+import BottomSheet from '@/shared/ui/BottomSheet';
+import Button from '@/shared/ui/Button';
+import { toast } from '@/shared/ui/Toast';
 import {
   format, addDays, startOfWeek, startOfMonth, endOfMonth,
   eachDayOfInterval, getDay, addMonths, subMonths,
@@ -25,12 +28,26 @@ const STATUS_VARIANT: Record<string, 'success' | 'warning' | 'danger' | 'info' |
   pending: 'neutral',
 };
 
+const STATUS_LABEL: Record<string, string> = {
+  confirmed: 'Подтверждена',
+  paid: 'Оплачена',
+  pending: 'Ожидает',
+  completed: 'Завершена',
+  cancelled_by_client: 'Отменена клиентом',
+  cancelled_by_master: 'Отменена мастером',
+  no_show: 'Не пришёл',
+};
+
 export default function Schedule() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [viewMode, setViewMode] = useState<'week' | 'month'>('week');
   const [weekStart, setWeekStart] = useState(startOfWeek(new Date(), { weekStartsOn: 1 }));
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(format(new Date(), 'yyyy-MM-dd'));
+  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+  const [actionLoading, setActionLoading] = useState(false);
+  const [cancelReason, setCancelReason] = useState('');
 
   const { data, isLoading } = useQuery({
     queryKey: ['master-schedule', selectedDate],
@@ -42,6 +59,42 @@ export default function Schedule() {
 
   const bookings = toArray<Booking>(data);
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
+
+  const handleAction = async (action: 'confirm' | 'complete' | 'cancel' | 'no_show') => {
+    if (!selectedBooking) return;
+    setActionLoading(true);
+    try {
+      switch (action) {
+        case 'confirm':
+          await bookingApi.confirm(selectedBooking.id);
+          toast.success('Запись подтверждена');
+          break;
+        case 'complete':
+          await bookingApi.complete(selectedBooking.id);
+          toast.success('Визит завершён');
+          break;
+        case 'cancel':
+          await bookingApi.cancelByMaster(selectedBooking.id, cancelReason || undefined);
+          toast.success('Запись отменена');
+          break;
+        case 'no_show':
+          await bookingApi.noShow(selectedBooking.id);
+          toast.success('Отмечен как не пришёл');
+          break;
+      }
+      await queryClient.invalidateQueries({ queryKey: ['master-schedule', selectedDate] });
+      setSelectedBooking(null);
+      setCancelReason('');
+    } catch {
+      toast.error('Ошибка при обновлении статуса');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const isPending = selectedBooking?.status === 'pending';
+  const isConfirmed = selectedBooking?.status === 'confirmed' || selectedBooking?.status === 'paid';
+  const isActive = isPending || isConfirmed;
 
   return (
     <div className="px-screen-x pt-section-y pb-24 animate-fade-in">
@@ -193,32 +246,153 @@ export default function Schedule() {
         </div>
       ) : (
         <div className="flex flex-col gap-2.5">
-          {bookings.map((b) => (
-            <div
-              key={b.id}
-              className="bg-surface-elevated rounded-card p-3.5"
-            >
-              <div className="flex justify-between items-start">
-                <div className="flex items-start gap-3">
-                  <div className="w-1 h-10 rounded-full bg-brand-400 mt-0.5" />
-                  <div>
-                    <div className="font-semibold text-sm">
-                      {b.time} — {b.client_name}
-                    </div>
-                    <div className="text-xs text-tg-hint mt-1">
-                      {b.service_name} · {b.duration_min} мин
+          {bookings.map((b) => {
+            const canAct = ['pending', 'confirmed', 'paid'].includes(b.status);
+            return (
+              <button
+                key={b.id}
+                onClick={() => setSelectedBooking(b)}
+                className="bg-surface-elevated rounded-card p-3.5 text-left active:scale-[0.98] transition-transform w-full"
+              >
+                <div className="flex justify-between items-start">
+                  <div className="flex items-start gap-3">
+                    <div className="w-1 h-10 rounded-full bg-brand-400 mt-0.5" />
+                    <div>
+                      <div className="font-semibold text-sm">
+                        {b.time} — {b.client_name || 'Клиент'}
+                      </div>
+                      <div className="text-xs text-tg-hint mt-1">
+                        {b.service_name} · {b.duration_min} мин
+                        {b.price_final ? ` · ${Number(b.price_final).toLocaleString('ru')} ₽` : ''}
+                      </div>
                     </div>
                   </div>
+                  <div className="flex items-center gap-2">
+                    <StatusBadge
+                      label={STATUS_LABEL[b.status] || b.status}
+                      variant={STATUS_VARIANT[b.status] || 'neutral'}
+                    />
+                    {canAct && <span className="text-tg-hint text-xs">›</span>}
+                  </div>
                 </div>
-                <StatusBadge
-                  label={b.status}
-                  variant={STATUS_VARIANT[b.status] || 'neutral'}
-                />
-              </div>
-            </div>
-          ))}
+              </button>
+            );
+          })}
         </div>
       )}
+
+      {/* Booking Detail Bottom Sheet */}
+      <BottomSheet
+        isOpen={!!selectedBooking}
+        onClose={() => { setSelectedBooking(null); setCancelReason(''); }}
+        title="Детали записи"
+      >
+        {selectedBooking && (
+          <div className="px-screen-x pb-8">
+            <div className="flex flex-col gap-3 mb-5">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-tg-hint">Статус</span>
+                <StatusBadge
+                  label={STATUS_LABEL[selectedBooking.status] || selectedBooking.status}
+                  variant={STATUS_VARIANT[selectedBooking.status] || 'neutral'}
+                />
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm text-tg-hint">Клиент</span>
+                <span className="text-sm font-medium">{selectedBooking.client_name || 'Не указан'}</span>
+              </div>
+              {selectedBooking.client_phone && (
+                <div className="flex justify-between">
+                  <span className="text-sm text-tg-hint">Телефон</span>
+                  <a href={`tel:${selectedBooking.client_phone}`} className="text-sm font-medium text-tg-link">
+                    {selectedBooking.client_phone}
+                  </a>
+                </div>
+              )}
+              <div className="flex justify-between">
+                <span className="text-sm text-tg-hint">Услуга</span>
+                <span className="text-sm font-medium">{selectedBooking.service_name}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm text-tg-hint">Время</span>
+                <span className="text-sm font-medium">
+                  {selectedBooking.time} · {selectedBooking.duration_min} мин
+                </span>
+              </div>
+              {selectedBooking.price_final != null && (
+                <div className="flex justify-between">
+                  <span className="text-sm text-tg-hint">Стоимость</span>
+                  <span className="text-sm font-bold">
+                    {Number(selectedBooking.price_final).toLocaleString('ru')} ₽
+                  </span>
+                </div>
+              )}
+              {selectedBooking.client_comment && (
+                <div className="flex justify-between">
+                  <span className="text-sm text-tg-hint">Комментарий</span>
+                  <span className="text-sm text-right max-w-[60%]">{selectedBooking.client_comment}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Action buttons */}
+            {isActive && (
+              <div className="flex flex-col gap-2">
+                {isPending && (
+                  <Button
+                    onClick={() => handleAction('confirm')}
+                    loading={actionLoading}
+                    fullWidth
+                  >
+                    Подтвердить
+                  </Button>
+                )}
+                {isConfirmed && (
+                  <Button
+                    onClick={() => handleAction('complete')}
+                    loading={actionLoading}
+                    fullWidth
+                  >
+                    Завершить визит
+                  </Button>
+                )}
+                {isConfirmed && (
+                  <Button
+                    onClick={() => handleAction('no_show')}
+                    loading={actionLoading}
+                    variant="secondary"
+                    fullWidth
+                  >
+                    Не пришёл
+                  </Button>
+                )}
+                <div className="mt-1">
+                  <input
+                    value={cancelReason}
+                    onChange={(e) => setCancelReason(e.target.value)}
+                    placeholder="Причина отмены (необязательно)"
+                    className="w-full p-3 rounded-xl text-sm outline-none bg-tg-secondary mb-2"
+                  />
+                  <Button
+                    onClick={() => handleAction('cancel')}
+                    loading={actionLoading}
+                    variant="danger"
+                    fullWidth
+                  >
+                    Отменить запись
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {!isActive && (
+              <div className="text-center text-sm text-tg-hint py-4">
+                Запись {STATUS_LABEL[selectedBooking.status]?.toLowerCase() || selectedBooking.status}
+              </div>
+            )}
+          </div>
+        )}
+      </BottomSheet>
     </div>
   );
 }
