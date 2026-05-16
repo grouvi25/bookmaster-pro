@@ -41,7 +41,33 @@ class BookingService:
         promotion_id: Optional[int] = None,
         source: str = "mini_app",
     ) -> Appointment:
-        """Создать запись, проверив доступность слота."""
+        """Создать запись, проверив доступность слота и лимит тарифа."""
+        from sqlalchemy import func
+        from app.modules.core.models import FeatureFlags
+
+        # Проверяем лимит записей по тарифу
+        flags_result = await self.db.execute(
+            select(FeatureFlags).where(FeatureFlags.master_id == master_id)
+        )
+        flags = flags_result.scalar_one_or_none()
+        if flags and flags.max_bookings_per_month:
+            month_start = date.today().replace(day=1)
+            count_result = await self.db.execute(
+                select(func.count(Appointment.id)).where(
+                    Appointment.master_id == master_id,
+                    Appointment.date >= month_start,
+                    Appointment.status.notin_([
+                        AppointmentStatus.CANCELLED_BY_CLIENT.value,
+                        AppointmentStatus.CANCELLED_BY_MASTER.value,
+                    ]),
+                )
+            )
+            current_count = count_result.scalar() or 0
+            if current_count >= flags.max_bookings_per_month:
+                raise ValueError(
+                    f"Лимит записей по тарифу исчерпан ({current_count}/{flags.max_bookings_per_month})"
+                )
+
         # Получаем услугу
         result = await self.db.execute(
             select(Service).where(Service.id == service_id)

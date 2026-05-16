@@ -2,6 +2,7 @@
 Marketplace service — поиск мастеров, листинги, публичные профили.
 """
 
+import math
 from typing import List, Optional, Tuple
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -19,12 +20,26 @@ class MarketplaceService:
     def __init__(self, db: AsyncSession):
         self.db = db
 
+    @staticmethod
+    def _haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+        R = 6371.0
+        dlat = math.radians(lat2 - lat1)
+        dlon = math.radians(lon2 - lon1)
+        a = (
+            math.sin(dlat / 2) ** 2
+            + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * math.sin(dlon / 2) ** 2
+        )
+        return R * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+
     async def search_masters(
         self,
         city: Optional[str] = None,
         specialization: Optional[str] = None,
         query: Optional[str] = None,
         min_rating: Optional[float] = None,
+        lat: Optional[float] = None,
+        lng: Optional[float] = None,
+        radius_km: float = 10.0,
         page: int = 1,
         per_page: int = 20,
     ) -> Tuple[List[dict], int]:
@@ -58,6 +73,13 @@ class MarketplaceService:
             ))
         if min_rating:
             q = q.where(Master.rating_avg >= min_rating)
+        if lat is not None and lng is not None:
+            q = q.where(
+                and_(
+                    Master.latitude.isnot(None),
+                    Master.longitude.isnot(None),
+                )
+            )
 
         # Filter only visible listings
         q = q.where(
@@ -88,7 +110,7 @@ class MarketplaceService:
         masters = []
         for row in rows:
             master = row[0]
-            masters.append({
+            entry = {
                 "id": master.id,
                 "slug": master.slug,
                 "display_name": master.display_name,
@@ -102,9 +124,18 @@ class MarketplaceService:
                 "services_count": row[3],
                 "placement_tier": row[1] or "free",
                 "is_verified": master.is_verified,
-            })
+            }
+            if lat is not None and lng is not None and master.latitude and master.longitude:
+                dist = self._haversine_km(lat, lng, master.latitude, master.longitude)
+                if dist > radius_km:
+                    continue
+                entry["distance_km"] = round(dist, 1)
+            masters.append(entry)
 
-        return masters, total
+        if lat is not None and lng is not None:
+            masters.sort(key=lambda x: x.get("distance_km", 9999))
+
+        return masters, len(masters) if (lat is not None and lng is not None) else total
 
     async def get_public_profile(self, slug: str) -> Optional[dict]:
         """Публичная страница мастера (для маркетплейса и TapLink)."""

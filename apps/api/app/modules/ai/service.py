@@ -178,6 +178,8 @@ class AIService:
                 full_response += chunk
                 tokens_used += len(chunk) // 4
                 yield chunk
+        except ValueError:
+            raise
         except Exception as e:
             logger.error(f"AI chat stream error: {e}")
             error_msg = "Извините, произошла ошибка. Попробуйте ещё раз."
@@ -549,8 +551,32 @@ class AIService:
         await self.db.flush()
 
     async def _consume_tokens(self, master_id: int, tokens: int):
-        """Обновляем счётчик использованных токенов (заглушка для будущего биллинга)."""
-        logger.debug(f"Master {master_id} consumed ~{tokens} tokens")
+        """Обновляем счётчик и проверяем лимит AI-токенов."""
+        flags = await self.db.get(FeatureFlags, master_id)
+        if not flags:
+            return
+
+        monthly_limit = flags.ai_tokens_monthly or 0
+        if monthly_limit <= 0:
+            return
+
+        month_start = datetime.now(timezone.utc).replace(
+            day=1, hour=0, minute=0, second=0, microsecond=0,
+        )
+        result = await self.db.execute(
+            select(func.coalesce(func.sum(AIConversation.tokens_used), 0)).where(
+                AIConversation.master_id == master_id,
+                AIConversation.created_at >= month_start,
+            )
+        )
+        used = result.scalar() or 0
+
+        if used + tokens > monthly_limit:
+            raise ValueError(
+                f"Лимит AI-токенов исчерпан ({used}/{monthly_limit}). "
+                f"Обновите тариф для увеличения лимита."
+            )
+        logger.debug(f"Master {master_id} consumed ~{tokens} tokens ({used + tokens}/{monthly_limit})")
 
     async def _save_voice_diary_to_crm(
         self,
@@ -603,10 +629,9 @@ class AIService:
 
         used_this_month = 0
         try:
-            from app.modules.ai.models import AIConversation
-            from sqlalchemy import func
-            from datetime import datetime
-            month_start = datetime.utcnow().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+            month_start = datetime.now(timezone.utc).replace(
+                day=1, hour=0, minute=0, second=0, microsecond=0,
+            )
             result = await self.db.execute(
                 select(func.coalesce(func.sum(AIConversation.tokens_used), 0)).where(
                     AIConversation.master_id == master_id,

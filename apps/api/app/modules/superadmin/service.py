@@ -19,13 +19,7 @@ from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
-PLAN_PRICES = {
-    "start": 590,
-    "basic": 990,
-    "pro": 1990,
-    "pro_ai": 2990,
-    "business": 4990,
-}
+from app.modules.payments.service import PLAN_PRICES  # noqa: E402 — single source of truth
 
 
 class SuperadminService:

@@ -109,11 +109,23 @@ class LoyaltyService:
         if account.balance < points:
             raise ValueError("Insufficient loyalty points")
 
-        # Проверяем лимит списания
+        # Проверяем лимит списания (% от суммы заказа)
         result = await self.db.execute(
             select(Master).where(Master.id == master_id)
         )
-        result.scalar_one_or_none()
+        master = result.scalar_one_or_none()
+        if master and master.loyalty_max_spend_percent and appointment_id:
+            from app.modules.booking.models import Appointment
+            appt_result = await self.db.execute(
+                select(Appointment).where(Appointment.id == appointment_id)
+            )
+            appt = appt_result.scalar_one_or_none()
+            if appt and appt.price_final:
+                max_points = int(appt.price_final * master.loyalty_max_spend_percent / 100)
+                if points > max_points:
+                    raise ValueError(
+                        f"Максимум {max_points} баллов ({master.loyalty_max_spend_percent}% от суммы заказа)"
+                    )
 
         account.balance -= points
 
