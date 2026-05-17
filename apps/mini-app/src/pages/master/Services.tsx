@@ -6,6 +6,8 @@ import { ListSkeleton } from '@/shared/ui/Skeleton';
 import Button from '@/shared/ui/Button';
 import Card from '@/shared/ui/Card';
 import { toast } from '@/shared/ui/Toast';
+import PageHeader from '@/shared/ui/PageHeader';
+import EmptyState from '@/shared/ui/EmptyState';
 import { Plus, GripVertical, Pencil, Trash2, X, Check } from 'lucide-react';
 import {
   DndContext,
@@ -227,19 +229,23 @@ export default function Services() {
   if (isLoading) return <ListSkeleton count={4} />;
 
   return (
-    <div className="p-4 pb-24 animate-fade-in">
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-xl font-bold">Мои услуги</h1>
-        <button
-          onClick={() => {
-            resetForm();
-            setShowForm(true);
-          }}
-          className="flex items-center gap-1 text-tg-link text-sm"
-        >
-          <Plus className="w-4 h-4" /> Добавить
-        </button>
-      </div>
+    <div className="min-h-screen bg-tg-bg text-tg-text pb-24 animate-fade-in">
+      <PageHeader
+        title="Мои услуги"
+        right={
+          <button
+            onClick={() => {
+              resetForm();
+              setShowForm(true);
+            }}
+            className="flex items-center gap-1 text-tg-link text-sm"
+          >
+            <Plus className="w-4 h-4" /> Добавить
+          </button>
+        }
+      />
+
+      <div className="px-screen-x">
 
       {showForm && (
         <Card className="mb-4 animate-slide-up">
@@ -256,7 +262,7 @@ export default function Services() {
               value={formName}
               onChange={(e) => setFormName(e.target.value)}
               placeholder="Название услуги"
-              className="w-full p-3 rounded-xl text-sm outline-none bg-tg-bg"
+              className="input-field"
             />
             <div className="flex gap-2">
               <input
@@ -264,14 +270,14 @@ export default function Services() {
                 onChange={(e) => setFormPrice(e.target.value)}
                 placeholder="Цена, ₽"
                 type="number"
-                className="flex-1 p-3 rounded-xl text-sm outline-none bg-tg-bg"
+                className="flex-1 input-field"
               />
               <input
                 value={formPriceMax}
                 onChange={(e) => setFormPriceMax(e.target.value)}
                 placeholder="До, ₽"
                 type="number"
-                className="flex-1 p-3 rounded-xl text-sm outline-none bg-tg-bg"
+                className="flex-1 input-field"
               />
             </div>
             <div className="flex gap-2">
@@ -280,13 +286,13 @@ export default function Services() {
                 onChange={(e) => setFormDuration(e.target.value)}
                 placeholder="Мин"
                 type="number"
-                className="w-24 p-3 rounded-xl text-sm outline-none bg-tg-bg"
+                className="w-24 input-field"
               />
               <input
                 value={formCategory}
                 onChange={(e) => setFormCategory(e.target.value)}
                 placeholder="Категория"
-                className="flex-1 p-3 rounded-xl text-sm outline-none bg-tg-bg"
+                className="flex-1 input-field"
               />
             </div>
             <textarea
@@ -294,7 +300,7 @@ export default function Services() {
               onChange={(e) => setFormDescription(e.target.value)}
               placeholder="Описание (необязательно)"
               rows={2}
-              className="w-full p-3 rounded-xl text-sm outline-none bg-tg-bg resize-none"
+              className="input-field resize-none"
             />
             <Button onClick={handleSubmit} loading={formLoading} fullWidth size="sm">
               <Check className="w-4 h-4 mr-1" />
@@ -305,10 +311,11 @@ export default function Services() {
       )}
 
       {services.length === 0 ? (
-        <div className="text-center py-12">
-          <p className="text-tg-hint mb-2">Нет услуг</p>
-          <p className="text-tg-hint text-xs">Добавьте первую услугу</p>
-        </div>
+        <EmptyState
+          emoji="💇"
+          title="Нет услуг"
+          description="Добавьте первую услугу"
+        />
       ) : (
         <DndContext
           sensors={sensors}
@@ -336,6 +343,7 @@ export default function Services() {
       <p className="text-xs text-tg-hint text-center mt-4">
         Перетаскивайте услуги для изменения порядка
       </p>
+      </div>
     </div>
   );
 }

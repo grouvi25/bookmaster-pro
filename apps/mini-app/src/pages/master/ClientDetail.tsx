@@ -1,4 +1,4 @@
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { clientsApi } from '@/api/endpoints';
@@ -6,8 +6,8 @@ import Loading from '@/components/common/Loading';
 import Card from '@/shared/ui/Card';
 import Button from '@/shared/ui/Button';
 import { toast } from '@/shared/ui/Toast';
+import BackButton from '@/components/common/BackButton';
 import {
-  ChevronLeft,
   User,
   Phone,
   Cake,
@@ -69,7 +69,6 @@ const TIER_LABELS: Record<string, string> = {
 
 export default function ClientDetail() {
   const { clientId } = useParams<{ clientId: string }>();
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
 
   const { data: client, isLoading } = useQuery<ClientDetailData>({
@@ -130,13 +129,8 @@ export default function ClientDetail() {
   };
 
   return (
-    <div className="p-4 pb-24 animate-fade-in">
-      <button
-        onClick={() => navigate('/master/clients')}
-        className="flex items-center gap-0.5 text-tg-link text-sm mb-3"
-      >
-        <ChevronLeft className="w-4 h-4" /> Клиенты
-      </button>
+    <div className="px-screen-x pt-section-y pb-24 animate-fade-in">
+      <BackButton to="/master/clients" label="Клиенты" />
 
       {/* Header card */}
       <Card className="mb-4">
@@ -230,7 +224,7 @@ export default function ClientDetail() {
             value={newTag}
             onChange={(e) => setNewTag(e.target.value)}
             placeholder="Новый тег"
-            className="flex-1 p-2 rounded-lg text-xs outline-none bg-tg-bg"
+            className="flex-1 input-field !text-xs !p-2"
             onKeyDown={(e) => e.key === 'Enter' && handleAddTag()}
           />
           <Button size="sm" onClick={handleAddTag} loading={saving}>
@@ -297,7 +291,7 @@ export default function ClientDetail() {
               onChange={(e) => setNewNote(e.target.value)}
               placeholder="Добавить заметку..."
               rows={2}
-              className="flex-1 p-2 rounded-lg text-sm outline-none bg-tg-bg resize-none"
+              className="flex-1 input-field resize-none"
             />
             <Button size="sm" onClick={handleAddNote} loading={saving}>
               <Plus className="w-4 h-4" />

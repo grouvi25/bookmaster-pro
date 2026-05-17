@@ -5,13 +5,14 @@ import { bookingApi } from '@/api/endpoints';
 import { useBookingStore } from '@/stores/booking';
 import BackButton from '@/components/common/BackButton';
 import Loading from '@/components/common/Loading';
+import EmptyState from '@/shared/ui/EmptyState';
 import {
   format, parseISO, startOfMonth, endOfMonth, eachDayOfInterval,
   getDay, addMonths, subMonths, isSameDay, isBefore, startOfDay,
 } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import clsx from 'clsx';
-import { ChevronLeft, ChevronRight, CalendarDays } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 const WEEKDAYS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
 
@@ -122,16 +123,18 @@ export default function SelectDate() {
       </div>
 
       {!availableDates?.dates?.length && (
-        <div className="text-center py-8 mt-4">
-          <CalendarDays className="w-10 h-10 text-tg-hint mx-auto mb-3" strokeWidth={1.5} />
-          <p className="text-tg-hint text-sm">Нет доступных дат</p>
-          <button
-            onClick={() => navigate('/book/waitlist')}
-            className="mt-3 text-tg-link text-sm"
-          >
-            Встать в лист ожидания
-          </button>
-        </div>
+        <EmptyState
+          emoji="📅"
+          title="Нет доступных дат"
+          action={
+            <button
+              onClick={() => navigate('/book/waitlist')}
+              className="text-tg-link text-sm"
+            >
+              Встать в лист ожидания
+            </button>
+          }
+        />
       )}
     </div>
   );

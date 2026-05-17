@@ -5,6 +5,7 @@ import { bookingApi } from '@/api/endpoints';
 import { useBookingStore } from '@/stores/booking';
 import BackButton from '@/components/common/BackButton';
 import Loading from '@/components/common/Loading';
+import EmptyState from '@/shared/ui/EmptyState';
 import clsx from 'clsx';
 import { Clock } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
@@ -90,10 +91,11 @@ export default function SelectTime() {
       </div>
 
       {slots.length === 0 ? (
-        <div className="text-center py-8">
-          <Clock className="w-10 h-10 text-tg-hint mx-auto mb-3" strokeWidth={1.5} />
-          <p className="text-tg-hint text-sm">Нет доступных слотов на эту дату</p>
-        </div>
+        <EmptyState
+          emoji="⏰"
+          title="Нет доступных слотов"
+          description="Нет доступных слотов на эту дату"
+        />
       ) : (
         <>
           {renderGroup('Утро', morningSlots)}

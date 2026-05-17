@@ -4,6 +4,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { locationsApi } from '@/api/endpoints';
 import Loading from '@/components/common/Loading';
 import PageHeader from '@/shared/ui/PageHeader';
+import Card from '@/shared/ui/Card';
+import Button from '@/shared/ui/Button';
+import EmptyState from '@/shared/ui/EmptyState';
 import { ArrowLeft, MapPin, Plus, Trash2, Check } from 'lucide-react';
 
 export default function Locations() {
@@ -51,16 +54,16 @@ export default function Locations() {
         }
       />
 
-      <div className="px-4">
+      <div className="px-screen-x">
 
       {showCreate && <CreateLocation onClose={() => setShowCreate(false)} />}
 
       <div className="flex flex-col gap-3">
         {locations.length === 0 ? (
-          <p className="text-tg-hint text-center py-8">Нет локаций</p>
+          <EmptyState emoji="📍" title="Нет локаций" description="Добавьте первую локацию" />
         ) : (
           locations.map((loc) => (
-            <div key={loc.id} className="bg-surface-elevated rounded-card p-4 flex justify-between items-center">
+            <Card key={loc.id} className="flex justify-between items-center">
               <div className="flex items-start gap-3">
                 <MapPin className="w-5 h-5 text-tg-link mt-0.5 flex-shrink-0" />
                 <div>
@@ -83,7 +86,7 @@ export default function Locations() {
               >
                 <Trash2 className="w-4 h-4" />
               </button>
-            </div>
+            </Card>
           ))
         )}
       </div>
@@ -108,7 +111,7 @@ function CreateLocation({ onClose }: { onClose: () => void }) {
   });
 
   return (
-    <div className="bg-surface-elevated rounded-card p-4 mb-5">
+    <Card className="mb-5">
       <h3 className="text-sm font-semibold mb-3">Новая локация</h3>
 
       <input
@@ -122,7 +125,7 @@ function CreateLocation({ onClose }: { onClose: () => void }) {
         value={address}
         onChange={(e) => setAddress(e.target.value)}
         placeholder="Адрес"
-        className="w-full px-3 py-2 bg-tg-bg rounded-lg text-sm outline-none mb-3"
+        className="input-field mb-3"
       />
 
       <label className="flex items-center gap-2 text-sm mb-3 cursor-pointer">
@@ -138,17 +141,16 @@ function CreateLocation({ onClose }: { onClose: () => void }) {
       </label>
 
       <div className="flex justify-end gap-2">
-        <button onClick={onClose} className="text-xs text-tg-hint">
-          Отмена
-        </button>
-        <button
+        <Button variant="secondary" size="sm" onClick={onClose}>Отмена</Button>
+        <Button
+          variant="primary"
+          size="sm"
           onClick={() => createMutation.mutate()}
           disabled={!name || createMutation.isPending}
-          className="bg-tg-button text-tg-button-text px-4 py-1.5 rounded-lg text-xs font-medium disabled:opacity-50"
         >
           Создать
-        </button>
+        </Button>
       </div>
-    </div>
+    </Card>
   );
 }
