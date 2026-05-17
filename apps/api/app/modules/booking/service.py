@@ -287,6 +287,13 @@ class BookingService:
         if not appointment.client_id:
             return
         try:
+            from app.modules.masters.models import Master as _Master
+            _res = await self.db.execute(
+                select(_Master).where(_Master.id == appointment.master_id)
+            )
+            _master = _res.scalar_one_or_none()
+            if _master and not _master.notify_new_booking:
+                return
             time_str = (
                 appointment.time_start.strftime("%d.%m в %H:%M")
                 if appointment.time_start
@@ -320,6 +327,12 @@ class BookingService:
     ) -> None:
         """Отправить push при изменении статуса."""
         try:
+            from app.modules.masters.models import Master as _Master
+            _res = await self.db.execute(
+                select(_Master).where(_Master.id == appointment.master_id)
+            )
+            _master = _res.scalar_one_or_none()
+
             time_str = (
                 appointment.time_start.strftime("%d.%m в %H:%M")
                 if appointment.time_start
@@ -328,6 +341,8 @@ class BookingService:
             client_name = appointment.client_name or "Клиент"
 
             if new_status == AppointmentStatus.CANCELLED_BY_CLIENT.value:
+                if _master and not _master.notify_cancel:
+                    return
                 reason_line = f"\nПричина: {cancel_reason}" if cancel_reason else ""
                 text = (
                     f"❌ Клиент отменил запись\n"
@@ -374,6 +389,8 @@ class BookingService:
             elif new_status == AppointmentStatus.COMPLETED.value:
                 if not appointment.client_id:
                     return
+                if _master and not _master.notify_review:
+                    return
                 text = (
                     f"✅ Визит завершён\n{time_str}\n"
                     f"Спасибо, что были у нас! Оставьте отзыв 🌟"
@@ -388,6 +405,8 @@ class BookingService:
 
             elif new_status == AppointmentStatus.NO_SHOW.value:
                 if not appointment.client_id:
+                    return
+                if _master and not _master.notify_no_show:
                     return
                 text = (
                     f"⚠️ Вы не пришли на запись\n{time_str}\n"

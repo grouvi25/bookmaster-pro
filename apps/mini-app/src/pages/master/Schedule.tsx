@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { bookingApi } from '@/api/endpoints';
+import { bookingApi, portfolioApi, uploadsApi } from '@/api/endpoints';
 import { toArray } from '@/shared/lib/normalize';
 import { ListSkeleton } from '@/shared/ui/Skeleton';
 import PageHeader from '@/shared/ui/PageHeader';
@@ -15,7 +15,7 @@ import {
 } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import clsx from 'clsx';
-import { ChevronLeft, ChevronRight, CalendarOff } from 'lucide-react';
+import { ChevronLeft, ChevronRight, CalendarOff, Camera } from 'lucide-react';
 import type { Booking } from '@/shared/types/api';
 
 const STATUS_VARIANT: Record<string, 'success' | 'warning' | 'danger' | 'info' | 'neutral'> = {
@@ -48,6 +48,8 @@ export default function Schedule() {
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
+  const [photoPromptBooking, setPhotoPromptBooking] = useState<Booking | null>(null);
+  const [photoUploading, setPhotoUploading] = useState(false);
 
   const { data, isLoading } = useQuery({
     queryKey: ['master-schedule', selectedDate],
@@ -72,6 +74,7 @@ export default function Schedule() {
         case 'complete':
           await bookingApi.complete(selectedBooking.id);
           toast.success('Визит завершён');
+          setPhotoPromptBooking(selectedBooking);
           break;
         case 'cancel':
           await bookingApi.cancelByMaster(selectedBooking.id, cancelReason || undefined);
@@ -390,6 +393,65 @@ export default function Schedule() {
                 Запись {STATUS_LABEL[selectedBooking.status]?.toLowerCase() || selectedBooking.status}
               </div>
             )}
+          </div>
+        )}
+      </BottomSheet>
+
+      {/* Photo prompt after completing a visit */}
+      <BottomSheet
+        isOpen={!!photoPromptBooking}
+        onClose={() => setPhotoPromptBooking(null)}
+        title="Добавить фото работы?"
+      >
+        {photoPromptBooking && (
+          <div className="px-screen-x pb-8">
+            <p className="text-sm text-tg-hint mb-4">
+              Добавьте фото результата в портфолио — клиенты смогут увидеть вашу работу
+            </p>
+            <div className="flex flex-col gap-2">
+              <label className="cursor-pointer">
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    setPhotoUploading(true);
+                    try {
+                      const uploadResp = await uploadsApi.uploadFile(file, 'portfolio');
+                      const fileKey = uploadResp.data?.file_key || uploadResp.data?.s3_key;
+                      await portfolioApi.upload({
+                        s3_key: fileKey,
+                        appointment_id: photoPromptBooking.id,
+                      });
+                      toast.success('Фото добавлено в портфолио');
+                      setPhotoPromptBooking(null);
+                    } catch {
+                      toast.error('Ошибка загрузки фото');
+                    } finally {
+                      setPhotoUploading(false);
+                    }
+                  }}
+                />
+                <Button
+                  fullWidth
+                  loading={photoUploading}
+                  onClick={() => {}}
+                  className="pointer-events-none"
+                >
+                  <Camera className="w-4 h-4 mr-2" />
+                  Выбрать фото
+                </Button>
+              </label>
+              <Button
+                variant="secondary"
+                fullWidth
+                onClick={() => setPhotoPromptBooking(null)}
+              >
+                Пропустить
+              </Button>
+            </div>
           </div>
         )}
       </BottomSheet>
