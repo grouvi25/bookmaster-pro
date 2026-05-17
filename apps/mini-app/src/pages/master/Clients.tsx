@@ -7,6 +7,8 @@ import { ListSkeleton } from '@/shared/ui/Skeleton';
 import PageHeader from '@/shared/ui/PageHeader';
 import SearchInput from '@/shared/ui/SearchInput';
 import EmptyState from '@/shared/ui/EmptyState';
+import Card from '@/shared/ui/Card';
+import Button from '@/shared/ui/Button';
 import { User, X, ChevronRight } from 'lucide-react';
 import type { ClientCRM } from '@/shared/types/api';
 import FeatureGate from '@/shared/ui/FeatureGate';
@@ -47,7 +49,7 @@ function ClientsList() {
       </div>
 
       {selected ? (
-        <div className="bg-surface-elevated rounded-card p-4 mb-4 animate-slide-up">
+        <Card className="mb-4 animate-slide-up">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 bg-brand-500/10 rounded-card flex items-center justify-center">
@@ -99,13 +101,15 @@ function ClientsList() {
             </p>
           ) : null}
 
-          <button
+          <Button
             onClick={() => navigate(`/master/clients/${selectedId}`)}
-            className="w-full mt-3 flex items-center justify-center gap-1 py-2.5 bg-brand-500 text-white rounded-xl text-sm font-semibold active:scale-[0.97] transition-all"
+            fullWidth
+            size="sm"
+            className="mt-3"
           >
             Подробнее <ChevronRight className="w-4 h-4" />
-          </button>
-        </div>
+          </Button>
+        </Card>
       ) : null}
 
       {clients.length === 0 ? (

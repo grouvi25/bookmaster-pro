@@ -129,14 +129,14 @@ export default function WorkSchedule() {
                     type="time"
                     value={day.start_time}
                     onChange={(e) => updateDay(day.day_of_week, { start_time: e.target.value })}
-                    className="bg-tg-secondary rounded-lg px-2 py-1 text-sm flex-1"
+                    className="input-field !h-auto !py-1 !px-2 !text-sm flex-1"
                   />
                   <span className="text-tg-hint text-xs">—</span>
                   <input
                     type="time"
                     value={day.end_time}
                     onChange={(e) => updateDay(day.day_of_week, { end_time: e.target.value })}
-                    className="bg-tg-secondary rounded-lg px-2 py-1 text-sm flex-1"
+                    className="input-field !h-auto !py-1 !px-2 !text-sm flex-1"
                   />
                 </div>
                 <div className="flex items-center gap-2">
@@ -146,14 +146,14 @@ export default function WorkSchedule() {
                     type="time"
                     value={day.break_start || ''}
                     onChange={(e) => updateDay(day.day_of_week, { break_start: e.target.value || null })}
-                    className="bg-tg-secondary rounded-lg px-2 py-1 text-sm flex-1"
+                    className="input-field !h-auto !py-1 !px-2 !text-sm flex-1"
                   />
                   <span className="text-tg-hint text-xs">—</span>
                   <input
                     type="time"
                     value={day.break_end || ''}
                     onChange={(e) => updateDay(day.day_of_week, { break_end: e.target.value || null })}
-                    className="bg-tg-secondary rounded-lg px-2 py-1 text-sm flex-1"
+                    className="input-field !h-auto !py-1 !px-2 !text-sm flex-1"
                   />
                 </div>
               </div>

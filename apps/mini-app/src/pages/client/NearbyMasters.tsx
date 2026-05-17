@@ -4,6 +4,8 @@ import { useQuery } from '@tanstack/react-query';
 import api from '@/api/client';
 import Loading from '@/components/common/Loading';
 import EmptyState from '@/shared/ui/EmptyState';
+import Button from '@/shared/ui/Button';
+import Card from '@/shared/ui/Card';
 import { MapPin, Star, Navigation } from 'lucide-react';
 
 interface NearbyMaster {
@@ -53,7 +55,7 @@ export default function NearbyMasters() {
 
   return (
     <div className="px-screen-x pt-section-y pb-24 animate-fade-in">
-      <h1 className="text-2xl font-bold tracking-tight mb-1">Мастера рядом</h1>
+      <h1 className="text-h1 mb-1">Мастера рядом</h1>
       <p className="text-tg-hint text-sm mb-5">Найдите специалиста поблизости</p>
 
       {!coords ? (
@@ -64,13 +66,12 @@ export default function NearbyMasters() {
           <p className="text-sm text-tg-hint text-center max-w-xs">
             Разрешите доступ к геолокации, чтобы найти мастеров рядом с вами
           </p>
-          <button
+          <Button
             onClick={requestLocation}
             disabled={locating}
-            className="px-6 py-3 bg-brand-500 text-white rounded-btn font-semibold shadow-button disabled:opacity-50 active:scale-[0.97] transition-all"
           >
             {locating ? 'Определяем...' : 'Определить местоположение'}
-          </button>
+          </Button>
           {locationError && (
             <p className="text-sm text-red-500">{locationError}</p>
           )}
@@ -105,11 +106,11 @@ export default function NearbyMasters() {
           ) : (
             <div className="flex flex-col gap-2">
               {masters.map((m) => (
-                <button
-                  key={m.id}
-                  onClick={() => navigate(`/m/${m.slug}`)}
-                  className="bg-surface-elevated rounded-card p-3.5 flex items-center gap-3 text-left active:scale-[0.98] transition-all"
-                >
+                  <Card
+                    key={m.id}
+                    onClick={() => navigate(`/m/${m.slug}`)}
+                    className="flex items-center gap-3 text-left"
+                  >
                   {m.avatar_url ? (
                     <img
                       src={m.avatar_url}
@@ -138,7 +139,7 @@ export default function NearbyMasters() {
                   <div className="text-xs text-tg-hint whitespace-nowrap">
                     {m.distance_km} км
                   </div>
-                </button>
+                </Card>
               ))}
             </div>
           )}
