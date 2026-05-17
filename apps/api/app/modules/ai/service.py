@@ -152,6 +152,8 @@ class AIService:
         """
         Чат с AI-советником. Streaming через WebSocket.
         """
+        await self._check_quota(master_id, estimated_tokens=1500)
+
         history = await self._get_chat_history(master_id, session_id)
         system_prompt = await self._build_advisor_prompt(master_id, user_message)
 
@@ -203,6 +205,8 @@ class AIService:
         user_message: str,
     ) -> dict:
         """Синхронный чат с AI-советником (без стриминга)."""
+        await self._check_quota(master_id, estimated_tokens=1500)
+
         history = await self._get_chat_history(master_id, session_id)
         system_prompt = await self._build_advisor_prompt(master_id, user_message)
 
@@ -252,6 +256,8 @@ class AIService:
         client_message: str,
     ) -> str:
         """AI отвечает клиенту от имени мастера (синхронный, для бота)."""
+        await self._check_quota(master_id, estimated_tokens=500)
+
         system_prompt = await self._build_client_prompt(master_id, client_id)
         messages = [
             {"role": "system", "content": system_prompt},
@@ -278,6 +284,8 @@ class AIService:
         params: Dict[str, Any],
     ) -> Dict[str, Any]:
         """Генерация контента по шаблону."""
+        await self._check_quota(master_id, estimated_tokens=2000)
+
         if template_key not in CONTENT_TEMPLATES:
             raise ValueError(f"Неизвестный шаблон: {template_key}")
 
@@ -352,6 +360,8 @@ class AIService:
         """
         Мастер надиктовал заметку — AI структурирует и сохраняет в CRM.
         """
+        await self._check_quota(master_id, estimated_tokens=500)
+
         extraction_prompt = f"""Проанализируй заметку мастера и извлеки структурированные данные.
 
 Заметка: "{transcript}"
@@ -550,8 +560,8 @@ class AIService:
         self.db.add(msg)
         await self.db.flush()
 
-    async def _consume_tokens(self, master_id: int, tokens: int):
-        """Обновляем счётчик и проверяем лимит AI-токенов."""
+    async def _check_quota(self, master_id: int, estimated_tokens: int = 0):
+        """Проверяем лимит AI-токенов ДО вызова AI."""
         flags = await self.db.get(FeatureFlags, master_id)
         if not flags:
             return
@@ -571,12 +581,33 @@ class AIService:
         )
         used = result.scalar() or 0
 
-        if used + tokens > monthly_limit:
+        if used + estimated_tokens > monthly_limit:
             raise ValueError(
                 f"Лимит AI-токенов исчерпан ({used}/{monthly_limit}). "
                 f"Обновите тариф для увеличения лимита."
             )
-        logger.debug(f"Master {master_id} consumed ~{tokens} tokens ({used + tokens}/{monthly_limit})")
+
+    async def _consume_tokens(self, master_id: int, tokens: int):
+        """Логируем фактическое использование токенов (после вызова AI)."""
+        flags = await self.db.get(FeatureFlags, master_id)
+        if not flags:
+            return
+
+        monthly_limit = flags.ai_tokens_monthly or 0
+        if monthly_limit <= 0:
+            return
+
+        month_start = datetime.now(timezone.utc).replace(
+            day=1, hour=0, minute=0, second=0, microsecond=0,
+        )
+        result = await self.db.execute(
+            select(func.coalesce(func.sum(AIConversation.tokens_used), 0)).where(
+                AIConversation.master_id == master_id,
+                AIConversation.created_at >= month_start,
+            )
+        )
+        used = result.scalar() or 0
+        logger.debug(f"Master {master_id} consumed ~{tokens} tokens ({used}/{monthly_limit})")
 
     async def _save_voice_diary_to_crm(
         self,
