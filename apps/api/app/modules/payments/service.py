@@ -151,6 +151,9 @@ class PaymentService:
             if appointment:
                 appointment.status = AppointmentStatus.PAID.value
 
+            # Уведомить клиента и мастера об успешной оплате
+            await self._notify_payment_succeeded(payment)
+
         elif event_type == "payment.canceled":
             payment.status = "failed"
 
@@ -435,6 +438,45 @@ class PaymentService:
             flags.broadcast_enabled = True
 
         await self.db.flush()
+
+    async def _notify_payment_succeeded(self, payment: Payment) -> None:
+        """Уведомить клиента и мастера об успешной оплате."""
+        try:
+            from app.modules.notifications.service import NotificationService
+
+            amount_str = f"{payment.amount_paid}₽"
+
+            # Уведомляем клиента
+            if payment.client_id:
+                client_text = (
+                    f"✅ Оплата прошла успешно!\n"
+                    f"Сумма: {amount_str}"
+                )
+                await NotificationService.send_by_client_id(
+                    self.db,
+                    payment.client_id,
+                    client_text,
+                    button_text="Мои записи",
+                    button_url=f"{settings.APP_URL}?startParam=my_bookings",
+                )
+
+            # Уведомляем мастера
+            if payment.master_id:
+                master_text = (
+                    f"💰 Получена оплата!\n"
+                    f"Сумма: {amount_str}"
+                )
+                await NotificationService.send_by_master_id(
+                    self.db,
+                    payment.master_id,
+                    master_text,
+                    button_text="Открыть расписание",
+                    button_url=f"{settings.APP_URL}?startParam=dashboard",
+                )
+        except Exception as e:
+            logger.error(
+                f"Failed to send payment notification for payment {payment.id}: {e}"
+            )
 
     async def get_active_subscription(self, master_id: int) -> Optional[MasterSubscription]:
         """Получить активную подписку мастера."""
