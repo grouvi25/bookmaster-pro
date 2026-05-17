@@ -130,7 +130,7 @@ export default function ClientDetail() {
   };
 
   return (
-    <div className="p-4 pb-20 animate-fade-in">
+    <div className="p-4 pb-24 animate-fade-in">
       <button
         onClick={() => navigate('/master/clients')}
         className="flex items-center gap-0.5 text-tg-link text-sm mb-3"

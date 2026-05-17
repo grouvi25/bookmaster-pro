@@ -233,7 +233,7 @@ function AIChat() {
   }, []);
 
   return (
-    <div className="flex flex-col h-[calc(100vh-72px)] animate-fade-in">
+    <div className="flex flex-col h-[calc(100vh-72px-80px)] animate-fade-in">
       {/* Header */}
       <div className="px-4 py-2 flex items-center justify-between bg-surface-primary">
         <h1 className="text-lg font-bold truncate mr-2">AI-ассистент</h1>

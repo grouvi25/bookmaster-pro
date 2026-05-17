@@ -44,7 +44,7 @@ export default function Consultations() {
   const [tab, setTab] = useState<'list' | 'stats'>('list');
 
   return (
-    <div className="p-4 pb-20 animate-fade-in">
+    <div className="p-4 pb-24 animate-fade-in">
       <h1 className="text-xl font-bold mb-3">Консультации</h1>
 
       <div className="flex gap-2 mb-4">
