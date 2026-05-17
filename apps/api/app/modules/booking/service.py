@@ -389,8 +389,6 @@ class BookingService:
             elif new_status == AppointmentStatus.COMPLETED.value:
                 if not appointment.client_id:
                     return
-                if _master and not _master.notify_review:
-                    return
                 text = (
                     f"✅ Визит завершён\n{time_str}\n"
                     f"Спасибо, что были у нас! Оставьте отзыв 🌟"
@@ -406,8 +404,6 @@ class BookingService:
             elif new_status == AppointmentStatus.NO_SHOW.value:
                 if not appointment.client_id:
                     return
-                if _master and not _master.notify_no_show:
-                    return
                 text = (
                     f"⚠️ Вы не пришли на запись\n{time_str}\n"
                     f"Пожалуйста, отменяйте запись заранее, "
@@ -420,6 +416,20 @@ class BookingService:
                     button_text="Записаться снова",
                     button_url=f"{settings.APP_URL}?startParam=my_bookings",
                 )
+
+                # Уведомляем мастера о no-show (если включено)
+                if _master and _master.notify_no_show:
+                    master_text = (
+                        f"⚠️ Клиент не пришёл\n"
+                        f"{client_name} — {time_str}"
+                    )
+                    await NotificationService.send_by_master_id(
+                        self.db,
+                        appointment.master_id,
+                        master_text,
+                        button_text="Открыть расписание",
+                        button_url=f"{settings.APP_URL}?startParam=dashboard",
+                    )
         except Exception as e:
             logger.error(
                 f"Failed to send status-change notification "

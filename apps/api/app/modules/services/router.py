@@ -46,9 +46,32 @@ async def create_service(
     db: AsyncSession = Depends(get_db),
 ):
     """Создать услугу (только мастер)."""
+    from sqlalchemy import select, func
+    from app.modules.core.models import FeatureFlags
+    from app.modules.services.models import Service as ServiceModel
+
     master = await MasterService(db).get_by_identity(int(user["sub"]))
     if not master:
         raise HTTPException(status_code=403, detail="Only masters can create services")
+
+    flags_result = await db.execute(
+        select(FeatureFlags).where(FeatureFlags.master_id == master.id)
+    )
+    flags = flags_result.scalar_one_or_none()
+    if flags and flags.max_services:
+        count_result = await db.execute(
+            select(func.count(ServiceModel.id)).where(
+                ServiceModel.master_id == master.id,
+                ServiceModel.is_active.is_(True),
+            )
+        )
+        current_count = count_result.scalar() or 0
+        if current_count >= flags.max_services:
+            raise HTTPException(
+                status_code=403,
+                detail=f"Лимит услуг по тарифу исчерпан ({current_count}/{flags.max_services})",
+            )
+
     service = ServiceService(db)
     return await service.create(master.id, body.model_dump())
 

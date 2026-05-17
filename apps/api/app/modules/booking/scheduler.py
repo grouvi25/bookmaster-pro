@@ -25,6 +25,8 @@ notify = NotificationService
 async def remind_24h():
     """Напоминание за 24 часа до визита."""
     async with async_session_factory() as db:
+        from app.modules.masters.models import Master
+
         now = datetime.now(timezone.utc)
         target = now + timedelta(hours=24)
         window_start = target - timedelta(minutes=30)
@@ -44,6 +46,10 @@ async def remind_24h():
 
         sent = 0
         for appt in appointments:
+            master = await db.get(Master, appt.master_id)
+            if master and not master.notify_reminder:
+                continue
+
             time_str = appt.time_start.strftime("%H:%M") if appt.time_start else "?"
             date_str = appt.date.strftime("%d.%m") if appt.date else "завтра"
             text = (
@@ -69,6 +75,8 @@ async def remind_24h():
 async def remind_2h():
     """Напоминание за 2 часа до визита."""
     async with async_session_factory() as db:
+        from app.modules.masters.models import Master
+
         now = datetime.now(timezone.utc)
         target = now + timedelta(hours=2)
         window_start = target - timedelta(minutes=15)
@@ -88,6 +96,10 @@ async def remind_2h():
 
         sent = 0
         for appt in appointments:
+            master = await db.get(Master, appt.master_id)
+            if master and not master.notify_reminder:
+                continue
+
             time_str = appt.time_start.strftime("%H:%M") if appt.time_start else "?"
             text = (
                 f"⏰ Через 2 часа у вас запись в {time_str}.\n"
