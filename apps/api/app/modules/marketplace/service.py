@@ -2,17 +2,20 @@
 Marketplace service — поиск мастеров, листинги, публичные профили.
 """
 
+import logging
 import math
 from typing import List, Optional, Tuple
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, or_, and_
+from sqlalchemy import select, func, or_, and_, cast, Text
 
 from app.modules.masters.models import Master
 from app.modules.services.models import Service
 from app.modules.marketplace.models import MarketplaceListing
 from app.modules.reviews.models import ClientReview
 from app.modules.portfolio.models import WorkPhoto
+
+logger = logging.getLogger(__name__)
 
 
 class MarketplaceService:
@@ -40,17 +43,42 @@ class MarketplaceService:
         lat: Optional[float] = None,
         lng: Optional[float] = None,
         radius_km: float = 10.0,
+        verified_only: bool = False,
         page: int = 1,
         per_page: int = 20,
     ) -> Tuple[List[dict], int]:
-        """Поиск мастеров с фильтрами."""
+        """Поиск мастеров с фильтрами (FTS + geo)."""
+        # SQL-уровневая haversine для корректной пагинации
+        distance_col = None
+        if lat is not None and lng is not None:
+            distance_col = (
+                func.acos(
+                    func.least(
+                        func.greatest(
+                            func.sin(func.radians(lat))
+                            * func.sin(func.radians(Master.latitude))
+                            + func.cos(func.radians(lat))
+                            * func.cos(func.radians(Master.latitude))
+                            * func.cos(func.radians(Master.longitude) - func.radians(lng)),
+                            -1,
+                        ),
+                        1,
+                    )
+                )
+                * 6371.0
+            ).label("distance_km")
+
+        select_cols = [
+            Master,
+            MarketplaceListing.placement_tier,
+            func.min(Service.price).label("min_price"),
+            func.count(Service.id).label("services_count"),
+        ]
+        if distance_col is not None:
+            select_cols.append(distance_col)
+
         q = (
-            select(
-                Master,
-                MarketplaceListing.placement_tier,
-                func.min(Service.price).label("min_price"),
-                func.count(Service.id).label("services_count"),
-            )
+            select(*select_cols)
             .outerjoin(MarketplaceListing, MarketplaceListing.master_id == Master.id)
             .outerjoin(Service, and_(
                 Service.master_id == Master.id,
@@ -65,14 +93,34 @@ class MarketplaceService:
             q = q.where(func.lower(Master.city) == func.lower(city))
         if specialization:
             q = q.where(func.lower(Master.specialization).contains(func.lower(specialization)))
+
+        # FTS: полнотекстовый поиск по display_name + specialization + description
         if query:
-            q = q.where(or_(
-                Master.display_name.ilike(f"%{query}%"),
-                Master.specialization.ilike(f"%{query}%"),
-                Master.description.ilike(f"%{query}%"),
-            ))
+            ts_query = func.plainto_tsquery("russian", query)
+            ts_vector = func.to_tsvector(
+                "russian",
+                func.coalesce(cast(Master.display_name, Text), "")
+                + func.cast(" ", Text)
+                + func.coalesce(cast(Master.specialization, Text), "")
+                + func.cast(" ", Text)
+                + func.coalesce(cast(Master.description, Text), ""),
+            )
+            # FTS с fallback на ilike для коротких запросов
+            q = q.where(
+                or_(
+                    ts_vector.bool_op("@@")(ts_query),
+                    Master.display_name.ilike(f"%{query}%"),
+                    Master.specialization.ilike(f"%{query}%"),
+                )
+            )
+
         if min_rating:
             q = q.where(Master.rating_avg >= min_rating)
+
+        if verified_only:
+            q = q.where(Master.is_verified.is_(True))
+
+        # Geo-фильтр на уровне SQL
         if lat is not None and lng is not None:
             q = q.where(
                 and_(
@@ -80,6 +128,7 @@ class MarketplaceService:
                     Master.longitude.isnot(None),
                 )
             )
+            q = q.having(distance_col <= radius_km)
 
         # Filter only visible listings
         q = q.where(
@@ -94,14 +143,23 @@ class MarketplaceService:
         total_r = await self.db.execute(count_q)
         total = total_r.scalar() or 0
 
-        # Order: featured > priority > free, then by rating
-        q = q.order_by(
-            func.array_position(
-                ["featured", "priority", "free"],
-                func.coalesce(MarketplaceListing.placement_tier, "free"),
-            ),
-            Master.rating_avg.desc(),
-        )
+        # Order: featured > priority > free, then by distance or rating
+        if lat is not None and lng is not None:
+            q = q.order_by(
+                func.array_position(
+                    ["featured", "priority", "free"],
+                    func.coalesce(MarketplaceListing.placement_tier, "free"),
+                ),
+                distance_col,
+            )
+        else:
+            q = q.order_by(
+                func.array_position(
+                    ["featured", "priority", "free"],
+                    func.coalesce(MarketplaceListing.placement_tier, "free"),
+                ),
+                Master.rating_avg.desc(),
+            )
         q = q.offset((page - 1) * per_page).limit(per_page)
 
         result = await self.db.execute(q)
@@ -125,17 +183,11 @@ class MarketplaceService:
                 "placement_tier": row[1] or "free",
                 "is_verified": master.is_verified,
             }
-            if lat is not None and lng is not None and master.latitude and master.longitude:
-                dist = self._haversine_km(lat, lng, master.latitude, master.longitude)
-                if dist > radius_km:
-                    continue
-                entry["distance_km"] = round(dist, 1)
+            if distance_col is not None and len(row) > 4 and row[4] is not None:
+                entry["distance_km"] = round(float(row[4]), 1)
             masters.append(entry)
 
-        if lat is not None and lng is not None:
-            masters.sort(key=lambda x: x.get("distance_km", 9999))
-
-        return masters, len(masters) if (lat is not None and lng is not None) else total
+        return masters, total
 
     async def get_public_profile(self, slug: str) -> Optional[dict]:
         """Публичная страница мастера (для маркетплейса и TapLink)."""
