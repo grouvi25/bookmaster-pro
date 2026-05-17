@@ -4,7 +4,9 @@ import ClientTabBar from './ClientTabBar';
 export default function ClientLayout() {
   return (
     <>
-      <Outlet />
+      <div className="pb-24">
+        <Outlet />
+      </div>
       <ClientTabBar />
     </>
   );
