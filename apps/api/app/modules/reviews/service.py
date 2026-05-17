@@ -61,6 +61,13 @@ class ReviewService:
         # Начислить баллы за отзыв
         await self._earn_review_bonus(appointment.master_id, client_id)
 
+        # Уведомить мастера о новом отзыве
+        await self._notify_master_new_review(
+            master_id=appointment.master_id,
+            rating=rating,
+            text=text,
+        )
+
         return review
 
     async def _earn_review_bonus(self, master_id: int, client_id: int) -> None:
@@ -190,6 +197,37 @@ class ReviewService:
         await self._recalculate_rating(review.master_id)
         logger.info(f"Review #{review_id} unhidden")
         return review
+
+    async def _notify_master_new_review(
+        self,
+        master_id: int,
+        rating: int,
+        text: Optional[str] = None,
+    ) -> None:
+        """Уведомить мастера о новом отзыве от клиента."""
+        try:
+            result = await self.db.execute(
+                select(Master).where(Master.id == master_id)
+            )
+            master = result.scalar_one_or_none()
+            if not master or not master.notify_review:
+                return
+
+            from app.modules.notifications.service import NotificationService
+            from app.core.config import settings
+
+            stars = "⭐" * rating
+            review_text = f"\n«{text}»" if text else ""
+            msg = f"🌟 Новый отзыв!\n{stars}{review_text}"
+            await NotificationService.send_by_master_id(
+                self.db,
+                master_id,
+                msg,
+                button_text="Посмотреть отзывы",
+                button_url=f"{settings.APP_URL}?startParam=reviews",
+            )
+        except Exception as e:
+            logger.error(f"Failed to notify master {master_id} about new review: {e}")
 
     async def _recalculate_rating(self, master_id: int) -> None:
         result = await self.db.execute(

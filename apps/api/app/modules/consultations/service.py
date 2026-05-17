@@ -124,6 +124,10 @@ class ConsultationService:
 
         slot.is_available = False
         await self.db.flush()
+
+        # Уведомить мастера о новой консультации
+        await self._notify_master_new_consultation(consultation, slot)
+
         return consultation
 
     async def get_consultation(self, consultation_id: int) -> Optional[Consultation]:
@@ -229,6 +233,47 @@ class ConsultationService:
         consultation.converted_appointment_id = appointment_id
         await self.db.flush()
         return consultation
+
+    async def _notify_master_new_consultation(
+        self,
+        consultation: "Consultation",
+        slot: "ConsultationSlot",
+    ) -> None:
+        """Уведомить мастера о новой бронировке консультации."""
+        try:
+            from app.modules.masters.models import Master
+            from app.modules.notifications.service import NotificationService
+            from app.core.config import settings
+
+            result = await self.db.execute(
+                select(Master).where(Master.id == consultation.master_id)
+            )
+            master = result.scalar_one_or_none()
+            if not master or not master.notify_new_booking:
+                return
+
+            time_str = (
+                slot.slot_start.strftime("%d.%m в %H:%M")
+                if slot.slot_start
+                else ""
+            )
+            text = (
+                f"📹 Новая онлайн-консультация!\n"
+                f"{time_str}"
+            )
+            await NotificationService.send_by_master_id(
+                self.db,
+                consultation.master_id,
+                text,
+                button_text="Открыть расписание",
+                button_url=f"{settings.APP_URL}?startParam=dashboard",
+            )
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).error(
+                f"Failed to notify master {consultation.master_id} "
+                f"about new consultation {consultation.id}: {e}"
+            )
 
     # ── Stats ──────────────────────────────────────────────────
 
