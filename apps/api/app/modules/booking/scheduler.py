@@ -454,6 +454,108 @@ async def billing_reminder():
         logger.info(f"billing_reminder: {sent}/{len(subs)} reminders sent")
 
 
+async def billing_auto_charge():
+    """
+    Ежедневно — автосписание за подписку в день next_billing.
+    Использует сохранённый payment_method (yookassa_recurring_id).
+    При неудаче — уведомляем мастера, даём 3 дня grace period.
+    """
+    async with async_session_factory() as db:
+        from app.modules.payments.models import MasterSubscription
+        from app.modules.payments.service import PLAN_PRICES
+        from decimal import Decimal
+
+        today = datetime.now(timezone.utc).date()
+
+        result = await db.execute(
+            select(MasterSubscription).where(
+                MasterSubscription.next_billing <= today,
+                MasterSubscription.status == "active",
+            )
+        )
+        subs = result.scalars().all()
+
+        charged = 0
+        failed = 0
+        for sub in subs:
+            if not sub.yookassa_recurring_id:
+                logger.info(
+                    f"billing_auto_charge: master {sub.master_id} "
+                    f"has no recurring payment method, skipping"
+                )
+                continue
+
+            price = PLAN_PRICES.get(sub.plan, Decimal("0"))
+            if sub.billing_period == "yearly":
+                price = price * 12 * Decimal("0.8")
+
+            try:
+                if not settings.YOOKASSA_SHOP_ID or not settings.YOOKASSA_SECRET_KEY:
+                    logger.warning(
+                        "billing_auto_charge: YooKassa not configured, skipping"
+                    )
+                    break
+
+                from yookassa import Configuration, Payment as YKPayment
+                Configuration.account_id = settings.YOOKASSA_SHOP_ID
+                Configuration.secret_key = settings.YOOKASSA_SECRET_KEY
+
+                yk_payment = YKPayment.create({
+                    "amount": {"value": str(price), "currency": "RUB"},
+                    "capture": True,
+                    "payment_method_id": sub.yookassa_recurring_id,
+                    "description": (
+                        f"Автопродление подписки {sub.plan} — {sub.billing_period}"
+                    ),
+                    "metadata": {
+                        "subscription_id": sub.id,
+                        "master_id": sub.master_id,
+                        "auto_charge": True,
+                    },
+                })
+
+                if yk_payment.status == "succeeded":
+                    period_days = 365 if sub.billing_period == "yearly" else 30
+                    sub.next_billing = today + timedelta(days=period_days)
+                    charged += 1
+                    logger.info(
+                        f"billing_auto_charge: master {sub.master_id} "
+                        f"charged {price}₽, next_billing={sub.next_billing}"
+                    )
+                else:
+                    raise ValueError(f"Payment status: {yk_payment.status}")
+
+            except Exception as e:
+                failed += 1
+                logger.error(
+                    f"billing_auto_charge: master {sub.master_id} "
+                    f"charge failed: {e}"
+                )
+                grace_days = (today - sub.next_billing).days
+                if grace_days >= 3:
+                    sub.status = "expired"
+                    text = (
+                        "❌ Подписка приостановлена: не удалось списать оплату.\n"
+                        "Обновите платёжные данные для продолжения."
+                    )
+                else:
+                    text = (
+                        f"⚠️ Не удалось списать оплату за тариф «{sub.plan}».\n"
+                        f"Осталось {3 - grace_days} дн. для обновления карты."
+                    )
+                await notify.send_by_master_id(
+                    db, sub.master_id, text,
+                    button_text="Обновить карту",
+                    button_url=f"{settings.APP_URL}?startParam=billing",
+                )
+
+        await db.commit()
+        logger.info(
+            f"billing_auto_charge: {charged} charged, {failed} failed "
+            f"out of {len(subs)} due"
+        )
+
+
 async def ai_reindex():
     """
     Ежедневно в 3:00 — переиндексировать RAG базу

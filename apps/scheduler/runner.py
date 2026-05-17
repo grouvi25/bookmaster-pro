@@ -29,6 +29,7 @@ from app.modules.booking.scheduler import (
     post_visit_review,
     post_visit_rebooking,
     billing_reminder,
+    billing_auto_charge,
     ai_reindex,
     loyalty_expire,
     loyalty_expiry_warn,
@@ -110,6 +111,10 @@ def create_scheduler() -> AsyncIOScheduler:
     scheduler.add_job(
         billing_reminder, "cron", hour=10, minute=0,
         id="billing_reminder", replace_existing=True,
+    )
+    scheduler.add_job(
+        billing_auto_charge, "cron", hour=6, minute=0,
+        id="billing_auto_charge", replace_existing=True,
     )
     scheduler.add_job(
         ai_reindex, "cron", hour=3, minute=0,
