@@ -151,9 +151,10 @@ class SlotService:
             for appt in existing:
                 appt_start = appt.time_start
                 appt_end = appt.time_end
-                # Добавляем буфер к существующей записи
+                # Буфер: защищаем окно после И перед записью
+                appt_start_with_buffer = appt_start - timedelta(minutes=buffer)
                 appt_end_with_buffer = appt_end + timedelta(minutes=buffer)
-                if current_time < appt_end_with_buffer and slot_end > appt_start:
+                if current_time < appt_end_with_buffer and slot_end > appt_start_with_buffer:
                     is_available = False
                     break
 
