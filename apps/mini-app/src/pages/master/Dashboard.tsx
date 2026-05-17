@@ -5,6 +5,7 @@ import { bookingApi, mastersApi } from '@/api/endpoints';
 import { toArray } from '@/shared/lib/normalize';
 import { PageSkeleton } from '@/shared/ui/Skeleton';
 import Card from '@/shared/ui/Card';
+import Button from '@/shared/ui/Button';
 import StatCard from '@/shared/ui/StatCard';
 import EmptyState from '@/shared/ui/EmptyState';
 import StatusBadge from '@/shared/ui/StatusBadge';
@@ -60,7 +61,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="px-screen-x py-section-y pb-24 screen-enter">
+    <div className="px-screen-x py-section-y pb-24 animate-fade-in">
       <div className="mb-section-y">
         <p className="text-tg-hint text-aux capitalize">
           {format(new Date(), 'EEEE, d MMMM', { locale: ru })}
@@ -147,29 +148,32 @@ export default function Dashboard() {
               {/* Quick action buttons */}
               <div className="flex gap-2 mt-3 pt-3 border-t border-tg-secondary">
                 {appt.status === 'pending' && (
-                  <button
+                  <Button
                     onClick={() => handleQuickAction(appt.id, 'confirm')}
-                    disabled={loadingId === appt.id}
-                    className="flex-1 py-2 rounded-lg bg-brand-500 text-white text-sm font-semibold active:scale-[0.97] transition-transform disabled:opacity-40"
+                    loading={loadingId === appt.id}
+                    size="sm"
+                    className="flex-1"
                   >
-                    {loadingId === appt.id ? '…' : 'Подтвердить'}
-                  </button>
+                    Подтвердить
+                  </Button>
                 )}
                 {['confirmed', 'paid'].includes(appt.status) && (
-                  <button
+                  <Button
                     onClick={() => handleQuickAction(appt.id, 'complete')}
-                    disabled={loadingId === appt.id}
-                    className="flex-1 py-2 rounded-lg bg-accent-emerald text-white text-sm font-semibold active:scale-[0.97] transition-transform disabled:opacity-40"
+                    loading={loadingId === appt.id}
+                    size="sm"
+                    className="flex-1"
                   >
-                    {loadingId === appt.id ? '…' : 'Завершить'}
-                  </button>
+                    Завершить
+                  </Button>
                 )}
-                <button
+                <Button
                   onClick={() => navigate('/master/schedule')}
-                  className="py-2 px-3 rounded-lg bg-tg-secondary text-tg-text text-sm font-medium active:scale-[0.97] transition-transform"
+                  variant="secondary"
+                  size="sm"
                 >
                   Подробнее
-                </button>
+                </Button>
               </div>
             </Card>
           ))}

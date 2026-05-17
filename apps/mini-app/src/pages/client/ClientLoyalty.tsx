@@ -22,7 +22,7 @@ export default function ClientLoyalty() {
   const masterIds = [...new Set(bookings.map((b) => b.master_id))];
 
   return (
-    <div className="px-screen-x py-section-y pb-24 screen-enter">
+    <div className="px-screen-x py-section-y pb-24 animate-fade-in">
       <h1 className="text-h1 mb-2">Баллы лояльности</h1>
       <p className="text-aux text-tg-hint mb-section-y">Копите баллы за каждый визит к мастеру</p>
 

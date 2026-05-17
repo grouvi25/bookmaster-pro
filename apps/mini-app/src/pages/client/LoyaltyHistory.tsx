@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useParams } from 'react-router-dom';
 import { loyaltyApi } from '@/api/endpoints';
-import Loading from '@/components/common/Loading';
+import { ListSkeleton } from '@/shared/ui/Skeleton';
 import Card from '@/shared/ui/Card';
 import BackButton from '@/components/common/BackButton';
 import EmptyState from '@/shared/ui/EmptyState';
@@ -62,12 +62,12 @@ export default function LoyaltyHistory() {
     enabled: !!masterId,
   });
 
-  if (balLoading || histLoading) return <Loading />;
+  if (balLoading || histLoading) return <div className="px-screen-x py-section-y"><ListSkeleton count={4} /></div>;
 
   const tier = balance ? TIER_CONFIG[balance.tier] ?? TIER_CONFIG.new : TIER_CONFIG.new;
 
   return (
-    <div className="px-screen-x py-section-y pb-24 screen-enter">
+    <div className="px-screen-x py-section-y pb-24 animate-fade-in">
       <BackButton />
 
       <h1 className="text-h1 mb-section-y">Программа лояльности</h1>

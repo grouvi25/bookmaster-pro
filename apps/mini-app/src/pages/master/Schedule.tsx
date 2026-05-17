@@ -8,6 +8,7 @@ import PageHeader from '@/shared/ui/PageHeader';
 import StatusBadge from '@/shared/ui/StatusBadge';
 import BottomSheet from '@/shared/ui/BottomSheet';
 import Button from '@/shared/ui/Button';
+import EmptyState from '@/shared/ui/EmptyState';
 import { toast } from '@/shared/ui/Toast';
 import {
   format, addDays, startOfWeek, startOfMonth, endOfMonth,
@@ -244,9 +245,7 @@ export default function Schedule() {
       </div>
 
       {bookings.length === 0 ? (
-        <div className="bg-tg-secondary rounded-card p-8 text-center">
-          <p className="text-sm text-tg-hint">Нет записей</p>
-        </div>
+        <EmptyState emoji="📅" title="Нет записей" />
       ) : (
         <div className="flex flex-col gap-2.5">
           {bookings.map((b) => {
@@ -374,7 +373,7 @@ export default function Schedule() {
                     value={cancelReason}
                     onChange={(e) => setCancelReason(e.target.value)}
                     placeholder="Причина отмены (необязательно)"
-                    className="w-full p-3 rounded-xl text-sm outline-none bg-tg-secondary mb-2"
+                    className="input-field mb-2"
                   />
                   <Button
                     onClick={() => handleAction('cancel')}
