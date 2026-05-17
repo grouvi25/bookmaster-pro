@@ -1,7 +1,12 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import { consultationsApi } from '@/api/endpoints';
 import Loading from '@/components/common/Loading';
+import PageHeader from '@/shared/ui/PageHeader';
+import Card from '@/shared/ui/Card';
+import EmptyState from '@/shared/ui/EmptyState';
+import { ArrowLeft } from 'lucide-react';
 
 interface ConsultationItem {
   id: number;
@@ -41,32 +46,42 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export default function Consultations() {
+  const navigate = useNavigate();
   const [tab, setTab] = useState<'list' | 'stats'>('list');
 
   return (
-    <div className="p-4 pb-24 animate-fade-in">
-      <h1 className="text-xl font-bold mb-3">Консультации</h1>
-
-      <div className="flex gap-2 mb-4">
-        {[
-          { key: 'list' as const, label: 'Записи' },
-          { key: 'stats' as const, label: 'Статистика' },
-        ].map(({ key, label }) => (
-          <button
-            key={key}
-            onClick={() => setTab(key)}
-            className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
-              tab === key
-                ? 'bg-tg-button text-tg-button-text'
-                : 'bg-tg-secondary text-tg-text'
-            }`}
-          >
-            {label}
+    <div className="min-h-screen bg-tg-bg text-tg-text pb-24 animate-fade-in">
+      <PageHeader
+        title="Консультации"
+        left={
+          <button onClick={() => navigate(-1)} className="p-2">
+            <ArrowLeft className="w-5 h-5" />
           </button>
-        ))}
-      </div>
+        }
+      />
 
-      {tab === 'list' ? <ConsultationsList /> : <ConsultationStatsSection />}
+      <div className="px-screen-x">
+        <div className="flex gap-2 mb-4">
+          {[
+            { key: 'list' as const, label: 'Записи' },
+            { key: 'stats' as const, label: 'Статистика' },
+          ].map(({ key, label }) => (
+            <button
+              key={key}
+              onClick={() => setTab(key)}
+              className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
+                tab === key
+                  ? 'bg-tg-button text-tg-button-text'
+                  : 'bg-tg-secondary text-tg-text'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {tab === 'list' ? <ConsultationsList /> : <ConsultationStatsSection />}
+      </div>
     </div>
   );
 }
@@ -119,16 +134,14 @@ function ConsultationsList() {
       </div>
 
       {items.length === 0 ? (
-        <p className="text-tg-hint text-sm text-center py-8">
-          Нет консультаций
-        </p>
+        <EmptyState
+          emoji="📞"
+          title="Нет консультаций"
+        />
       ) : (
         <div className="flex flex-col gap-2">
           {items.map((c) => (
-            <div
-              key={c.id}
-              className="bg-surface-elevated rounded-card p-3.5"
-            >
+            <Card key={c.id}>
               <div className="flex justify-between items-start mb-2">
                 <div>
                   <div className="text-sm font-medium">
@@ -200,7 +213,7 @@ function ConsultationsList() {
                   </button>
                 </div>
               )}
-            </div>
+            </Card>
           ))}
         </div>
       )}
@@ -231,13 +244,13 @@ function ConsultationStatsSection() {
         />
       </div>
 
-      <div className="bg-surface-elevated rounded-card p-4">
+      <Card>
         <h3 className="text-sm font-medium mb-2">Что такое конверсия?</h3>
         <p className="text-xs text-tg-hint">
           Процент завершённых консультаций, которые привели к записи на услугу.
           Чем выше, тем эффективнее ваши онлайн-консультации.
         </p>
-      </div>
+      </Card>
     </div>
   );
 }

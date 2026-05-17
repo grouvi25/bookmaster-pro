@@ -4,10 +4,10 @@ import { useNavigate } from 'react-router-dom';
 import Loading from '@/components/common/Loading';
 import Card from '@/shared/ui/Card';
 import Button from '@/shared/ui/Button';
-import SectionBack from '@/shared/ui/SectionBack';
+import PageHeader from '@/shared/ui/PageHeader';
 import EmptyState from '@/shared/ui/EmptyState';
 import { toast } from '@/shared/ui/Toast';
-import { Plus, Trash2 } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2 } from 'lucide-react';
 import api from '@/api/client';
 
 interface BlockedSlot {
@@ -42,14 +42,22 @@ export default function BlockedSlots() {
   const slots = data || [];
 
   return (
-    <div className="px-screen-x pt-section-y pb-24 animate-fade-in">
-      <SectionBack onBack={() => navigate(-1)} />
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-xl font-bold tracking-tight">Выходные и перерывы</h1>
-        <Button variant="primary" size="sm" onClick={() => setShowCreate(!showCreate)}>
-          <Plus className="w-3.5 h-3.5" /> Добавить
-        </Button>
-      </div>
+    <div className="min-h-screen bg-tg-bg text-tg-text pb-24 animate-fade-in">
+      <PageHeader
+        title="Выходные и перерывы"
+        left={
+          <button onClick={() => navigate(-1)} className="p-2">
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+        }
+        right={
+          <Button variant="primary" size="sm" onClick={() => setShowCreate(!showCreate)}>
+            <Plus className="w-3.5 h-3.5" /> Добавить
+          </Button>
+        }
+      />
+
+      <div className="px-screen-x">
 
       {showCreate && (
         <CreateBlockedSlot onClose={() => setShowCreate(false)} />
@@ -94,6 +102,7 @@ export default function BlockedSlots() {
           ))}
         </div>
       )}
+      </div>
     </div>
   );
 }

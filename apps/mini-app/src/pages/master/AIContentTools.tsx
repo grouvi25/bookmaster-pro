@@ -4,10 +4,10 @@ import { useNavigate } from 'react-router-dom';
 import { aiApi } from '@/api/endpoints';
 import Card from '@/shared/ui/Card';
 import Button from '@/shared/ui/Button';
-import SectionBack from '@/shared/ui/SectionBack';
+import PageHeader from '@/shared/ui/PageHeader';
 import { ListSkeleton } from '@/shared/ui/Skeleton';
 import { toast } from '@/shared/ui/Toast';
-import { Sparkles, Copy, Check } from 'lucide-react';
+import { ArrowLeft, Sparkles, Copy, Check } from 'lucide-react';
 
 interface Template {
   key: string;
@@ -58,9 +58,17 @@ export default function AIContentTools() {
   const templateList = templates || [];
 
   return (
-    <div className="px-screen-x pt-section-y pb-24 animate-fade-in">
-      <SectionBack onBack={() => navigate(-1)} />
-      <h1 className="text-xl font-bold tracking-tight mb-1">AI контент-мастер</h1>
+    <div className="min-h-screen bg-tg-bg text-tg-text pb-24 animate-fade-in">
+      <PageHeader
+        title="AI контент-мастер"
+        left={
+          <button onClick={() => navigate(-1)} className="p-2">
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+        }
+      />
+
+      <div className="px-screen-x">
       {tokensInfo && (
         <p className="text-xs text-tg-hint mb-4">
           Токены: {tokensInfo.used?.toLocaleString('ru') ?? 0} / {tokensInfo.limit?.toLocaleString('ru') ?? '∞'}
@@ -146,6 +154,7 @@ export default function AIContentTools() {
           )}
         </div>
       )}
+      </div>
     </div>
   );
 }

@@ -1,9 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { loyaltyApi } from '@/api/endpoints';
 import Loading from '@/components/common/Loading';
 import Card from '@/shared/ui/Card';
-import SectionBack from '@/shared/ui/SectionBack';
+import BackButton from '@/components/common/BackButton';
 import EmptyState from '@/shared/ui/EmptyState';
 
 
@@ -49,7 +49,6 @@ const EMOJI_MAP = {
 
 export default function LoyaltyHistory() {
   const { masterId } = useParams<{ masterId: string }>();
-  const navigate = useNavigate();
 
   const { data: balance, isLoading: balLoading } = useQuery<LoyaltyBalance>({
     queryKey: ['loyalty-balance', masterId],
@@ -69,7 +68,7 @@ export default function LoyaltyHistory() {
 
   return (
     <div className="px-screen-x py-section-y pb-24 screen-enter">
-      <SectionBack onBack={() => navigate(-1)} />
+      <BackButton />
 
       <h1 className="text-h1 mb-section-y">Программа лояльности</h1>
 

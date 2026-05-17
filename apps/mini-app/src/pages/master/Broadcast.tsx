@@ -4,6 +4,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { broadcastApi } from '@/api/endpoints';
 import Loading from '@/components/common/Loading';
 import PageHeader from '@/shared/ui/PageHeader';
+import Card from '@/shared/ui/Card';
+import Button from '@/shared/ui/Button';
+import EmptyState from '@/shared/ui/EmptyState';
 import { ArrowLeft, Send, Plus, Users } from 'lucide-react';
 
 export default function Broadcast() {
@@ -59,10 +62,10 @@ export default function Broadcast() {
 
       <div className="flex flex-col gap-3">
         {broadcasts.length === 0 ? (
-          <p className="text-tg-hint text-center py-8">Нет рассылок</p>
+          <EmptyState emoji="📨" title="Нет рассылок" description="Создайте первую рассылку" />
         ) : (
           broadcasts.map((b) => (
-            <div key={b.id} className="bg-surface-elevated rounded-card p-4">
+            <Card key={b.id}>
               <div className="flex justify-between items-start mb-2">
                 <div>
                   <h3 className="font-medium text-sm">{b.title}</h3>
@@ -96,7 +99,7 @@ export default function Broadcast() {
                   Отправить сейчас
                 </button>
               )}
-            </div>
+            </Card>
           ))
         )}
       </div>
@@ -134,7 +137,7 @@ function CreateBroadcast({ onClose }: { onClose: () => void }) {
   });
 
   return (
-    <div className="bg-surface-elevated rounded-card p-4 mb-5">
+    <Card className="mb-5">
       <h3 className="text-sm font-semibold mb-3">Новая рассылка</h3>
 
       <input
@@ -169,17 +172,16 @@ function CreateBroadcast({ onClose }: { onClose: () => void }) {
            'Предпросмотр'}
         </button>
         <div className="flex-1" />
-        <button onClick={onClose} className="text-xs text-tg-hint">
-          Отмена
-        </button>
-        <button
+        <Button variant="secondary" size="sm" onClick={onClose}>Отмена</Button>
+        <Button
+          variant="primary"
+          size="sm"
           onClick={() => createMutation.mutate()}
           disabled={!title || !text || createMutation.isPending}
-          className="bg-tg-button text-tg-button-text px-4 py-1.5 rounded-lg text-xs font-medium disabled:opacity-50"
         >
           Создать
-        </button>
+        </Button>
       </div>
-    </div>
+    </Card>
   );
 }

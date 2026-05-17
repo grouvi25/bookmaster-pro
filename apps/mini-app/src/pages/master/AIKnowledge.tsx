@@ -4,12 +4,12 @@ import { useNavigate } from 'react-router-dom';
 import { aiApi } from '@/api/endpoints';
 import Card from '@/shared/ui/Card';
 import Button from '@/shared/ui/Button';
-import SectionBack from '@/shared/ui/SectionBack';
+import PageHeader from '@/shared/ui/PageHeader';
 import EmptyState from '@/shared/ui/EmptyState';
 import { ListSkeleton } from '@/shared/ui/Skeleton';
 import { toast } from '@/shared/ui/Toast';
 import FeatureGate from '@/shared/ui/FeatureGate';
-import { FileText, Plus, Trash2, Loader2 } from 'lucide-react';
+import { ArrowLeft, FileText, Plus, Trash2, Loader2 } from 'lucide-react';
 
 interface KnowledgeDoc {
   id: number;
@@ -151,28 +151,35 @@ function AIKnowledgeInner() {
   const docs = data || [];
 
   return (
-    <div className="px-screen-x pt-section-y pb-24 animate-fade-in">
-      <SectionBack onBack={() => navigate('/master/ai')} />
+    <div className="min-h-screen bg-tg-bg text-tg-text pb-24 animate-fade-in">
+      <PageHeader
+        title="База знаний AI"
+        left={
+          <button onClick={() => navigate('/master/ai')} className="p-2">
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+        }
+        right={
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={handlePick}
+            disabled={uploading}
+          >
+            {uploading ? (
+              <>
+                <Loader2 className="w-3.5 h-3.5 animate-spin" /> Загрузка...
+              </>
+            ) : (
+              <>
+                <Plus className="w-3.5 h-3.5" /> Документ
+              </>
+            )}
+          </Button>
+        }
+      />
 
-      <div className="flex justify-between items-start mb-1 gap-3">
-        <h1 className="text-xl font-bold tracking-tight">База знаний AI</h1>
-        <Button
-          variant="primary"
-          size="sm"
-          onClick={handlePick}
-          disabled={uploading}
-        >
-          {uploading ? (
-            <>
-              <Loader2 className="w-3.5 h-3.5 animate-spin" /> Загрузка...
-            </>
-          ) : (
-            <>
-              <Plus className="w-3.5 h-3.5" /> Документ
-            </>
-          )}
-        </Button>
-      </div>
+      <div className="px-screen-x">
       <p className="text-xs text-tg-hint mb-4">
         Загрузите PDF или TXT с информацией о вашем бизнесе — AI-советник будет
         использовать их при ответах. До 10 МБ на файл.
@@ -240,6 +247,7 @@ function AIKnowledgeInner() {
           ))}
         </div>
       )}
+      </div>
     </div>
   );
 }
