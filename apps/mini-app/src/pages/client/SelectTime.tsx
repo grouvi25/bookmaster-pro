@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { bookingApi } from '@/api/endpoints';
 import { useBookingStore } from '@/stores/booking';
 import BackButton from '@/components/common/BackButton';
-import Loading from '@/components/common/Loading';
+import { ListSkeleton } from '@/shared/ui/Skeleton';
 import EmptyState from '@/shared/ui/EmptyState';
 import clsx from 'clsx';
 import { Clock } from 'lucide-react';
@@ -35,7 +35,7 @@ export default function SelectTime() {
   }, [masterId, serviceId, selectedDate, navigate]);
 
   if (!masterId || !serviceId || !selectedDate) return null;
-  if (isLoading) return <Loading />;
+  if (isLoading) return <div className="px-screen-x py-section-y"><ListSkeleton count={4} /></div>;
 
   const rawSlots: TimeSlot[] = slotsData?.slots || [];
   const slots = rawSlots.filter((s) => s.available);

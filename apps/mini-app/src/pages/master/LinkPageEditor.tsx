@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { mastersApi, servicesApi, portfolioApi, uploadsApi } from '@/api/endpoints';
 import { toArray } from '@/shared/lib/normalize';
-import Loading from '@/components/common/Loading';
+import { PageSkeleton } from '@/shared/ui/Skeleton';
 import Card from '@/shared/ui/Card';
 import Button from '@/shared/ui/Button';
 import PageHeader from '@/shared/ui/PageHeader';
@@ -132,7 +132,7 @@ export default function LinkPageEditor() {
     }
   };
 
-  if (isLoading) return <Loading />;
+  if (isLoading) return <PageSkeleton />;
   if (!master) return <div className="px-screen-x py-section-y text-center text-tg-hint">Профиль не найден</div>;
 
   const servicesList: Service[] = toArray<Service>(services);

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/api/client';
-import Loading from '@/components/common/Loading';
+import { ListSkeleton } from '@/shared/ui/Skeleton';
 import EmptyState from '@/shared/ui/EmptyState';
 import Button from '@/shared/ui/Button';
 import Card from '@/shared/ui/Card';
@@ -96,7 +96,7 @@ export default function NearbyMasters() {
           </div>
 
           {isLoading ? (
-            <Loading />
+            <ListSkeleton count={3} />
           ) : !masters || masters.length === 0 ? (
             <EmptyState
               emoji="🔍"

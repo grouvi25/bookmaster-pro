@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import api from '@/api/client';
 import { APP_URL } from '@/shared/config';
-import Loading from '@/components/common/Loading';
+import { PageSkeleton } from '@/shared/ui/Skeleton';
 import { CalendarDays, Star, ChevronRight } from 'lucide-react';
 
 interface MasterPublic {
@@ -44,7 +44,7 @@ export default function EmbedPage() {
     return () => observer.disconnect();
   }, []);
 
-  if (loading) return <Loading />;
+  if (loading) return <PageSkeleton />;
   if (error || !master) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen p-6 text-center">
