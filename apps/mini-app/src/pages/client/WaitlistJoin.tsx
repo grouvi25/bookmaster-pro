@@ -99,8 +99,8 @@ export default function WaitlistJoin() {
           onChange={(e) => setPhone(e.target.value)}
           placeholder="+7 (___) ___-__-__"
           type="tel"
-          className="w-full p-3 rounded-xl text-sm outline-none bg-tg-secondary"
-        />
+                  className="input-field"
+                />
       </div>
 
       <div className="mb-6">
@@ -110,7 +110,7 @@ export default function WaitlistJoin() {
           onChange={(e) => setComment(e.target.value)}
           placeholder="Пожелания по времени или дате..."
           rows={3}
-          className="w-full p-3 rounded-xl text-sm outline-none bg-tg-secondary resize-none"
+          className="input-field !h-auto resize-none"
         />
       </div>
 

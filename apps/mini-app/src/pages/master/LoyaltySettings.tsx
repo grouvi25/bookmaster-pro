@@ -53,7 +53,7 @@ export default function LoyaltySettings() {
         }
       />
 
-      <div className="px-4">
+      <div className="px-screen-x">
 
       <Card className="mb-4">
         <h2 className="font-medium text-sm mb-3 flex items-center gap-1.5">

@@ -83,7 +83,7 @@ export default function ReviewForm() {
           onChange={(e) => setText(e.target.value)}
           placeholder="Расскажите о вашем опыте..."
           rows={4}
-          className="w-full p-3 rounded-xl text-sm outline-none bg-tg-secondary resize-none"
+          className="input-field !h-auto resize-none"
         />
       </div>
 

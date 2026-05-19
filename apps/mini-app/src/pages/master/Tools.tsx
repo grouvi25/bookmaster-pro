@@ -23,7 +23,7 @@ export default function Tools() {
   const [tab, setTab] = useState<ToolsTab>('promo');
 
   return (
-    <div className="px-screen-x py-section-y pb-24 screen-enter">
+    <div className="px-screen-x py-section-y pb-24 animate-fade-in">
       <PageHeader title="Инструменты" />
 
       <div className="mb-section-y">
@@ -80,7 +80,7 @@ function PromoSection() {
       </div>
 
       {showForm && (
-        <Card className="mb-3 screen-enter">
+        <Card className="mb-3 animate-fade-in">
           <input
             value={code}
             onChange={(e) => setCode(e.target.value.toUpperCase())}

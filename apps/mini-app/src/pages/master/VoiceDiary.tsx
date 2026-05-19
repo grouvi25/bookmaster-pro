@@ -131,7 +131,7 @@ function VoiceDiaryContent() {
         }
       />
 
-      <div className="px-4 space-y-4">
+      <div className="px-screen-x space-y-4">
         {/* Record button */}
         <div className="flex flex-col items-center py-8">
           <button

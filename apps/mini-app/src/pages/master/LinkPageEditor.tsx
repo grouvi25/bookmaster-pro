@@ -234,8 +234,8 @@ export default function LinkPageEditor() {
           onChange={(e) => setBio(e.target.value)}
           placeholder="Расскажите о себе, опыте, подходе к работе..."
           rows={4}
-          className="w-full p-3 rounded-xl text-sm outline-none bg-tg-secondary resize-none"
-        />
+                  className="input-field !h-auto resize-none"
+                />
       </div>
 
       {/* Social links */}
@@ -259,13 +259,13 @@ export default function LinkPageEditor() {
                     value={link.label}
                     onChange={(e) => updateLink(i, 'label', e.target.value)}
                     placeholder="Название (Instagram, Telegram...)"
-                    className="w-full p-2.5 rounded-xl text-sm outline-none bg-tg-secondary"
-                  />
-                  <input
-                    value={link.url}
-                    onChange={(e) => updateLink(i, 'url', e.target.value)}
-                    placeholder="https://..."
-                    className="w-full p-2.5 rounded-xl text-sm outline-none bg-tg-secondary"
+                                      className="input-field"
+                                    />
+                                    <input
+                                      value={link.url}
+                                      onChange={(e) => updateLink(i, 'url', e.target.value)}
+                                      placeholder="https://..."
+                                      className="input-field"
                   />
                 </div>
                 <button
