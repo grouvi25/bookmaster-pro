@@ -180,8 +180,8 @@ export default function ModeratorPanel() {
     <div className="min-h-screen bg-tg-bg text-tg-text pb-24 animate-fade-in">
       <PageHeader title="Модератор" />
 
-      <div className="px-4 space-y-4">
-        {/* Main tabs */}
+            <div className="px-screen-x space-y-4">
+              {/* Main tabs */}
         <div className="flex gap-2">
           <button
             onClick={() => setActiveTab('tickets')}

@@ -29,7 +29,7 @@ export default function Settings() {
   const [tab, setTab] = useState<SettingsTab>('main');
 
   return (
-    <div className="min-h-screen bg-tg-bg text-tg-text pb-24 screen-enter">
+    <div className="min-h-screen bg-tg-bg text-tg-text pb-24 animate-fade-in">
       <PageHeader
         title={TAB_TITLES[tab]}
         left={
@@ -170,8 +170,8 @@ function AnalyticsSection() {
   if (isLoading) return <StatGridSkeleton count={4} />;
 
   return (
-    <div className="screen-enter">
-      <h2 className="text-h2 mb-3">Аналитика за 30 дней</h2>
+        <div className="animate-fade-in">
+          <h2 className="text-h2 mb-3">Аналитика за 30 дней</h2>
 
       <div className="grid grid-cols-2 gap-card-gap mb-4">
         <StatCard label="Выручка" value={`${(data?.total_revenue ?? 0).toLocaleString('ru')} ₽`} />
@@ -241,9 +241,9 @@ function ServicesSection() {
   };
 
   return (
-    <div className="screen-enter">
-      <div className="flex items-center justify-between mb-3">
-        <h2 className="text-h2">Мои услуги</h2>
+        <div className="animate-fade-in">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-h2">Мои услуги</h2>
         <button onClick={() => setShowForm(!showForm)} className="flex items-center gap-1 text-tg-link text-body">
           {'➕'} Добавить
         </button>
@@ -333,9 +333,9 @@ function ProfileSection() {
   };
 
   return (
-    <div className="screen-enter">
-      <div className="flex items-center justify-between mb-3">
-        <h2 className="text-h2">Профиль</h2>
+        <div className="animate-fade-in">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-h2">Профиль</h2>
         {!editing && (
           <button onClick={startEdit} className="text-tg-link text-body interactive">
             Редактировать
@@ -468,8 +468,8 @@ function NotificationsSection() {
   };
 
   return (
-    <div className="screen-enter">
-      <h2 className="text-h2 mb-1">Уведомления</h2>
+        <div className="animate-fade-in">
+          <h2 className="text-h2 mb-1">Уведомления</h2>
       <p className="text-aux text-tg-hint mb-4">Настройте, какие уведомления вы хотите получать</p>
 
       <div className="flex flex-col gap-card-gap">
@@ -537,8 +537,8 @@ function SupportSection() {
   };
 
   return (
-    <div className="screen-enter">
-      <h2 className="text-h2 mb-3">Поддержка</h2>
+        <div className="animate-fade-in">
+          <h2 className="text-h2 mb-3">Поддержка</h2>
 
       <div className="mb-4 space-y-2">
         <select

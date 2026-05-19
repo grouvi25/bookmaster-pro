@@ -102,7 +102,7 @@ function SubscriptionPackagesContent() {
         }
       />
 
-      <div className="px-4 space-y-4">
+      <div className="px-screen-x space-y-4">
         {showForm && (
           <div className="bg-surface-elevated rounded-card p-4 space-y-3">
             <h3 className="font-semibold text-sm">Новый пакет</h3>

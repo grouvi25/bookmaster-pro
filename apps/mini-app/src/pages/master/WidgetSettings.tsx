@@ -53,7 +53,7 @@ function WidgetSettingsContent() {
         }
       />
 
-      <div className="px-4 space-y-4">
+      <div className="px-screen-x space-y-4">
         <div className="bg-surface-elevated rounded-card p-4">
           <div className="flex items-center gap-3 mb-3">
             <Globe className="w-5 h-5 text-brand-500" />
