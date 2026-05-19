@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { servicesApi } from '@/api/endpoints';
 import { useBookingStore } from '@/stores/booking';
 import BackButton from '@/components/common/BackButton';
-import Loading from '@/components/common/Loading';
+import { ListSkeleton } from '@/shared/ui/Skeleton';
 import { Clock, ChevronRight } from 'lucide-react';
 import type { Service } from '@/shared/types/api';
 
@@ -19,7 +19,7 @@ export default function SelectService() {
     enabled: !!masterId,
   });
 
-  if (isLoading) return <Loading />;
+  if (isLoading) return <div className="px-screen-x py-section-y"><ListSkeleton count={4} /></div>;
 
   const handleSelect = (svc: Service) => {
     setService(svc.id, svc.name, svc.price, svc.duration_min);

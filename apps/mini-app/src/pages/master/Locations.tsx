@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { locationsApi } from '@/api/endpoints';
-import Loading from '@/components/common/Loading';
+import { ListSkeleton } from '@/shared/ui/Skeleton';
 import PageHeader from '@/shared/ui/PageHeader';
 import Card from '@/shared/ui/Card';
 import Button from '@/shared/ui/Button';
@@ -24,7 +24,7 @@ export default function Locations() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['locations'] }),
   });
 
-  if (isLoading) return <Loading />;
+  if (isLoading) return <div className="px-screen-x py-section-y"><ListSkeleton count={3} /></div>;
 
   const locations = (data || []) as Array<{
     id: number;

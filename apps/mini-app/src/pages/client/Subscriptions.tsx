@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { subscriptionsApi } from '@/api/endpoints';
-import Loading from '@/components/common/Loading';
+import { ListSkeleton } from '@/shared/ui/Skeleton';
 import Card from '@/shared/ui/Card';
 import BackButton from '@/components/common/BackButton';
 import EmptyState from '@/shared/ui/EmptyState';
@@ -39,7 +39,7 @@ export default function Subscriptions() {
     queryFn: () => subscriptionsApi.list().then((r) => r.data),
   });
 
-  if (isLoading) return <Loading />;
+  if (isLoading) return <div className="px-screen-x py-section-y"><ListSkeleton count={3} /></div>;
 
   const subscriptions = subs ?? [];
   const active = subscriptions.filter((s) => s.status === 'active');

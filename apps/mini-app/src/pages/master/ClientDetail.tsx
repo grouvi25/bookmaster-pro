@@ -2,7 +2,7 @@ import { useParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { clientsApi } from '@/api/endpoints';
-import Loading from '@/components/common/Loading';
+import { PageSkeleton } from '@/shared/ui/Skeleton';
 import Card from '@/shared/ui/Card';
 import Button from '@/shared/ui/Button';
 import { toast } from '@/shared/ui/Toast';
@@ -83,7 +83,7 @@ export default function ClientDetail() {
   const [newNote, setNewNote] = useState('');
   const [saving, setSaving] = useState(false);
 
-  if (isLoading) return <Loading />;
+  if (isLoading) return <PageSkeleton />;
   if (!client) {
     return (
       <div className="p-4 text-center">

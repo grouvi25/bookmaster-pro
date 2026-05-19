@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { loyaltyApi } from '@/api/endpoints';
-import Loading from '@/components/common/Loading';
+import { ListSkeleton } from '@/shared/ui/Skeleton';
 import Card from '@/shared/ui/Card';
 import PageHeader from '@/shared/ui/PageHeader';
 import { ArrowLeft, Star, Users, Gift, Clock } from 'lucide-react';
@@ -39,7 +39,7 @@ export default function LoyaltySettings() {
     queryFn: () => loyaltyApi.getSettings().then((r) => r.data),
   });
 
-  if (isLoading) return <Loading />;
+  if (isLoading) return <div className="px-screen-x py-section-y"><ListSkeleton count={3} /></div>;
   if (!settings) return null;
 
   return (

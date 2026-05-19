@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useParams } from 'react-router-dom';
 import { mastersApi, servicesApi, reviewsApi, portfolioApi } from '@/api/endpoints';
-import Loading from '@/components/common/Loading';
+import { PageSkeleton } from '@/shared/ui/Skeleton';
 import { User, Star, ExternalLink } from 'lucide-react';
 import type { Service, PortfolioItem } from '@/shared/types/api';
 import { pageUrl, botLink } from '@/shared/config';
@@ -41,7 +41,7 @@ export default function LinkPage() {
     enabled: !!master?.id && master?.is_portfolio,
   });
 
-  if (isLoading) return <Loading />;
+  if (isLoading) return <PageSkeleton />;
   if (!master) return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-tg-bg p-6">
       <User className="w-16 h-16 text-tg-hint/40 mb-4" strokeWidth={1.5} />
