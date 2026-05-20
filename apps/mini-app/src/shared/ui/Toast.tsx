@@ -43,7 +43,7 @@ export function ToastContainer() {
             'px-4 py-3 rounded-card text-[15px] font-medium animate-slide-down pointer-events-auto',
             t.type === 'success' && 'bg-status-success text-white',
             t.type === 'error' && 'bg-status-danger text-white',
-            t.type === 'info' && 'bg-gray-900 text-white',
+            t.type === 'info' && 'bg-tg-text text-tg-bg',
           )}
         >
           {t.message}

@@ -43,7 +43,7 @@ export default function Broadcast() {
         right={
           <button
             onClick={() => setShowCreate(!showCreate)}
-            className="flex items-center gap-1.5 bg-brand-500 text-white px-3.5 py-2 rounded-xl text-sm font-semibold shadow-button active:scale-[0.97] transition-all"
+            className="flex items-center gap-1.5 bg-tg-button text-tg-button-text px-3.5 py-2 rounded-btn text-sm font-semibold interactive"
           >
             <Plus className="w-4 h-4" />
             Новая

@@ -56,10 +56,10 @@ export default function NpsPopup() {
               className={`min-w-[36px] h-9 rounded-xl text-sm font-medium transition-all ${
                 score === i
                   ? i <= 6
-                    ? 'bg-red-500 text-white'
+                    ? 'bg-status-danger text-white'
                     : i <= 8
-                    ? 'bg-amber-500 text-white'
-                    : 'bg-green-500 text-white'
+                    ? 'bg-status-warning text-white'
+                    : 'bg-status-success text-white'
                   : 'bg-surface-elevated text-tg-text'
               }`}
             >

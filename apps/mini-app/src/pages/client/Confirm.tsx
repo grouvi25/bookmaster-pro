@@ -188,7 +188,7 @@ export default function Confirm() {
             </div>
           )}
 
-          <div className="border-t border-gray-200 pt-3 flex justify-between">
+          <div className="border-t border-tg-secondary pt-3 flex justify-between">
             <span className="font-bold">Итого</span>
             <span className="font-bold text-brand-600">
               {finalPrice.toLocaleString('ru')} \₽

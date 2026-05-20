@@ -86,7 +86,7 @@ export default function NearbyMasters() {
             <select
               value={radius}
               onChange={(e) => setRadius(Number(e.target.value))}
-              className="ml-auto text-xs border border-gray-200 rounded-lg px-2 py-1"
+              className="ml-auto text-xs border border-tg-secondary rounded-lg px-2 py-1"
             >
               <option value={5}>5 км</option>
               <option value={10}>10 км</option>

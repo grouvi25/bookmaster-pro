@@ -81,7 +81,7 @@ function WidgetSettingsContent() {
               </div>
               <button
                 onClick={() => copyToClipboard(jsSnippet, 'js')}
-                className="flex items-center gap-2 px-4 py-2 bg-brand-500 text-white rounded-xl text-sm font-medium w-full justify-center"
+                className="flex items-center gap-2 px-4 py-2 bg-tg-button text-tg-button-text rounded-btn text-sm font-medium w-full justify-center interactive"
               >
                 {copiedField === 'js' ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                 {copiedField === 'js' ? 'Скопировано' : 'Копировать код'}

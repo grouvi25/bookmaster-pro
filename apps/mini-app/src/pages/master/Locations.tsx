@@ -41,7 +41,7 @@ export default function Locations() {
         right={
           <button
             onClick={() => setShowCreate(!showCreate)}
-            className="flex items-center gap-1.5 bg-tg-button text-tg-button-text px-3 py-2 rounded-xl text-sm font-medium"
+            className="flex items-center gap-1.5 bg-tg-button text-tg-button-text px-3 py-2 rounded-btn text-sm font-medium interactive"
           >
             <Plus className="w-4 h-4" />
             Добавить
