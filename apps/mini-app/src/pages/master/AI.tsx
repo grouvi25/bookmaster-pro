@@ -1,8 +1,21 @@
+/**
+ * AI-ассистент мастера — чат с WebSocket стримингом.
+ *
+ * ТЗ "База и Ai" §2.2-2.3:
+ * - Header: название, кнопки быстрого доступа (База знаний, Контент, Голосовой),
+ *   кнопка новой сессии.
+ * - Quick actions карточки при пустом чате.
+ * - WebSocket стриминг → fallback на POST /ai/ask.
+ * - Голосовой ввод: MediaRecorder → /ai/transcribe → WS send.
+ */
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { aiApi } from '@/api/endpoints';
 import { useAuthStore } from '@/stores/auth';
-import { SendHorizontal, Mic, MicOff, Sparkles, FileText, BookOpen } from 'lucide-react';
+import {
+  SendHorizontal, Mic, MicOff, Sparkles, FileText, BookOpen, RotateCcw,
+} from 'lucide-react';
+import Button from '@/shared/ui/Button';
 import FeatureGate from '@/shared/ui/FeatureGate';
 
 interface Message {
@@ -10,6 +23,13 @@ interface Message {
   content: string;
   streaming?: boolean;
 }
+
+const QUICK_ACTIONS = [
+  { emoji: '📊', text: 'Сколько записей на этой неделе?' },
+  { emoji: '💡', text: 'Как увеличить количество клиентов?' },
+  { emoji: '📝', text: 'Составь план постов на неделю' },
+  { emoji: '💬', text: 'Помоги ответить на отзыв' },
+];
 
 export default function AIAssistant() {
   return (
@@ -22,18 +42,7 @@ export default function AIAssistant() {
 function AIChat() {
   const navigate = useNavigate();
   const { masterId } = useAuthStore();
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      role: 'assistant',
-      content:
-        'Привет! Я ваш AI-ассистент. Могу помочь с:\n\n' +
-        '\• Анализом бизнеса и советами\n' +
-        '\• Генерацией текстов для описаний услуг\n' +
-        '\• Ответами на отзывы клиентов\n' +
-        '\• Подсказками по маркетингу\n\n' +
-        'Спрашивайте!',
-    },
-  ]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [sessionId, setSessionId] = useState<string | undefined>(undefined);
@@ -42,6 +51,7 @@ function AIChat() {
   const chunksRef = useRef<Blob[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
   const wsRef = useRef<WebSocket | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({
@@ -51,26 +61,25 @@ function AIChat() {
   }, [messages]);
 
   useEffect(() => {
-    return () => {
-      wsRef.current?.close();
-    };
+    return () => { wsRef.current?.close(); };
   }, []);
+
+  // ── WebSocket ──────────────────────────────────────────
 
   const sendViaWebSocket = useCallback(
     (userMessage: string) => {
-      const wsUrl = `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/api/v1/ai/chat`;
+      const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const wsUrl = `${proto}//${window.location.host}/api/v1/ai/chat`;
 
       const ws = new WebSocket(wsUrl);
       wsRef.current = ws;
 
       ws.onopen = () => {
-        ws.send(
-          JSON.stringify({
-            message: userMessage,
-            session_id: sessionId,
-            master_id: masterId,
-          })
-        );
+        ws.send(JSON.stringify({
+          message: userMessage,
+          session_id: sessionId,
+          master_id: masterId,
+        }));
       };
 
       let buffer = '';
@@ -88,18 +97,22 @@ function AIChat() {
           return;
         }
 
-        if (data.session_id) {
-          setSessionId(data.session_id);
-        }
+        if (data.session_id) setSessionId(data.session_id);
 
         if (data.chunk) {
           buffer += data.chunk;
           setMessages((prev) => {
             const last = prev[prev.length - 1];
             if (last?.streaming) {
-              return [...prev.slice(0, -1), { role: 'assistant', content: buffer, streaming: true }];
+              return [
+                ...prev.slice(0, -1),
+                { role: 'assistant', content: buffer, streaming: true },
+              ];
             }
-            return [...prev, { role: 'assistant', content: buffer, streaming: true }];
+            return [
+              ...prev,
+              { role: 'assistant', content: buffer, streaming: true },
+            ];
           });
         }
 
@@ -121,52 +134,53 @@ function AIChat() {
         ws.close();
       };
 
-      ws.onclose = () => {
-        wsRef.current = null;
-      };
+      ws.onclose = () => { wsRef.current = null; };
     },
     [sessionId, masterId]
   );
 
   const fallbackToHTTP = async (userMessage: string) => {
     try {
-      const resp = await aiApi.ask({
-        message: userMessage,
-        session_id: sessionId,
-      });
-      if (resp.data.session_id) {
-        setSessionId(resp.data.session_id);
-      }
+      const resp = await aiApi.ask({ message: userMessage, session_id: sessionId });
+      if (resp.data.session_id) setSessionId(resp.data.session_id);
       setMessages((prev) => {
         const last = prev[prev.length - 1];
+        const content = resp.data.response || 'Нет ответа';
         if (last?.streaming) {
-          return [...prev.slice(0, -1), { role: 'assistant', content: resp.data.response || 'Нет ответа' }];
+          return [...prev.slice(0, -1), { role: 'assistant', content }];
         }
-        return [...prev, { role: 'assistant', content: resp.data.response || 'Нет ответа' }];
+        return [...prev, { role: 'assistant', content }];
       });
     } catch (err: unknown) {
-      const errorMsg =
+      const msg =
         (err as { response?: { status?: number } })?.response?.status === 403
           ? 'AI-ассистент недоступен на вашем тарифе.'
           : 'Произошла ошибка. Попробуйте позже.';
-      setMessages((prev) => [
-        ...prev,
-        { role: 'assistant', content: errorMsg },
-      ]);
+      setMessages((prev) => [...prev, { role: 'assistant', content: msg }]);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSend = async () => {
-    if (!input.trim() || loading) return;
-    const userMessage = input.trim();
+  // ── Actions ────────────────────────────────────────────
+
+  const handleSend = (text?: string) => {
+    const userMessage = (text || input).trim();
+    if (!userMessage || loading) return;
     setInput('');
     setMessages((prev) => [...prev, { role: 'user', content: userMessage }]);
     setLoading(true);
-
     sendViaWebSocket(userMessage);
   };
+
+  const handleNewSession = () => {
+    wsRef.current?.close();
+    setMessages([]);
+    setSessionId(undefined);
+    setLoading(false);
+  };
+
+  // ── Voice ──────────────────────────────────────────────
 
   const startRecording = useCallback(async () => {
     try {
@@ -232,101 +246,159 @@ function AIChat() {
     setRecording(false);
   }, []);
 
+  // ── Render ─────────────────────────────────────────────
+
+  const isEmpty = messages.length === 0;
+
   return (
-    <div className="flex flex-col h-[calc(100vh-72px-80px)] animate-fade-in">
+    <div className="flex flex-col h-[100dvh] pb-[80px] animate-fade-in">
       {/* Header */}
-      <div className="px-4 py-2 flex items-center justify-between bg-surface-primary">
-        <h1 className="text-lg font-bold truncate mr-2">AI-ассистент</h1>
+      <div className="px-screen-x py-3 flex items-center justify-between border-b border-tg-secondary shrink-0">
+        <div>
+          <h1 className="text-h2 font-bold">AI-ассистент ✨</h1>
+          <p className="text-aux text-tg-hint">Советник для вашего бизнеса</p>
+        </div>
         <div className="flex gap-1 shrink-0">
           <button
             onClick={() => navigate('/master/ai/knowledge')}
-            className="p-2 rounded-xl bg-tg-secondary text-tg-text active:scale-95 transition-all"
+            className="p-2 rounded-xl bg-tg-secondary text-tg-text interactive"
             title="База знаний"
           >
             <BookOpen className="w-4 h-4" />
           </button>
           <button
             onClick={() => navigate('/master/ai/voice-diary')}
-            className="p-2 rounded-xl bg-tg-secondary text-tg-text active:scale-95 transition-all"
+            className="p-2 rounded-xl bg-tg-secondary text-tg-text interactive"
             title="Голосовой дневник"
           >
             <FileText className="w-4 h-4" />
           </button>
           <button
             onClick={() => navigate('/master/ai/content')}
-            className="p-2 rounded-xl bg-tg-secondary text-tg-text active:scale-95 transition-all"
+            className="p-2 rounded-xl bg-tg-secondary text-tg-text interactive"
             title="Контент"
           >
             <Sparkles className="w-4 h-4" />
           </button>
+          <button
+            onClick={handleNewSession}
+            className="p-2 rounded-xl bg-tg-secondary text-tg-text interactive"
+            title="Новая сессия"
+          >
+            <RotateCcw className="w-4 h-4" />
+          </button>
         </div>
       </div>
 
-      {/* Messages */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-3">
-        {messages.map((msg, i) => (
-          <div
-            key={i}
-            className={`max-w-[82%] ${
-              msg.role === 'user' ? 'ml-auto' : 'mr-auto'
-            }`}
-          >
-            <div
-              className={`rounded-2xl px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap ${
-                msg.role === 'user'
-                  ? 'bg-brand-500 text-white rounded-br-lg'
-                  : 'bg-surface-elevated text-tg-text rounded-bl-lg'
-              }`}
-            >
-              {msg.content}
-              {msg.streaming && (
-                <span className="inline-block w-1.5 h-4 bg-brand-500 ml-0.5 animate-pulse" />
-              )}
+      {/* Messages area */}
+      <div ref={scrollRef} className="flex-1 overflow-y-auto px-screen-x py-4">
+        {/* Quick actions при пустом чате (ТЗ §2.3) */}
+        {isEmpty && (
+          <div className="flex flex-col items-center py-8">
+            <p className="text-body text-tg-hint mb-4 text-center">Чем могу помочь?</p>
+            <div className="grid grid-cols-2 gap-2 w-full">
+              {QUICK_ACTIONS.map((action) => (
+                <button
+                  key={action.text}
+                  onClick={() => handleSend(action.text)}
+                  className="p-3 rounded-card text-left bg-tg-secondary interactive"
+                >
+                  <div className="text-lg mb-1">{action.emoji}</div>
+                  <div className="text-aux font-medium leading-tight">{action.text}</div>
+                </button>
+              ))}
+            </div>
+
+            {/* Доп. кнопки */}
+            <div className="flex gap-2 mt-4 w-full">
+              <button
+                onClick={() => navigate('/master/ai/content')}
+                className="flex-1 p-3 rounded-card text-center bg-tg-secondary interactive"
+              >
+                <div className="text-lg">✏️</div>
+                <div className="text-aux font-medium mt-1">Контент</div>
+              </button>
+              <button
+                onClick={() => navigate('/master/ai/voice-diary')}
+                className="flex-1 p-3 rounded-card text-center bg-tg-secondary interactive"
+              >
+                <div className="text-lg">🎙️</div>
+                <div className="text-aux font-medium mt-1">Голосовой дневник</div>
+              </button>
             </div>
           </div>
-        ))}
-        {loading && !messages[messages.length - 1]?.streaming && (
-          <div className="mr-auto">
-            <div className="bg-surface-elevated rounded-2xl rounded-bl-lg px-4 py-3.5">
-              <div className="flex gap-1.5">
-                <div className="w-2 h-2 bg-tg-hint/40 rounded-full animate-bounce" />
-                <div className="w-2 h-2 bg-tg-hint/40 rounded-full animate-bounce [animation-delay:0.15s]" />
-                <div className="w-2 h-2 bg-tg-hint/40 rounded-full animate-bounce [animation-delay:0.3s]" />
+        )}
+
+        {/* Сообщения */}
+        {!isEmpty && (
+          <div className="flex flex-col gap-3">
+            {messages.map((msg, i) => (
+              <div
+                key={i}
+                className={`max-w-[85%] ${
+                  msg.role === 'user' ? 'ml-auto' : 'mr-auto'
+                }`}
+              >
+                <div
+                  className={`rounded-2xl px-4 py-3 text-body leading-relaxed whitespace-pre-wrap ${
+                    msg.role === 'user'
+                      ? 'bg-tg-button text-tg-button-text rounded-br-lg'
+                      : 'bg-tg-secondary text-tg-text rounded-bl-lg'
+                  }`}
+                >
+                  {msg.content}
+                  {msg.streaming && (
+                    <span className="inline-block w-1.5 h-4 bg-tg-button ml-0.5 animate-pulse align-middle" />
+                  )}
+                </div>
               </div>
-            </div>
+            ))}
+            {loading && !messages[messages.length - 1]?.streaming && (
+              <div className="mr-auto">
+                <div className="bg-tg-secondary rounded-2xl rounded-bl-lg px-4 py-3.5">
+                  <div className="flex gap-1.5">
+                    <div className="w-2 h-2 bg-tg-hint/40 rounded-full animate-bounce" />
+                    <div className="w-2 h-2 bg-tg-hint/40 rounded-full animate-bounce [animation-delay:0.15s]" />
+                    <div className="w-2 h-2 bg-tg-hint/40 rounded-full animate-bounce [animation-delay:0.3s]" />
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
 
-      {/* Input */}
-      <div className="p-3 bg-surface-primary">
-        <div className="flex gap-2">
+      {/* Input bar */}
+      <div className="px-screen-x py-3 border-t border-tg-secondary bg-tg-bg shrink-0 safe-bottom">
+        <div className="flex gap-2 items-end">
           <button
             onClick={recording ? stopRecording : startRecording}
             disabled={loading}
-            className={`px-3 py-3 rounded-2xl transition-all ${
+            className={`w-[50px] h-[50px] rounded-btn flex items-center justify-center transition-all shrink-0 ${
               recording
                 ? 'bg-status-danger text-white animate-pulse'
-                : 'bg-surface-elevated text-tg-hint'
+                : 'bg-tg-secondary text-tg-hint'
             } disabled:opacity-40`}
           >
-            {recording ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+            {recording ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
           </button>
           <input
+            ref={inputRef}
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-            placeholder="Напишите вопрос..."
-            className="input-field"
+            onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
+            placeholder="Спросите что угодно..."
+            className="input-field flex-1"
           />
-          <button
-            onClick={handleSend}
+          <Button
+            onClick={() => handleSend()}
             disabled={!input.trim() || loading}
-            className="px-4 py-3 bg-brand-500 text-white rounded-2xl disabled:opacity-40 active:scale-[0.95] transition-all"
+            size="md"
+            className="shrink-0 !w-[50px] !px-0"
           >
-            <SendHorizontal className="w-4 h-4" />
-          </button>
+            <SendHorizontal className="w-5 h-5" />
+          </Button>
         </div>
       </div>
     </div>
