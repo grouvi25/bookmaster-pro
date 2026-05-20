@@ -2,6 +2,8 @@ import { Metadata } from 'next';
 import axios from 'axios';
 import MasterCard from '@/components/MasterCard';
 
+export const dynamic = 'force-dynamic';
+
 interface SearchParams {
   q?: string;
   specialization?: string;
@@ -39,6 +41,7 @@ async function getMasters(params: SearchParams) {
           offset: (parseInt(params.page || '1') - 1) * 20,
         },
         timeout: 5000,
+        headers: { 'Cache-Control': 'no-cache' },
       }
     );
     return response.data;

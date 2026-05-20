@@ -4,6 +4,8 @@ import axios from 'axios';
 import Image from 'next/image';
 import BookButton from '@/components/BookButton';
 
+export const dynamic = 'force-dynamic';
+
 export async function generateMetadata({
   params,
 }: {
@@ -11,24 +13,25 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const master = await getMaster(params.slug);
   if (!master) return { title: 'Мастер не найден' };
+  const name = master.display_name || master.name || 'Мастер';
   return {
-    title: `${master.name} — ${master.specialization} в ${master.city || 'России'} | BookMaster Pro`,
+    title: `${name} — ${master.specialization} в ${master.city || 'России'} | BookMaster Pro`,
     description:
-      `${master.name}: ${master.specialization}. ` +
+      `${name}: ${master.specialization}. ` +
       `Рейтинг ${master.rating_avg?.toFixed(1) || '—'} · ${master.rating_count || 0} отзывов. ` +
       `Онлайн-запись на BookMaster Pro.`,
     openGraph: {
       type: 'profile',
-      title: `${master.name} — ${master.specialization}`,
-      description: master.bio || '',
+      title: `${name} — ${master.specialization}`,
+      description: master.description || '',
       images: master.avatar_url ? [master.avatar_url] : [],
     },
     other: {
       'application/ld+json': JSON.stringify({
         '@context': 'https://schema.org',
         '@type': 'LocalBusiness',
-        name: master.name,
-        description: master.bio || master.specialization,
+        name: name,
+        description: master.description || master.specialization,
         address: {
           '@type': 'PostalAddress',
           addressLocality: master.city || '',
@@ -51,7 +54,7 @@ async function getMaster(slug: string) {
   try {
     const resp = await axios.get(
       `${process.env.API_URL}/masters/${slug}`,
-      { timeout: 5000 }
+      { timeout: 5000, headers: { 'Cache-Control': 'no-cache' } }
     );
     return resp.data;
   } catch {
@@ -79,6 +82,7 @@ export default async function MasterProfilePage({
   const master = await getMaster(params.slug);
   if (!master) notFound();
 
+  const name = master.display_name || master.name || 'Мастер';
   const reviewsData = await getReviews(master.id);
   const appUrl = `${process.env.APP_URL}?startParam=m_${params.slug}`;
 
@@ -92,7 +96,7 @@ export default async function MasterProfilePage({
             {master.avatar_url ? (
               <Image
                 src={master.avatar_url}
-                alt={master.name}
+                alt={name}
                 width={128}
                 height={128}
                 className="w-full h-full object-cover"
@@ -106,7 +110,7 @@ export default async function MasterProfilePage({
         {/* Основная инфо */}
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-1">
-            <h1 className="text-2xl font-bold">{master.name}</h1>
+            <h1 className="text-2xl font-bold">{name}</h1>
             {master.is_verified && (
               <span className="bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded-md font-medium">
                 &#10003; Проверен
@@ -135,8 +139,8 @@ export default async function MasterProfilePage({
           )}
 
           {/* Bio */}
-          {master.bio && (
-            <p className="text-gray-600 leading-relaxed">{master.bio}</p>
+          {master.description && (
+            <p className="text-gray-600 leading-relaxed">{master.description}</p>
           )}
         </div>
       </div>
@@ -215,7 +219,7 @@ export default async function MasterProfilePage({
 
       {/* CTA */}
       <div className="sticky bottom-4 flex flex-col gap-3">
-        <BookButton appUrl={appUrl} masterName={master.name} />
+        <BookButton appUrl={appUrl} masterName={name} />
       </div>
     </div>
   );

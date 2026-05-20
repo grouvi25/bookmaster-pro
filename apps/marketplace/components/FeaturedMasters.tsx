@@ -5,9 +5,9 @@ async function getFeatured() {
   try {
     const resp = await axios.get(
       `${process.env.API_URL}/marketplace/featured`,
-      { params: { limit: 6 }, timeout: 5000 }
+      { params: { limit: 6 }, timeout: 5000, headers: { 'Cache-Control': 'no-cache' } }
     );
-    return resp.data?.items || [];
+    return resp.data?.masters || resp.data?.items || [];
   } catch {
     return [];
   }

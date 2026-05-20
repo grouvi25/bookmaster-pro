@@ -2,6 +2,8 @@ import Link from 'next/link';
 import { Suspense } from 'react';
 import FeaturedMasters from '@/components/FeaturedMasters';
 
+export const dynamic = 'force-dynamic';
+
 const BOT_USERNAME = process.env.NEXT_PUBLIC_TG_BOT_USERNAME ?? '';
 
 const CATEGORIES = [
