@@ -24,3 +24,8 @@ htmlcov
 BookMaster_Pro_MASTER_TZ*.pdf
 file.pdf
 _tz_*.txt
+
+# Локальные секреты для деплоя (НЕ КОММИТИТЬ)
+.deploy_secrets
+.gh_*.py
+.commit_msg.txt

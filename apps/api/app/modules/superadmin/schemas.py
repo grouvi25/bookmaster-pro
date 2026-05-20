@@ -47,14 +47,14 @@ class MasterAdminListItem(BaseModel):
     id: int
     display_name: str
     slug: str
-    specialization: Optional[str]
-    city: Optional[str]
-    current_plan: str
-    is_verified: bool
-    is_active: bool
-    rating_avg: float
-    total_clients: int
-    total_appointments: int
+    specialization: Optional[str] = None
+    city: Optional[str] = None
+    current_plan: Optional[str] = None
+    is_verified: Optional[bool] = False
+    is_active: Optional[bool] = True
+    rating_avg: Optional[float] = 0.0
+    total_clients: Optional[int] = 0
+    total_appointments: Optional[int] = 0
     created_at: datetime
 
 

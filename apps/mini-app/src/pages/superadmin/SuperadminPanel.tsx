@@ -57,7 +57,7 @@ export default function SuperadminPanel() {
   const ActiveTab = TAB_COMPONENTS[tab];
 
   return (
-    <div className="px-screen-x pt-section-y pb-24 animate-fade-in">
+    <div className="px-screen-x pb-24 animate-fade-in">
       <PageHeader title="Суперадмин" />
       <RoleSwitcher />
 

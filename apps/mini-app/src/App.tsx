@@ -1,5 +1,5 @@
 import { useEffect, useState, Component, type ReactNode } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useNavigate, useParams } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useParams, useLocation } from 'react-router-dom';
 import { PlatformAdapter } from '@/platform/platform-adapter';
 import { useAuthStore } from '@/stores/auth';
 import { useBookingStore } from '@/stores/booking';
@@ -119,6 +119,7 @@ function RequireAuth({ children, allowedRoles }: { children: ReactNode; allowedR
 
 function AppRouter() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { role, setUser, setAuth } = useAuthStore();
   useBookingStore.getState();
   const [initializing, setInitializing] = useState(true);
@@ -270,8 +271,11 @@ function AppRouter() {
       </Routes>
       </RouteErrorBoundary>
 
-      {/* TabBar для мастеров */}
-      {isMaster && <TabBar />}
+      {/* TabBar для мастеров. Не показываем в суперадмин/модератор-режимах */}
+      {isMaster
+        && !location.pathname.startsWith('/superadmin')
+        && !location.pathname.startsWith('/moderator')
+        && <TabBar />}
 
       {/* Кнопка возврата в суперадминку */}
       <SuperadminReturnButton />

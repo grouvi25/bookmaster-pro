@@ -109,12 +109,12 @@ async def get_masters_list(
                 slug=m.slug,
                 specialization=m.specialization,
                 city=m.city,
-                current_plan=m.current_plan,
-                is_verified=m.is_verified,
-                is_active=m.is_active,
-                rating_avg=m.rating_avg,
-                total_clients=m.total_clients,
-                total_appointments=m.total_appointments,
+                current_plan=m.current_plan or "start",
+                is_verified=bool(m.is_verified),
+                is_active=bool(m.is_active) if m.is_active is not None else True,
+                rating_avg=float(m.rating_avg or 0),
+                total_clients=int(m.total_clients or 0),
+                total_appointments=int(m.total_appointments or 0),
                 created_at=m.created_at,
             )
             for m in masters
