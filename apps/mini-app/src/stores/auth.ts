@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import type { PlatformUser } from '@/platform/platform-adapter';
 
-type Role = 'client' | 'master' | 'superadmin' | null;
+type Role = 'client' | 'master' | 'moderator' | 'superadmin' | null;
 
 interface AuthState {
   user: PlatformUser | null;

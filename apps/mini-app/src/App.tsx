@@ -159,6 +159,8 @@ function AppRouter() {
           navigate(`/m/${slug}`);
         } else if (startParam === 'superadmin' && authRole === 'superadmin') {
           navigate('/superadmin');
+        } else if (startParam === 'moderator' && (authRole === 'moderator' || authRole === 'superadmin')) {
+          navigate('/moderator');
         } else if (startParam === 'dashboard') {
           navigate('/master');
         } else if (startParam.startsWith('review_')) {
@@ -172,6 +174,8 @@ function AppRouter() {
         }
       } else if (authRole === 'superadmin') {
         navigate('/superadmin');
+      } else if (authRole === 'moderator') {
+        navigate('/moderator');
       }
 
       setInitializing(false);
@@ -196,6 +200,8 @@ function AppRouter() {
           element={
             role === 'superadmin' ? (
               <Navigate to="/superadmin" replace />
+            ) : role === 'moderator' ? (
+              <Navigate to="/moderator" replace />
             ) : isMaster ? (
               <Navigate to="/master" replace />
             ) : role === 'client' ? (
