@@ -124,7 +124,7 @@ export default function Billing() {
         return;
       }
       queryClient.invalidateQueries({ queryKey: ['my-subscription'] });
-      queryClient.invalidateQueries({ queryKey: ['feature-flags'] });
+      queryClient.invalidateQueries({ queryKey: ['feature-flags'], refetchType: 'all' });
       toast.success('Подписка оформлена!');
       setSelectedPlan(null);
     },

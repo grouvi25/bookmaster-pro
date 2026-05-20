@@ -48,7 +48,8 @@ export function useFeatureFlags() {
     queryKey: ['feature-flags'],
     queryFn: () => featureFlagsApi.get().then((r) => r.data as FeatureFlags),
     enabled: !!token && isMaster,
-    staleTime: 60_000,
+    staleTime: 0, // Всегда refetch — критично для реактивного обновления при смене тарифа
+    refetchOnWindowFocus: true,
   });
 
   if (role === 'superadmin') {
