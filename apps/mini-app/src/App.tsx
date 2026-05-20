@@ -280,11 +280,10 @@ function AppRouter() {
       </Routes>
       </RouteErrorBoundary>
 
-      {/* TabBar для мастеров. Не показываем в суперадмин/модератор/editor-режимах */}
+      {/* TabBar для мастеров. Не показываем в суперадмин/модератор-режимах */}
       {isMaster
         && !location.pathname.startsWith('/superadmin')
         && !location.pathname.startsWith('/moderator')
-        && !location.pathname.startsWith('/link-page')
         && <TabBar />}
 
       {/* Кнопка возврата в суперадминку */}
