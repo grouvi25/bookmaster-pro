@@ -10,7 +10,7 @@ import {
 } from '@/shared/lib/bookingStatus';
 import { useBookingStore } from '@/stores/booking';
 import BackButton from '@/components/common/BackButton';
-import { ListSkeleton } from '@/shared/ui/Skeleton';
+import { MyBookingCardSkeleton } from '@/shared/ui/Skeleton';
 import Card from '@/shared/ui/Card';
 import EmptyState from '@/shared/ui/EmptyState';
 import StatusBadge from '@/shared/ui/StatusBadge';
@@ -38,7 +38,7 @@ export default function MyBookings({ hideBack }: { hideBack?: boolean } = {}) {
     queryFn: () => bookingApi.myBookings().then((r) => r.data),
   });
 
-  if (isLoading) return <div className="px-screen-x py-section-y"><ListSkeleton count={4} /></div>;
+  if (isLoading) return <div className="px-screen-x py-section-y"><MyBookingCardSkeleton count={4} /></div>;
 
   const bookings = toArray<Booking>(data);
   const filtered = activeTab === 'upcoming'

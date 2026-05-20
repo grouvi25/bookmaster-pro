@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { superadminApi } from '@/api/endpoints';
 import { toast } from '@/shared/ui/Toast';
-import { ListSkeleton } from '@/shared/ui/Skeleton';
+import { TicketCardSkeleton } from '@/shared/ui/Skeleton';
 import EmptyState from '@/shared/ui/EmptyState';
 import Card from '@/shared/ui/Card';
 import Button from '@/shared/ui/Button';
@@ -63,7 +63,7 @@ export default function PromoCodesTab() {
     },
   });
 
-  if (isLoading) return <ListSkeleton count={3} />;
+  if (isLoading) return <TicketCardSkeleton count={3} />;
   const codes = data || [];
 
   return (

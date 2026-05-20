@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { superadminApi } from '@/api/endpoints';
-import { ListSkeleton } from '@/shared/ui/Skeleton';
+import { StatGridSkeleton } from '@/shared/ui/Skeleton';
 import StatCard from '@/shared/ui/StatCard';
 import Card from '@/shared/ui/Card';
 import { fmtRub } from '../shared';
@@ -27,7 +27,7 @@ export default function FinanceTab() {
     queryFn: () => superadminApi.finance(periodDays).then((r) => r.data),
   });
 
-  if (isLoading) return <ListSkeleton count={4} />;
+  if (isLoading) return <StatGridSkeleton count={8} />;
   const f = data || {};
 
   return (

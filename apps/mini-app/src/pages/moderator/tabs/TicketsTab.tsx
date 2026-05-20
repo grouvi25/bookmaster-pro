@@ -10,7 +10,7 @@ import EmptyState from '@/shared/ui/EmptyState';
 import StatusBadge from '@/shared/ui/StatusBadge';
 import ChipTabs from '@/shared/ui/ChipTabs';
 import Button from '@/shared/ui/Button';
-import { ListSkeleton } from '@/shared/ui/Skeleton';
+import { TicketCardSkeleton } from '@/shared/ui/Skeleton';
 import {
   ticketStatusLabel,
   ticketStatusVariant,
@@ -103,7 +103,7 @@ export default function TicketsTab() {
       />
 
       {isLoading ? (
-        <ListSkeleton count={3} />
+        <TicketCardSkeleton count={3} />
       ) : tickets.length === 0 ? (
         <EmptyState
           emoji="✅"

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { clientsApi } from '@/api/endpoints';
 import { toArray } from '@/shared/lib/normalize';
-import { ListSkeleton } from '@/shared/ui/Skeleton';
+import { ClientCardSkeleton } from '@/shared/ui/Skeleton';
 import PageHeader from '@/shared/ui/PageHeader';
 import SearchInput from '@/shared/ui/SearchInput';
 import EmptyState from '@/shared/ui/EmptyState';
@@ -31,7 +31,7 @@ function ClientsList() {
     queryFn: () => clientsApi.list({ q: search }).then((r) => r.data),
   });
 
-  if (isLoading) return <div className="px-screen-x py-section-y"><ListSkeleton count={5} /></div>;
+  if (isLoading) return <div className="px-screen-x py-section-y"><ClientCardSkeleton count={5} /></div>;
 
   const clients = toArray<ClientCRM>(data);
   const selected = clients.find((c) => (c.client_id ?? c.id) === selectedId);

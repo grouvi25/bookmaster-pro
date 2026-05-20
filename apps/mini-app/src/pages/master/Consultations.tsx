@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { HeaderBackButton } from "@/components/common/BackButton";
 import { consultationsApi } from '@/api/endpoints';
-import { ListSkeleton } from '@/shared/ui/Skeleton';
+import { BookingCardSkeleton, StatGridSkeleton } from '@/shared/ui/Skeleton';
 import PageHeader from '@/shared/ui/PageHeader';
 import Card from '@/shared/ui/Card';
 import EmptyState from '@/shared/ui/EmptyState';
@@ -106,7 +106,7 @@ function ConsultationsList() {
       queryClient.invalidateQueries({ queryKey: ['consultations'] }),
   });
 
-  if (isLoading) return <ListSkeleton count={3} />;
+  if (isLoading) return <BookingCardSkeleton count={3} />;
 
   const items: ConsultationItem[] = Array.isArray(data) ? data : [];
 
@@ -222,7 +222,7 @@ function ConsultationStatsSection() {
     queryFn: () => consultationsApi.stats().then((r) => r.data),
   });
 
-  if (isLoading) return <ListSkeleton count={2} />;
+  if (isLoading) return <StatGridSkeleton count={4} />;
 
   const stats = data as ConsultationStatsData | undefined;
 

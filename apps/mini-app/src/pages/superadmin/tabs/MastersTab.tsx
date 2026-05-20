@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { superadminApi } from '@/api/endpoints';
 import { toast } from '@/shared/ui/Toast';
 import { toArray } from '@/shared/lib/normalize';
-import { ListSkeleton } from '@/shared/ui/Skeleton';
+import { ClientCardSkeleton } from '@/shared/ui/Skeleton';
 import StatusBadge from '@/shared/ui/StatusBadge';
 import EmptyState from '@/shared/ui/EmptyState';
 import Card from '@/shared/ui/Card';
@@ -74,7 +74,7 @@ export default function MastersTab() {
     },
   });
 
-  if (isLoading) return <ListSkeleton count={4} />;
+  if (isLoading) return <ClientCardSkeleton count={5} />;
 
   const masters = (data?.masters ?? toArray<MasterProfile>(data)) as AdminMaster[];
 

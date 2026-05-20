@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { servicesApi } from '@/api/endpoints';
 import { toArray } from '@/shared/lib/normalize';
-import { ListSkeleton } from '@/shared/ui/Skeleton';
+import { ServiceCardSkeleton } from '@/shared/ui/Skeleton';
 import Button from '@/shared/ui/Button';
 import Card from '@/shared/ui/Card';
 import { toast } from '@/shared/ui/Toast';
@@ -226,7 +226,7 @@ export default function Services() {
     }
   };
 
-  if (isLoading) return <ListSkeleton count={4} />;
+  if (isLoading) return <ServiceCardSkeleton count={4} />;
 
   return (
     <div className="min-h-screen bg-tg-bg text-tg-text pb-24 animate-fade-in">

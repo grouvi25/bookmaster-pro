@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { superadminApi } from '@/api/endpoints';
 import { toArray } from '@/shared/lib/normalize';
-import { ListSkeleton } from '@/shared/ui/Skeleton';
+import { CardSkeleton } from '@/shared/ui/Skeleton';
 import EmptyState from '@/shared/ui/EmptyState';
 import Card from '@/shared/ui/Card';
 import type { AuditLogEntry } from '@/shared/types/api';
@@ -12,7 +12,11 @@ export default function AuditTab() {
     queryFn: () => superadminApi.auditLog().then((r) => r.data),
   });
 
-  if (isLoading) return <ListSkeleton count={4} />;
+  if (isLoading) return (
+    <div className="flex flex-col gap-card-gap">
+      {[0,1,2,3].map(i => <CardSkeleton key={i} />)}
+    </div>
+  );
   const logs = toArray<AuditLogEntry>(data);
 
   return (

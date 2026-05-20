@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { HeaderBackButton } from "@/components/common/BackButton";
 import { mastersApi } from '@/api/endpoints';
-import { ListSkeleton } from '@/shared/ui/Skeleton';
+import { FormSkeleton } from '@/shared/ui/Skeleton';
 import Card from '@/shared/ui/Card';
 import PageHeader from '@/shared/ui/PageHeader';
 import Button from '@/shared/ui/Button';
@@ -82,7 +82,7 @@ export default function WorkSchedule() {
     );
   };
 
-  if (isLoading && !initialized) return <div className="px-screen-x py-section-y"><ListSkeleton count={7} /></div>;
+  if (isLoading && !initialized) return <div className="px-screen-x py-section-y"><FormSkeleton rows={7} /></div>;
 
   return (
     <div className="min-h-screen bg-tg-bg text-tg-text pb-24 animate-fade-in">

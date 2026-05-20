@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { superadminApi } from '@/api/endpoints';
-import { ListSkeleton } from '@/shared/ui/Skeleton';
+import { StatGridSkeleton } from '@/shared/ui/Skeleton';
 import Card from '@/shared/ui/Card';
 import StatusBadge from '@/shared/ui/StatusBadge';
 import { Gauge } from 'lucide-react';
@@ -27,7 +27,7 @@ export default function SLATab() {
     refetchInterval: 60_000,
   });
 
-  if (isLoading) return <ListSkeleton count={3} />;
+  if (isLoading) return <StatGridSkeleton count={3} />;
   const byP = data?.by_priority || {};
 
   return (

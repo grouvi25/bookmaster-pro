@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { mastersApi, analyticsApi, supportApi, servicesApi } from '@/api/endpoints';
 import { toArray } from '@/shared/lib/normalize';
-import { ListSkeleton, StatGridSkeleton } from '@/shared/ui/Skeleton';
+import { ListSkeleton, StatGridSkeleton, ServiceCardSkeleton, TicketCardSkeleton } from '@/shared/ui/Skeleton';
 import Button from '@/shared/ui/Button';
 import Card from '@/shared/ui/Card';
 import StatCard from '@/shared/ui/StatCard';
@@ -206,7 +206,7 @@ function ServicesSection() {
   const [formDuration, setFormDuration] = useState('60');
   const [formLoading, setFormLoading] = useState(false);
 
-  if (isLoading) return <ListSkeleton count={3} />;
+  if (isLoading) return <ServiceCardSkeleton count={3} />;
 
   const services = toArray<Service>(data);
 
@@ -301,7 +301,7 @@ function ProfileSection() {
   const [prepayPercent, setPrepayPercent] = useState('');
   const [saving, setSaving] = useState(false);
 
-  if (isLoading) return <ListSkeleton count={3} />;
+  if (isLoading) return <TicketCardSkeleton count={3} />;
 
   const startEdit = () => {
     setName(profile?.display_name || '');

@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { superadminApi } from '@/api/endpoints';
-import { ListSkeleton } from '@/shared/ui/Skeleton';
+import { StatGridSkeleton } from '@/shared/ui/Skeleton';
 import StatCard from '@/shared/ui/StatCard';
 import Card from '@/shared/ui/Card';
 import { BarChart3, Users, DollarSign, Ticket } from 'lucide-react';
@@ -39,7 +39,7 @@ export default function DashboardTab() {
     refetchInterval: 60_000,
   });
 
-  if (isLoading) return <ListSkeleton count={4} />;
+  if (isLoading) return <StatGridSkeleton count={8} />;
   const s = data || {};
 
   return (

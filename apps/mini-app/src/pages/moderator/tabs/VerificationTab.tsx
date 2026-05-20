@@ -7,7 +7,7 @@ import EmptyState from '@/shared/ui/EmptyState';
 import Card from '@/shared/ui/Card';
 import Button from '@/shared/ui/Button';
 import ConfirmDialog from '@/shared/ui/ConfirmDialog';
-import { ListSkeleton } from '@/shared/ui/Skeleton';
+import { ClientCardSkeleton } from '@/shared/ui/Skeleton';
 
 interface PendingMaster {
   id: number;
@@ -38,7 +38,7 @@ export default function VerificationTab() {
     onError: () => toast.error('Не удалось верифицировать'),
   });
 
-  if (isLoading) return <ListSkeleton count={3} />;
+  if (isLoading) return <ClientCardSkeleton count={3} />;
 
   return (
     <div className="space-y-4">

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { superadminApi } from '@/api/endpoints';
 import { toast } from '@/shared/ui/Toast';
-import { ListSkeleton } from '@/shared/ui/Skeleton';
+import { FormSkeleton } from '@/shared/ui/Skeleton';
 import Card from '@/shared/ui/Card';
 import Button from '@/shared/ui/Button';
 
@@ -54,7 +54,7 @@ export default function SettingsTab() {
     },
   });
 
-  if (isLoading) return <ListSkeleton count={2} />;
+  if (isLoading) return <FormSkeleton rows={5} />;
   const s = data || {};
 
   const getValue = (key: StringKey, fallback = ''): string => {

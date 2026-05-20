@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { TrendingUp } from 'lucide-react';
 import { superadminApi } from '@/api/endpoints';
-import { ListSkeleton } from '@/shared/ui/Skeleton';
+import { StatGridSkeleton } from '@/shared/ui/Skeleton';
 import StatCard from '@/shared/ui/StatCard';
 import Card from '@/shared/ui/Card';
 
@@ -26,7 +26,7 @@ export default function GrowthTab() {
     queryFn: () => superadminApi.growth(periodDays).then((r) => r.data),
   });
 
-  if (isLoading) return <ListSkeleton count={3} />;
+  if (isLoading) return <StatGridSkeleton count={3} />;
   const g = data || {};
 
   return (

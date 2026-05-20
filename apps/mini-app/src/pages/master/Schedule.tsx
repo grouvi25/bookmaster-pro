@@ -8,7 +8,7 @@ import {
   bookingStatusLabel,
   bookingStatusVariant,
 } from '@/shared/lib/bookingStatus';
-import { ListSkeleton } from '@/shared/ui/Skeleton';
+import { BookingCardSkeleton } from '@/shared/ui/Skeleton';
 import PageHeader from '@/shared/ui/PageHeader';
 import StatusBadge from '@/shared/ui/StatusBadge';
 import BottomSheet from '@/shared/ui/BottomSheet';
@@ -43,7 +43,7 @@ export default function Schedule() {
       bookingApi.masterBookings({ date: selectedDate }).then((r) => r.data),
   });
 
-  if (isLoading) return <div className="px-screen-x py-section-y"><ListSkeleton count={5} /></div>;
+  if (isLoading) return <div className="px-screen-x py-section-y"><BookingCardSkeleton count={5} /></div>;
 
   const bookings = toArray<Booking>(data);
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));

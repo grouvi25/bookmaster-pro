@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { mastersApi, servicesApi, reviewsApi, loyaltyApi, subscriptionsApi } from '@/api/endpoints';
 import { useBookingStore } from '@/stores/booking';
-import { PageSkeleton } from '@/shared/ui/Skeleton';
+import { MasterProfileSkeleton } from '@/shared/ui/Skeleton';
 import Button from '@/shared/ui/Button';
 import { fmtRub } from '@/shared/lib/format';
 import { User, Star, Package } from 'lucide-react';
@@ -79,7 +79,7 @@ export default function MasterProfile({ slug }: MasterProfileProps) {
     }
   };
 
-  if (isLoading) return <PageSkeleton />;
+  if (isLoading) return <MasterProfileSkeleton />;
   if (!master) return <div className="p-4 text-center text-tg-hint">Мастер не найден</div>;
 
   const handleBook = () => {
