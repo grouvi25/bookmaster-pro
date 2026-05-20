@@ -251,9 +251,9 @@ function AIChat() {
   const isEmpty = messages.length === 0;
 
   return (
-    <div className="flex flex-col h-[100dvh] pb-[80px] animate-fade-in">
+    <div className="flex flex-col h-[calc(100dvh-var(--tabbar-height,80px))] animate-fade-in">
       {/* Header */}
-      <div className="px-screen-x py-3 flex items-center justify-between border-b border-tg-secondary shrink-0">
+      <div className="px-screen-x py-3 flex items-center justify-between border-b border-tg-secondary shrink-0 bg-tg-bg">
         <div>
           <h1 className="text-h2 font-bold">AI-ассистент ✨</h1>
           <p className="text-aux text-tg-hint">Советник для вашего бизнеса</p>

@@ -3,6 +3,10 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --tabbar-height: 80px; /* TabBar: 56px bar + px-4 pb-2 + safe area ~80px total */
+  }
+
   * {
     -webkit-tap-highlight-color: transparent;
   }
