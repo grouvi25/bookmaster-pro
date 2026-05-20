@@ -132,7 +132,7 @@ services:
       APP_URL: ${APP_URL:-https://app.freelance-gid.online}
       NEXT_PUBLIC_TG_BOT_USERNAME: ${TG_BOT_USERNAME:-swift_sellbot}
     ports:
-      - "127.0.0.1:3000:3000"
+      - "0.0.0.0:3000:3000"
     depends_on:
       api: { condition: service_healthy }
     networks: [bookmaster]
