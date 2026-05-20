@@ -267,7 +267,7 @@ export default function LinkPageEditor() {
                 </div>
                 <button
                   onClick={() => removeLink(i)}
-                  className="p-2 text-red-400 hover:text-red-500"
+                  className="p-2 text-status-danger hover:text-status-danger"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>

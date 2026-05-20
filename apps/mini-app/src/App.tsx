@@ -61,7 +61,7 @@ import ModeratorPanel from '@/pages/moderator/ModeratorPanel';
 import SuperadminPanel from '@/pages/superadmin/SuperadminPanel';
 import { SuperadminReturnButton } from '@/pages/superadmin/SuperadminPanel';
 
-import Loading from '@/components/common/Loading';
+import FullscreenLoader from '@/shared/ui/FullscreenLoader';
 import Register from '@/pages/Register';
 
 
@@ -79,7 +79,7 @@ class RouteErrorBoundary extends Component<
     if (this.state.error) {
       return (
         <div className="flex flex-col items-center justify-center min-h-[60vh] bg-tg-bg text-tg-text p-6">
-          <ShieldAlert className="w-12 h-12 text-red-400 mb-4" strokeWidth={1.5} />
+          <ShieldAlert className="w-12 h-12 text-status-danger mb-4" strokeWidth={1.5} />
           <h2 className="text-xl font-bold mb-2">Ошибка загрузки</h2>
           <p className="text-tg-hint text-center text-sm mb-4">
             Произошла ошибка при загрузке страницы
@@ -179,7 +179,7 @@ function AppRouter() {
     init();
   }, []);
 
-  if (initializing) return <Loading text="Загрузка BookMaster Pro..." />;
+  if (initializing) return <FullscreenLoader text="Загрузка BookMaster Pro..." />;
 
   const isMaster = role === 'master' || role === 'superadmin';
 

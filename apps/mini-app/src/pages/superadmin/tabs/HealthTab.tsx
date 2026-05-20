@@ -107,7 +107,7 @@ export default function HealthTab() {
                       )}
                     </div>
                     {result.detail && (
-                      <div className="text-[11px] text-red-500 mt-1 break-words">
+                      <div className="text-[11px] text-status-danger mt-1 break-words">
                         {result.detail}
                       </div>
                     )}

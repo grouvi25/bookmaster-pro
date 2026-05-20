@@ -93,7 +93,7 @@ function SortableServiceCard({
         </button>
         <button
           onClick={() => onDelete(svc.id)}
-          className="text-red-400 active:text-red-600 p-1"
+          className="text-status-danger active:text-status-danger p-1"
         >
           <Trash2 className="w-4 h-4" />
         </button>

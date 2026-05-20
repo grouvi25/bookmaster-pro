@@ -105,7 +105,7 @@ export default function MasterProfile({ slug }: MasterProfileProps) {
         </p>
         {master.rating_count > 0 && (
           <div className="flex items-center justify-center gap-1 mt-2">
-            <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+            <Star className="w-4 h-4 text-status-warning fill-yellow-400" />
             <span className="font-semibold">{master.rating_avg?.toFixed(1)}</span>
             <span className="text-tg-hint text-xs">({master.rating_count} отзывов)</span>
           </div>
@@ -197,7 +197,7 @@ export default function MasterProfile({ slug }: MasterProfileProps) {
                   <span className="text-sm font-medium">{r.client_name}</span>
                   <div className="flex gap-0.5">
                     {Array.from({ length: r.rating }).map((_, i) => (
-                      <Star key={i} className="w-3 h-3 text-yellow-400 fill-yellow-400" />
+                      <Star key={i} className="w-3 h-3 text-status-warning fill-yellow-400" />
                     ))}
                   </div>
                 </div>

@@ -67,8 +67,8 @@ export default function Broadcast() {
                   <p className="text-xs text-tg-hint mt-0.5 line-clamp-2">{b.text}</p>
                 </div>
                 <span className={`text-xs px-2 py-0.5 rounded-lg flex-shrink-0 ml-2 ${
-                  b.status === 'sent' ? 'bg-green-500/15 text-green-600' :
-                  b.status === 'sending' ? 'bg-yellow-500/15 text-yellow-600' :
+                  b.status === 'sent' ? 'bg-status-success/15 text-status-success' :
+                  b.status === 'sending' ? 'bg-status-warning/15 text-status-warning' :
                   'bg-tg-secondary text-tg-hint'
                 }`}>
                   {b.status === 'sent' ? 'Отправлено' :

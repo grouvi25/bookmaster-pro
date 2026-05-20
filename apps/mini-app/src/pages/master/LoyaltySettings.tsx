@@ -52,7 +52,7 @@ export default function LoyaltySettings() {
 
       <Card className="mb-4">
         <h2 className="font-medium text-sm mb-3 flex items-center gap-1.5">
-          <Star className="w-4 h-4 text-yellow-500" />
+          <Star className="w-4 h-4 text-status-warning" />
           Уровни клиентов
         </h2>
         <div className="flex flex-col gap-3">

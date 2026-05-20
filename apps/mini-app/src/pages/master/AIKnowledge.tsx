@@ -52,20 +52,20 @@ function formatDate(iso: string): string {
 function StatusBadge({ status }: { status: KnowledgeDoc['status'] }) {
   if (status === 'indexed') {
     return (
-      <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-green-500/10 text-green-600">
+      <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-status-success/10 text-status-success">
         Готов
       </span>
     );
   }
   if (status === 'error') {
     return (
-      <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-red-500/10 text-red-600">
+      <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-status-danger/10 text-status-danger">
         Ошибка
       </span>
     );
   }
   return (
-    <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600">
+    <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-status-warning/10 text-status-warning">
       Обработка
     </span>
   );
@@ -224,7 +224,7 @@ function AIKnowledgeInner() {
                     {formatDate(doc.created_at)}
                   </div>
                   {doc.status === 'error' && doc.error && (
-                    <div className="text-[11px] text-red-500 mt-1 line-clamp-2">
+                    <div className="text-[11px] text-status-danger mt-1 line-clamp-2">
                       {doc.error}
                     </div>
                   )}
@@ -233,7 +233,7 @@ function AIKnowledgeInner() {
                   onClick={() => handleDelete(doc)}
                   disabled={deleteMutation.isPending}
                   aria-label="Удалить"
-                  className="text-tg-hint hover:text-red-500 transition-colors p-1.5 disabled:opacity-40"
+                  className="text-tg-hint hover:text-status-danger transition-colors p-1.5 disabled:opacity-40"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>

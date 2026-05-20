@@ -91,7 +91,7 @@ function WidgetSettingsContent() {
             {/* iframe */}
             <div className="bg-surface-elevated rounded-card p-4 space-y-3">
               <div className="flex items-center gap-2">
-                <Code className="w-4 h-4 text-blue-500" />
+                <Code className="w-4 h-4 text-status-info" />
                 <h3 className="font-semibold text-sm">iframe (альтернатива)</h3>
               </div>
               <p className="text-xs text-tg-hint">

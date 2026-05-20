@@ -113,7 +113,7 @@ export default function SelectDate() {
                   ? 'bg-brand-500 text-white shadow-button'
                   : available && !past
                     ? 'text-tg-text active:scale-90 hover:bg-tg-secondary'
-                    : 'text-gray-300'
+                    : 'text-tg-hint'
               )}
             >
               {format(date, 'd')}

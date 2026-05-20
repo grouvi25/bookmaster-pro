@@ -306,7 +306,7 @@ function AIChat() {
             disabled={loading}
             className={`px-3 py-3 rounded-2xl transition-all ${
               recording
-                ? 'bg-red-500 text-white animate-pulse'
+                ? 'bg-status-danger text-white animate-pulse'
                 : 'bg-surface-elevated text-tg-hint'
             } disabled:opacity-40`}
           >

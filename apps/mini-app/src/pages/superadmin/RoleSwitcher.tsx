@@ -42,7 +42,7 @@ export function RoleSwitcher() {
       <button
         onClick={() => switchToRole('client')}
         disabled={switching}
-        className="flex-1 flex items-center justify-center gap-2 p-3 bg-blue-500/10 text-blue-600 rounded-btn text-sm font-medium active:scale-[0.97] transition-all disabled:opacity-50"
+        className="flex-1 flex items-center justify-center gap-2 p-3 bg-status-info/10 text-status-info rounded-btn text-sm font-medium active:scale-[0.97] transition-all disabled:opacity-50"
       >
         <UserCircle className="w-4 h-4" />
         {switching ? '...' : 'Режим клиента'}
@@ -82,7 +82,7 @@ export function SuperadminReturnButton() {
     <button
       onClick={handleReturn}
       disabled={loading}
-      className="fixed top-4 right-4 z-[100] flex items-center gap-1.5 px-3 py-2 bg-red-500 text-white rounded-full text-xs font-semibold shadow-lg active:scale-95 transition-all disabled:opacity-50"
+      className="fixed top-4 right-4 z-[100] flex items-center gap-1.5 px-3 py-2 bg-status-danger text-white rounded-full text-xs font-semibold shadow-lg active:scale-95 transition-all disabled:opacity-50"
     >
       <ArrowRightLeft className="w-3.5 h-3.5" />
       {loading ? '...' : 'Суперадмин'}

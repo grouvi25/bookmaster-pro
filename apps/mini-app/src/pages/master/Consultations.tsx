@@ -37,12 +37,12 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 const STATUS_COLORS: Record<string, string> = {
-  pending: 'bg-yellow-500/15 text-yellow-600',
-  confirmed: 'bg-blue-500/15 text-blue-600',
-  in_progress: 'bg-green-500/15 text-green-600',
+  pending: 'bg-status-warning/15 text-status-warning',
+  confirmed: 'bg-status-info/15 text-status-info',
+  in_progress: 'bg-status-success/15 text-status-success',
   completed: 'bg-tg-secondary text-tg-hint',
-  cancelled: 'bg-red-500/15 text-red-500',
-  no_show: 'bg-red-500/15 text-red-500',
+  cancelled: 'bg-status-danger/15 text-status-danger',
+  no_show: 'bg-status-danger/15 text-status-danger',
 };
 
 export default function Consultations() {
@@ -187,7 +187,7 @@ function ConsultationsList() {
               )}
 
               {c.converted_appointment_id && (
-                <div className="text-xs text-green-600 mb-2">
+                <div className="text-xs text-status-success mb-2">
                   Конвертирована в запись #{c.converted_appointment_id}
                 </div>
               )}
@@ -196,13 +196,13 @@ function ConsultationsList() {
                 <div className="flex gap-2 mt-2">
                   <button
                     onClick={() => completeMutation.mutate(c.id)}
-                    className="flex-1 bg-green-500 text-white text-xs py-1.5 rounded-lg"
+                    className="flex-1 bg-status-success text-white text-xs py-1.5 rounded-lg"
                   >
                     Завершить
                   </button>
                   <button
                     onClick={() => cancelMutation.mutate(c.id)}
-                    className="flex-1 bg-red-500/15 text-red-500 text-xs py-1.5 rounded-lg"
+                    className="flex-1 bg-status-danger/15 text-status-danger text-xs py-1.5 rounded-lg"
                   >
                     Отменить
                   </button>

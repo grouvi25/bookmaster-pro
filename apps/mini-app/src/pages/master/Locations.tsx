@@ -77,7 +77,7 @@ export default function Locations() {
               </div>
               <button
                 onClick={() => deleteMutation.mutate(loc.id)}
-                className="text-red-400 p-1"
+                className="text-status-danger p-1"
               >
                 <Trash2 className="w-4 h-4" />
               </button>

@@ -127,7 +127,7 @@ export default function TicketsTab() {
 
       <div className="flex justify-between text-[11px] text-tg-hint mb-3">
         <span>Открытых: {openCount}</span>
-        <span className={slaBreached > 0 ? 'text-red-500 font-medium' : ''}>
+        <span className={slaBreached > 0 ? 'text-status-danger font-medium' : ''}>
           SLA нарушено: {slaBreached}
         </span>
       </div>
@@ -223,7 +223,7 @@ function TicketCard({
         {ticket.status !== 'escalated' && ticket.status !== 'resolved' && (
           <button
             onClick={onEscalate}
-            className="text-xs bg-red-500/10 text-red-600 px-2.5 py-1.5 rounded-lg"
+            className="text-xs bg-status-danger/10 text-status-danger px-2.5 py-1.5 rounded-lg"
           >
             Эскалировать
           </button>
@@ -245,7 +245,7 @@ function TicketCard({
                     key={m.id}
                     className={`text-xs rounded-lg p-2 ${
                       m.sender_type === 'admin'
-                        ? 'bg-blue-500/10 ml-4'
+                        ? 'bg-status-info/10 ml-4'
                         : 'bg-tg-bg mr-4'
                     }`}
                   >

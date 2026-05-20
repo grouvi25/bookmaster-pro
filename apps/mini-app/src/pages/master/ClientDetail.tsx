@@ -268,9 +268,9 @@ export default function ClientDetail() {
                   <div
                     className={`text-xs ${
                       v.status === 'completed'
-                        ? 'text-green-500'
+                        ? 'text-status-success'
                         : v.status === 'cancelled' || v.status === 'no_show'
-                        ? 'text-red-400'
+                        ? 'text-status-danger'
                         : 'text-tg-hint'
                     }`}
                   >

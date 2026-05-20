@@ -73,7 +73,7 @@ export default function NearbyMasters() {
             {locating ? 'Определяем...' : 'Определить местоположение'}
           </Button>
           {locationError && (
-            <p className="text-sm text-red-500">{locationError}</p>
+            <p className="text-sm text-status-danger">{locationError}</p>
           )}
         </div>
       ) : (
@@ -130,7 +130,7 @@ export default function NearbyMasters() {
                     <div className="flex items-center gap-2 mt-0.5">
                       {m.rating != null && (
                         <span className="flex items-center gap-0.5 text-xs">
-                          <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
+                          <Star className="w-3 h-3 text-status-warning fill-status-warning" />
                           {m.rating.toFixed(1)}
                         </span>
                       )}

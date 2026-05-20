@@ -102,7 +102,7 @@ export default function WorkSchedule() {
                   onClick={() => updateDay(day.day_of_week, { is_active: !day.is_active })}
                   className={clsx(
                     'w-10 h-6 rounded-full transition-all relative',
-                    day.is_active ? 'bg-brand-500' : 'bg-gray-300'
+                    day.is_active ? 'bg-brand-500' : 'bg-tg-secondary'
                   )}
                 >
                   <div className={clsx(

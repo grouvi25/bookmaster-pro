@@ -134,7 +134,7 @@ function VoiceDiaryContent() {
             disabled={processing}
             className={`w-24 h-24 rounded-full flex items-center justify-center transition-all ${
               recording
-                ? 'bg-red-500 text-white animate-pulse scale-110'
+                ? 'bg-status-danger text-white animate-pulse scale-110'
                 : 'bg-brand-500 text-white shadow-button'
             } disabled:opacity-40`}
           >

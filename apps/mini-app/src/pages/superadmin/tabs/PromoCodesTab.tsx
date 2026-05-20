@@ -161,7 +161,7 @@ export default function PromoCodesTab() {
                   {c.is_active && (
                     <button
                       onClick={() => deactivateMutation.mutate(c.id)}
-                      className="text-xs text-red-500 underline"
+                      className="text-xs text-status-danger underline"
                     >
                       Выкл
                     </button>

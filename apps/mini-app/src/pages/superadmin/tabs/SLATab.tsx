@@ -64,7 +64,7 @@ export default function SLATab() {
                 <div className="text-tg-hint">Без ответа &gt; SLA</div>
                 <div
                   className={`font-semibold ${
-                    stats.first_response_breach > 0 ? 'text-red-500' : ''
+                    stats.first_response_breach > 0 ? 'text-status-danger' : ''
                   }`}
                 >
                   {stats.first_response_breach}
@@ -74,7 +74,7 @@ export default function SLATab() {
                 <div className="text-tg-hint">Не закрыто &gt; SLA</div>
                 <div
                   className={`font-semibold ${
-                    stats.resolve_breach > 0 ? 'text-red-500' : ''
+                    stats.resolve_breach > 0 ? 'text-status-danger' : ''
                   }`}
                 >
                   {stats.resolve_breach}

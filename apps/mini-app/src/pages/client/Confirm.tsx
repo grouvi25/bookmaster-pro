@@ -173,7 +173,7 @@ export default function Confirm() {
           </div>
 
           {store.promoCode && (
-            <div className="flex items-center gap-3 text-green-600">
+            <div className="flex items-center gap-3 text-status-success">
               <span className="w-4 h-4" />
               <span>Промокод {store.promoCode}</span>
               <span className="ml-auto">-{store.discount}{store.discount < 100 ? '%' : ' \₽'}</span>
@@ -181,7 +181,7 @@ export default function Confirm() {
           )}
 
           {paymentType === 'points' && store.loyaltyPoints > 0 && (
-            <div className="flex items-center gap-3 text-blue-600">
+            <div className="flex items-center gap-3 text-status-info">
               <Coins className="w-4 h-4 flex-shrink-0" />
               <span>Баллы лояльности</span>
               <span className="ml-auto">-{Math.min(store.loyaltyPoints, finalPrice)} \₽</span>

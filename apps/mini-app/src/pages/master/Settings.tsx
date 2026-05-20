@@ -581,10 +581,10 @@ function SupportSection() {
                   <span className="font-medium">{t.subject}</span>
                   <span className={`text-micro px-2 py-0.5 rounded-badge ${
                     t.status === 'resolved' || t.status === 'closed'
-                      ? 'bg-[#34C759]/15 text-[#34C759]'
+                      ? 'bg-status-success/15 text-status-success'
                       : t.status === 'in_progress'
-                        ? 'bg-[#007AFF]/15 text-[#007AFF]'
-                        : 'bg-[#FF9500]/15 text-[#FF9500]'
+                        ? 'bg-status-info/15 text-status-info'
+                        : 'bg-status-warning/15 text-status-warning'
                   }`}>
                     {statusLabel(t.status)}
                   </span>

@@ -89,7 +89,7 @@ export default function BlockedSlots() {
               </div>
               <button
                 onClick={() => deleteMutation.mutate(slot.id)}
-                className="text-red-400 p-2"
+                className="text-status-danger p-2"
               >
                 <Trash2 className="w-4 h-4" />
               </button>

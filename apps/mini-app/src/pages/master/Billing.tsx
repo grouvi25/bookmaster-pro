@@ -26,7 +26,7 @@ const PLANS: Plan[] = [
     name: 'Старт',
     price: 590,
     Icon: Zap,
-    color: 'text-blue-500',
+    color: 'text-status-info',
     features: [
       'До 30 записей/мес',
       'Онлайн-запись',

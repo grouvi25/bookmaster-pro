@@ -143,7 +143,7 @@ export default function AIContentTools() {
                 onClick={handleCopy}
                 className="absolute top-3 right-3 text-tg-hint hover:text-tg-text transition-colors"
               >
-                {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+                {copied ? <Check className="w-4 h-4 text-status-success" /> : <Copy className="w-4 h-4" />}
               </button>
             </Card>
           )}

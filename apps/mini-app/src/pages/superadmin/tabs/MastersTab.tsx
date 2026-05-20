@@ -124,7 +124,7 @@ export default function MastersTab() {
               {!m.is_verified && (
                 <button
                   onClick={() => verifyMutation.mutate(m.id)}
-                  className="text-xs bg-blue-500/10 text-blue-600 px-2.5 py-1.5 rounded-lg"
+                  className="text-xs bg-status-info/10 text-status-info px-2.5 py-1.5 rounded-lg"
                 >
                   Верифицировать
                 </button>
@@ -135,8 +135,8 @@ export default function MastersTab() {
                 }
                 className={`text-xs px-2.5 py-1.5 rounded-lg ${
                   m.is_active
-                    ? 'bg-red-500/10 text-red-600'
-                    : 'bg-green-500/10 text-green-600'
+                    ? 'bg-status-danger/10 text-status-danger'
+                    : 'bg-status-success/10 text-status-success'
                 }`}
               >
                 {m.is_active ? 'Блокировать' : 'Разблокировать'}

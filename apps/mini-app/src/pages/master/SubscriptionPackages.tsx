@@ -142,7 +142,7 @@ function SubscriptionPackagesContent() {
             </div>
 
             {discountPercent > 0 && (
-              <p className="text-xs text-green-600">Скидка: {discountPercent}% от стоимости разовых визитов</p>
+              <p className="text-xs text-status-success">Скидка: {discountPercent}% от стоимости разовых визитов</p>
             )}
 
             <Button
@@ -181,7 +181,7 @@ function SubscriptionPackagesContent() {
                 </div>
                 <button
                   onClick={() => deleteMutation.mutate(pkg.id)}
-                  className="p-2 text-red-400 hover:text-red-500"
+                  className="p-2 text-status-danger hover:text-status-danger"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>

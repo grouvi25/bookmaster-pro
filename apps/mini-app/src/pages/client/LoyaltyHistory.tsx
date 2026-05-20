@@ -26,9 +26,9 @@ interface LoyaltyTx {
 }
 
 const TIER_CONFIG: Record<string, { label: string; color: string; cashback: number }> = {
-  new: { label: 'Новый', color: 'text-gray-500', cashback: 3 },
-  regular: { label: 'Постоянный', color: 'text-blue-500', cashback: 5 },
-  vip: { label: 'VIP', color: 'text-yellow-500', cashback: 10 },
+  new: { label: 'Новый', color: 'text-tg-hint', cashback: 3 },
+  regular: { label: 'Постоянный', color: 'text-status-info', cashback: 5 },
+  vip: { label: 'VIP', color: 'text-status-warning', cashback: 10 },
 };
 
 const TYPE_LABELS: Record<string, { label: string; icon: 'up' | 'down' | 'gift' }> = {

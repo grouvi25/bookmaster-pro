@@ -76,7 +76,7 @@ export default function PromoCode() {
           </Button>
         </div>
         {discount !== null && discount > 0 && (
-          <div className="flex items-center gap-2 mt-3 text-green-600 text-sm">
+          <div className="flex items-center gap-2 mt-3 text-status-success text-sm">
             <CircleCheck className="w-4 h-4" />
             <span>
               Скидка: -{discount}{discount < 100 ? '%' : ` \₽`}
@@ -112,13 +112,13 @@ export default function PromoCode() {
         </div>
         {discount !== null && discount > 0 && (
           <div className="flex justify-between text-sm mt-1">
-            <span className="text-green-600">Скидка</span>
-            <span className="text-green-600">
-              -{(servicePrice - finalPrice).toLocaleString('ru')} \₽
+            <span className="text-status-success">Скидка</span>
+            <span className="text-status-success">
+              -{(servicePrice - finalPrice).toLocaleString('ru')} ₽
             </span>
           </div>
         )}
-        <div className="border-t border-gray-200 mt-2 pt-2 flex justify-between font-semibold">
+        <div className="border-t border-tg-secondary mt-2 pt-2 flex justify-between font-semibold">
           <span>Итого</span>
           <span className="text-brand-600">{finalPrice.toLocaleString('ru')} \₽</span>
         </div>
