@@ -36,7 +36,7 @@ async def check_master_access(master_id: int, db: AsyncSession) -> str:
             )
         ).order_by(AccessGrant.valid_until.desc())
     )
-    active_grant = result.scalar_one_or_none()
+    active_grant = result.scalars().first()
 
     if active_grant:
         return active_grant.plan
