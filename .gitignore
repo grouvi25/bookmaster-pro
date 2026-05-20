@@ -15,3 +15,12 @@ htmlcov
 .DS_Store
 *.db
 *.sqlite3
+
+# IDE
+.vscode/
+.idea/
+
+# Локальные ТЗ-документы (не в репо)
+BookMaster_Pro_MASTER_TZ*.pdf
+file.pdf
+_tz_*.txt

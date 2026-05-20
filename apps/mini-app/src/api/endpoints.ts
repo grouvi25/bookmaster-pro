@@ -470,16 +470,32 @@ export const superadminApi = {
   dashboard: () => api.get('/superadmin/dashboard'),
   masters: (params?: Record<string, string | undefined>) =>
     api.get('/superadmin/masters', { params }),
+  updateMaster: (masterId: number, data: { is_verified?: boolean; is_active?: boolean; current_plan?: string }) =>
+    api.patch(`/superadmin/masters/${masterId}`, data),
+  verifyMaster: (masterId: number) =>
+    api.post(`/superadmin/masters/${masterId}/verify`),
   healthChecks: () => api.get('/superadmin/health'),
   auditLog: (params?: Record<string, string>) =>
     api.get('/superadmin/audit-log', { params }),
-  finance: () => api.get('/superadmin/finance'),
+  finance: (periodDays?: number) =>
+    api.get('/superadmin/finance', {
+      params: periodDays ? { period_days: periodDays } : undefined,
+    }),
   tickets: (params?: Record<string, string | undefined>) =>
     api.get('/superadmin/tickets', { params }),
+  ticketDetail: (id: number) => api.get(`/superadmin/tickets/${id}`),
+  replyTicket: (id: number, text: string) =>
+    api.post(`/superadmin/tickets/${id}/reply`, { text }),
   escalateTicket: (id: number) =>
     api.post(`/superadmin/tickets/${id}/escalate`),
+  slaStats: () => api.get('/superadmin/sla-stats'),
   settings: () => api.get('/superadmin/settings'),
-  growth: () => api.get('/superadmin/growth'),
+  updateSettings: (updates: Record<string, string | number | boolean>) =>
+    api.post('/superadmin/settings', updates),
+  growth: (periodDays?: number) =>
+    api.get('/superadmin/growth', {
+      params: periodDays ? { period_days: periodDays } : undefined,
+    }),
   promoCodes: () => api.get('/superadmin/promo-codes'),
   createPromoCode: (data: {
     code: string;
@@ -498,4 +514,13 @@ export const superadminApi = {
   }) => api.post(`/superadmin/masters/${masterId}/grant-access`, data),
   masterAccessGrants: (masterId: number) =>
     api.get(`/superadmin/masters/${masterId}/access-grants`),
+  broadcastPreview: (data: { plan_filter?: string | null; only_active?: boolean }) =>
+    api.post('/superadmin/broadcast/preview', data),
+  broadcastSend: (data: {
+    text: string;
+    plan_filter?: string | null;
+    only_active?: boolean;
+    button_text?: string | null;
+    button_url?: string | null;
+  }) => api.post('/superadmin/broadcast/send', data),
 };
