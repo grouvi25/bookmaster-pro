@@ -606,3 +606,155 @@ async def send_broadcast(
     )
     await db.commit()
     return result
+
+
+# ── Модераторы (управление командой) ──────────────────────────
+
+
+class AddModeratorRequest(PydanticBaseModel):
+    platform_id: str = Field(..., min_length=1, max_length=50)
+    platform: str = "telegram"
+
+
+@router.get("/moderators")
+async def list_moderators(
+    user: dict = Depends(_require_superadmin),
+    db: AsyncSession = Depends(get_db),
+):
+    """Список всех модераторов."""
+    from sqlalchemy import select
+    from app.modules.auth.models import Identity
+
+    result = await db.execute(
+        select(Identity)
+        .where(Identity.role == "moderator")
+        .order_by(Identity.created_at.desc())
+    )
+    moderators = result.scalars().all()
+    return [
+        {
+            "id": m.id,
+            "platform": m.platform,
+            "platform_id": m.platform_id,
+            "role": m.role,
+            "created_at": str(m.created_at),
+        }
+        for m in moderators
+    ]
+
+
+@router.post("/moderators")
+async def add_moderator(
+    req: AddModeratorRequest,
+    user: dict = Depends(_require_superadmin),
+    db: AsyncSession = Depends(get_db),
+):
+    """Назначить пользователя модератором по platform_id.
+
+    Если identity с таким platform+platform_id существует — меняем роль.
+    Если не существует — создаём новый identity с role='moderator'.
+    Отправляем push-уведомление.
+    """
+    from sqlalchemy import select
+    from app.modules.auth.models import Identity
+    from app.modules.notifications.service import NotificationService
+    from app.core.config import settings
+
+    platform_id = req.platform_id.strip()
+    platform = req.platform.strip().lower()
+
+    # Проверяем, не суперадмин ли
+    from app.core.auth import is_superadmin
+    if is_superadmin(platform_id):
+        raise HTTPException(status_code=400, detail="Нельзя назначить суперадмина модератором")
+
+    # Ищем существующую identity
+    result = await db.execute(
+        select(Identity).where(
+            Identity.platform == platform,
+            Identity.platform_id == platform_id,
+        )
+    )
+    identity = result.scalar_one_or_none()
+
+    if identity:
+        if identity.role == "moderator":
+            raise HTTPException(status_code=409, detail="Уже является модератором")
+        identity.role = "moderator"
+    else:
+        identity = Identity(
+            platform=platform,
+            platform_id=platform_id,
+            role="moderator",
+        )
+        db.add(identity)
+
+    # Audit
+    svc = SuperadminService(db)
+    admin_id = str(user.get("platform_id") or user.get("identity_id", "system"))
+    await svc.log_action(
+        admin_id=admin_id,
+        action="add_moderator",
+        entity_type="identity",
+        entity_id=identity.id if identity.id else None,
+        payload={"platform": platform, "platform_id": platform_id},
+    )
+
+    await db.commit()
+    if identity.id:
+        await db.refresh(identity)
+
+    # Уведомление
+    try:
+        await NotificationService.send_to_client(
+            platform=platform,
+            platform_id=platform_id,
+            text="👮 Вам предоставлен доступ модератора.\nОткройте приложение для работы с тикетами.",
+            button_text="Открыть",
+            button_url=settings.APP_URL,
+        )
+    except Exception:
+        pass
+
+    return {
+        "id": identity.id,
+        "platform": identity.platform,
+        "platform_id": identity.platform_id,
+        "role": identity.role,
+        "created": True,
+    }
+
+
+@router.delete("/moderators/{identity_id}")
+async def remove_moderator(
+    identity_id: int,
+    user: dict = Depends(_require_superadmin),
+    db: AsyncSession = Depends(get_db),
+):
+    """Снять роль модератора (возвращает в client)."""
+    from sqlalchemy import select
+    from app.modules.auth.models import Identity
+
+    result = await db.execute(
+        select(Identity).where(Identity.id == identity_id)
+    )
+    identity = result.scalar_one_or_none()
+    if not identity:
+        raise HTTPException(status_code=404, detail="Identity not found")
+    if identity.role != "moderator":
+        raise HTTPException(status_code=400, detail="Пользователь не является модератором")
+
+    identity.role = "client"
+
+    svc = SuperadminService(db)
+    admin_id = str(user.get("platform_id") or user.get("identity_id", "system"))
+    await svc.log_action(
+        admin_id=admin_id,
+        action="remove_moderator",
+        entity_type="identity",
+        entity_id=identity_id,
+        payload={"platform_id": identity.platform_id},
+    )
+
+    await db.commit()
+    return {"id": identity_id, "role": "client", "removed": True}

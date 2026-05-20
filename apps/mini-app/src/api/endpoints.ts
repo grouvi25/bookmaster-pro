@@ -523,4 +523,11 @@ export const superadminApi = {
     button_text?: string | null;
     button_url?: string | null;
   }) => api.post('/superadmin/broadcast/send', data),
+
+  // Модераторы (команда)
+  moderators: () => api.get('/superadmin/moderators'),
+  addModerator: (data: { platform_id: string; platform?: string }) =>
+    api.post('/superadmin/moderators', data),
+  removeModerator: (identityId: number) =>
+    api.delete(`/superadmin/moderators/${identityId}`),
 };
