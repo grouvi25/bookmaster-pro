@@ -55,6 +55,7 @@ pydub==0.25.1
 
 # === MONITORING ===
 sentry-sdk[fastapi]==2.13.0
+prometheus-client==0.21.0
 
 # === GEOSPATIAL ===
 geoalchemy2==0.15.2

@@ -29,6 +29,33 @@ jobs:
       - name: Ruff lint
         run: ruff check app/ --output-format=github
 
+  backend-test:
+    name: Backend Tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/api
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements-test.txt
+
+      - name: Run tests
+        run: pytest tests/ -v --tb=short
+        env:
+          DATABASE_URL: "sqlite+aiosqlite:///file::memory:?cache=shared&uri=true"
+          REDIS_URL: "redis://localhost:6379/0"
+          SECRET_KEY: "test-secret-key-for-ci-only-64-characters-long-xxxxxxxxxxxxxxxx"
+          ENVIRONMENT: "test"
+          DEBUG: "true"
+
   frontend-lint:
     name: Frontend Lint & Build
     runs-on: ubuntu-latest

@@ -32,7 +32,7 @@ def verify_max_signature(body: bytes, signature: str) -> bool:
     """
     if not settings.MAX_WEBHOOK_SECRET:
         return True
-    expected = hmac.new(
+    expected = hmac.HMAC(
         settings.MAX_WEBHOOK_SECRET.encode(),
         body,
         hashlib.sha256,

@@ -1,0 +1,100 @@
+{
+  "annotations": {"list": []},
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "title": "Request Rate (req/s)",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+      "targets": [
+        {
+          "expr": "sum(rate(http_requests_total[5m])) by (status_code)",
+          "legendFormat": "{{status_code}}"
+        }
+      ]
+    },
+    {
+      "title": "Response Time (p95)",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))",
+          "legendFormat": "p95"
+        },
+        {
+          "expr": "histogram_quantile(0.50, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))",
+          "legendFormat": "p50"
+        }
+      ]
+    },
+    {
+      "title": "Bookings Created",
+      "type": "stat",
+      "gridPos": {"h": 4, "w": 4, "x": 0, "y": 8},
+      "targets": [
+        {"expr": "sum(bookings_created_total)", "legendFormat": "total"}
+      ]
+    },
+    {
+      "title": "Payments (succeeded)",
+      "type": "stat",
+      "gridPos": {"h": 4, "w": 4, "x": 4, "y": 8},
+      "targets": [
+        {"expr": "sum(payments_total{status=\"succeeded\"})", "legendFormat": "succeeded"}
+      ]
+    },
+    {
+      "title": "AI Requests",
+      "type": "stat",
+      "gridPos": {"h": 4, "w": 4, "x": 8, "y": 8},
+      "targets": [
+        {"expr": "sum(ai_requests_total)", "legendFormat": "total"}
+      ]
+    },
+    {
+      "title": "Active Connections",
+      "type": "gauge",
+      "gridPos": {"h": 4, "w": 4, "x": 12, "y": 8},
+      "targets": [
+        {"expr": "sum(http_requests_in_progress)", "legendFormat": "in-flight"}
+      ]
+    },
+    {
+      "title": "Notifications Sent",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 12},
+      "targets": [
+        {
+          "expr": "sum(rate(notifications_sent_total[5m])) by (platform, status)",
+          "legendFormat": "{{platform}} {{status}}"
+        }
+      ]
+    },
+    {
+      "title": "Error Rate",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 12},
+      "targets": [
+        {
+          "expr": "sum(rate(http_requests_total{status_code=~\"5..\"}[5m]))",
+          "legendFormat": "5xx errors/s"
+        },
+        {
+          "expr": "sum(rate(http_requests_total{status_code=~\"4..\"}[5m]))",
+          "legendFormat": "4xx errors/s"
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 39,
+  "tags": ["bookmaster"],
+  "templating": {"list": []},
+  "time": {"from": "now-6h", "to": "now"},
+  "title": "BookMaster Pro — Overview",
+  "uid": "bookmaster-overview"
+}

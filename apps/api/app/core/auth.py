@@ -69,12 +69,12 @@ def validate_telegram_init_data(init_data: str) -> Optional[dict]:
         data_check_string = "\n".join(data_pairs)
 
         # Compute secret key
-        secret_key = hmac.new(
+        secret_key = hmac.HMAC(
             b"WebAppData", settings.TG_BOT_TOKEN.encode(), hashlib.sha256
         ).digest()
 
         # Compute hash
-        computed_hash = hmac.new(
+        computed_hash = hmac.HMAC(
             secret_key, data_check_string.encode(), hashlib.sha256
         ).hexdigest()
 

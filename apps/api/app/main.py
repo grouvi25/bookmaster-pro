@@ -38,6 +38,11 @@ app = FastAPI(
 
 setup_middleware(app)
 
+# Prometheus metrics
+from app.core.metrics import setup_metrics_middleware, setup_metrics_endpoint
+setup_metrics_middleware(app)
+setup_metrics_endpoint(app)
+
 
 @app.on_event("shutdown")
 async def shutdown():
@@ -48,6 +53,41 @@ async def shutdown():
 @app.get("/health")
 async def health():
     return {"status": "ok", "version": "1.0.0"}
+
+
+@app.get("/health/detailed")
+async def health_detailed():
+    """Расширенная проверка здоровья — DB, Redis, ключевые сервисы."""
+    import time as _time
+    checks = {}
+
+    # DB
+    try:
+        from app.core.database import async_session_factory
+        start = _time.time()
+        async with async_session_factory() as session:
+            from sqlalchemy import text
+            await session.execute(text("SELECT 1"))
+        checks["db"] = {"status": "ok", "latency_ms": round((_time.time() - start) * 1000, 1)}
+    except Exception as e:
+        checks["db"] = {"status": "error", "detail": str(e)[:100]}
+
+    # Redis
+    try:
+        from app.core.redis import get_redis
+        start = _time.time()
+        redis = await get_redis()
+        await redis.ping()
+        checks["redis"] = {"status": "ok", "latency_ms": round((_time.time() - start) * 1000, 1)}
+    except Exception as e:
+        checks["redis"] = {"status": "error", "detail": str(e)[:100]}
+
+    all_ok = all(c["status"] == "ok" for c in checks.values())
+    return {
+        "status": "ok" if all_ok else "degraded",
+        "version": "1.0.0",
+        "checks": checks,
+    }
 
 
 # ── Роутеры модулей ───────────────────────────────────────────
