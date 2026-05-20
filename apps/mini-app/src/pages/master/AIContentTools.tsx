@@ -57,7 +57,7 @@ export default function AIContentTools() {
   const templateList = templates || [];
 
   return (
-    <div className="min-h-screen bg-tg-bg text-tg-text pb-24 animate-fade-in">
+    <div >
       <PageHeader
         title="AI контент-мастер"
         left={<HeaderBackButton />}

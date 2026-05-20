@@ -41,7 +41,7 @@ export default function BlockedSlots() {
   const slots = data || [];
 
   return (
-    <div className="min-h-screen bg-tg-bg text-tg-text pb-24 animate-fade-in">
+    <div >
       <PageHeader
         title="Выходные и перерывы"
         left={<HeaderBackButton />}

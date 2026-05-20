@@ -23,7 +23,7 @@ export default function Tools() {
   const [tab, setTab] = useState<ToolsTab>('promo');
 
   return (
-    <div className="px-screen-x pb-24 animate-fade-in">
+    <div className="px-screen-x">
       <PageHeader title="Инструменты" />
 
       <div className="mb-section-y">

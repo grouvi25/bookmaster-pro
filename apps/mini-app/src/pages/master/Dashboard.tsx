@@ -61,7 +61,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="px-screen-x pt-section-y pb-24 animate-fade-in">
+    <div className="px-screen-x pt-section-y">
       <div className="mb-section-y">
         <p className="text-tg-hint text-aux capitalize">
           {format(new Date(), 'EEEE, d MMMM', { locale: ru })}

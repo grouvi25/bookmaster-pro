@@ -34,7 +34,7 @@ export default function Locations() {
   }>;
 
   return (
-    <div className="min-h-screen bg-tg-bg text-tg-text pb-24 animate-fade-in">
+    <div >
       <PageHeader
         title="Локации"
         left={<HeaderBackButton to="/master/settings" />}

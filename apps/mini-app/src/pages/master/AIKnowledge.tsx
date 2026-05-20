@@ -150,7 +150,7 @@ function AIKnowledgeInner() {
   const docs = data || [];
 
   return (
-    <div className="min-h-screen bg-tg-bg text-tg-text pb-24 animate-fade-in">
+    <div >
       <PageHeader
         title="База знаний AI"
         left={<HeaderBackButton to="/master/ai" />}

@@ -86,7 +86,7 @@ export default function Schedule() {
   const isActive = isPending || isConfirmed;
 
   return (
-    <div className="px-screen-x pb-24 animate-fade-in">
+    <div className="px-screen-x">
       <PageHeader
         title="Расписание"
         right={

@@ -36,7 +36,7 @@ export default function Broadcast() {
   }>;
 
   return (
-    <div className="min-h-screen bg-tg-bg text-tg-text pb-24 animate-fade-in">
+    <div >
       <PageHeader
         title="Рассылки"
         left={<HeaderBackButton to="/master/settings" />}

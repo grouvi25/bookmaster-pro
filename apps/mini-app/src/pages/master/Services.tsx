@@ -229,7 +229,7 @@ export default function Services() {
   if (isLoading) return <ServiceCardSkeleton count={4} />;
 
   return (
-    <div className="min-h-screen bg-tg-bg text-tg-text pb-24 animate-fade-in">
+    <div >
       <PageHeader
         title="Мои услуги"
         right={

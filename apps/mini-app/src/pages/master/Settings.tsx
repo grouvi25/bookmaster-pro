@@ -29,7 +29,7 @@ export default function Settings() {
   const [tab, setTab] = useState<SettingsTab>('main');
 
   return (
-    <div className="min-h-screen bg-tg-bg text-tg-text pb-24 animate-fade-in">
+    <div >
       <PageHeader
         title={TAB_TITLES[tab]}
         left={

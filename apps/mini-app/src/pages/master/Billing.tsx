@@ -135,7 +135,7 @@ export default function Billing() {
   };
 
   return (
-    <div className="min-h-screen bg-tg-bg text-tg-text pb-24 animate-fade-in">
+    <div >
       <PageHeader
         title="Тарифы и подписка"
         left={<HeaderBackButton to="/master/settings" />}

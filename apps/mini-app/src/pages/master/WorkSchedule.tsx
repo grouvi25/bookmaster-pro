@@ -88,7 +88,7 @@ export default function WorkSchedule() {
   if (isLoading && !initialized) return <div className="px-screen-x py-section-y"><FormSkeleton rows={7} /></div>;
 
   return (
-    <div className="min-h-screen bg-tg-bg text-tg-text pb-24 animate-fade-in">
+    <div >
       <PageHeader
         title="Рабочее расписание"
         left={<HeaderBackButton to="/master/settings" />}

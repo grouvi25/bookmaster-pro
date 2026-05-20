@@ -129,7 +129,7 @@ export default function ClientDetail() {
   };
 
   return (
-    <div className="px-screen-x pt-section-y pb-24 animate-fade-in">
+    <div className="px-screen-x pt-section-y">
       <BackButton to="/master/clients" label="Клиенты" />
 
       {/* Header card */}

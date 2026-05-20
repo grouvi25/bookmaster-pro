@@ -141,7 +141,7 @@ export default function LinkPageEditor() {
   const previewPath = `/p/${master.slug}`;
 
   return (
-    <div className="min-h-screen bg-tg-bg text-tg-text pb-24 animate-fade-in">
+    <div >
       <PageHeader
         title="Моя страница-визитка"
         left={<HeaderBackButton to="/master/settings" />}

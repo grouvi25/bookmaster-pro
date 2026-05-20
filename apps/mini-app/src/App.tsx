@@ -9,6 +9,7 @@ import { ToastContainer } from '@/shared/ui/Toast';
 
 // Layouts
 import ClientLayout from '@/layouts/ClientLayout';
+import MasterLayout from '@/layouts/MasterLayout';
 
 // Клиентские экраны
 import MasterProfile from '@/pages/client/MasterProfile';
@@ -237,28 +238,30 @@ function AppRouter() {
         <Route path="/review/:appointmentId" element={<ReviewForm />} />
         <Route path="/nearby" element={<NearbyMasters />} />
 
-        {/* Мастерские роуты — только для master и superadmin */}
-        <Route path="/master" element={<RequireAuth allowedRoles={['master', 'superadmin']}><Dashboard /></RequireAuth>} />
-        <Route path="/master/schedule" element={<RequireAuth allowedRoles={['master', 'superadmin']}><Schedule /></RequireAuth>} />
-        <Route path="/master/clients" element={<RequireAuth allowedRoles={['master', 'superadmin']}><Clients /></RequireAuth>} />
-        <Route path="/master/tools" element={<RequireAuth allowedRoles={['master', 'superadmin']}><Tools /></RequireAuth>} />
-        <Route path="/master/ai" element={<RequireAuth allowedRoles={['master', 'superadmin']}><AIAssistant /></RequireAuth>} />
-        <Route path="/master/settings" element={<RequireAuth allowedRoles={['master', 'superadmin']}><Settings /></RequireAuth>} />
-        <Route path="/master/services" element={<RequireAuth allowedRoles={['master', 'superadmin']}><Services /></RequireAuth>} />
-        <Route path="/master/clients/:clientId" element={<RequireAuth allowedRoles={['master', 'superadmin']}><ClientDetail /></RequireAuth>} />
-        <Route path="/master/consultations" element={<RequireAuth allowedRoles={['master', 'superadmin']}><Consultations /></RequireAuth>} />
-        <Route path="/master/loyalty-settings" element={<RequireAuth allowedRoles={['master', 'superadmin']}><LoyaltySettings /></RequireAuth>} />
-        <Route path="/master/broadcast" element={<RequireAuth allowedRoles={['master', 'superadmin']}><Broadcast /></RequireAuth>} />
-        <Route path="/master/locations" element={<RequireAuth allowedRoles={['master', 'superadmin']}><Locations /></RequireAuth>} />
-        <Route path="/billing" element={<RequireAuth allowedRoles={['master', 'superadmin']}><Billing /></RequireAuth>} />
-        <Route path="/link-page/edit" element={<RequireAuth allowedRoles={['master', 'superadmin']}><LinkPageEditor /></RequireAuth>} />
-        <Route path="/master/blocked-slots" element={<RequireAuth allowedRoles={['master', 'superadmin']}><BlockedSlots /></RequireAuth>} />
-        <Route path="/master/ai/content" element={<RequireAuth allowedRoles={['master', 'superadmin']}><AIContentTools /></RequireAuth>} />
-        <Route path="/master/ai/knowledge" element={<RequireAuth allowedRoles={['master', 'superadmin']}><AIKnowledge /></RequireAuth>} />
-        <Route path="/master/ai/voice-diary" element={<RequireAuth allowedRoles={['master', 'superadmin']}><VoiceDiary /></RequireAuth>} />
-        <Route path="/master/widget" element={<RequireAuth allowedRoles={['master', 'superadmin']}><WidgetSettings /></RequireAuth>} />
-        <Route path="/master/subscription-packages" element={<RequireAuth allowedRoles={['master', 'superadmin']}><SubscriptionPackages /></RequireAuth>} />
-        <Route path="/master/work-schedule" element={<RequireAuth allowedRoles={['master', 'superadmin']}><WorkSchedule /></RequireAuth>} />
+        {/* Мастерские роуты — обёрнуты в MasterLayout (pb-24, bg, animate) */}
+        <Route element={<RequireAuth allowedRoles={['master', 'superadmin']}><MasterLayout /></RequireAuth>}>
+          <Route path="/master" element={<Dashboard />} />
+          <Route path="/master/schedule" element={<Schedule />} />
+          <Route path="/master/clients" element={<Clients />} />
+          <Route path="/master/tools" element={<Tools />} />
+          <Route path="/master/ai" element={<AIAssistant />} />
+          <Route path="/master/settings" element={<Settings />} />
+          <Route path="/master/services" element={<Services />} />
+          <Route path="/master/clients/:clientId" element={<ClientDetail />} />
+          <Route path="/master/consultations" element={<Consultations />} />
+          <Route path="/master/loyalty-settings" element={<LoyaltySettings />} />
+          <Route path="/master/broadcast" element={<Broadcast />} />
+          <Route path="/master/locations" element={<Locations />} />
+          <Route path="/billing" element={<Billing />} />
+          <Route path="/link-page/edit" element={<LinkPageEditor />} />
+          <Route path="/master/blocked-slots" element={<BlockedSlots />} />
+          <Route path="/master/ai/content" element={<AIContentTools />} />
+          <Route path="/master/ai/knowledge" element={<AIKnowledge />} />
+          <Route path="/master/ai/voice-diary" element={<VoiceDiary />} />
+          <Route path="/master/widget" element={<WidgetSettings />} />
+          <Route path="/master/subscription-packages" element={<SubscriptionPackages />} />
+          <Route path="/master/work-schedule" element={<WorkSchedule />} />
+        </Route>
 
         {/* Публичная страница-линк (TapLink) */}
         <Route path="/p/:slug" element={<LinkPage />} />

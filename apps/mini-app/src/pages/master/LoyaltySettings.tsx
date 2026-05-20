@@ -42,7 +42,7 @@ export default function LoyaltySettings() {
   if (!settings) return null;
 
   return (
-    <div className="min-h-screen bg-tg-bg text-tg-text pb-24 animate-fade-in">
+    <div >
       <PageHeader
         title="Настройки лояльности"
         left={<HeaderBackButton to="/master/settings" />}

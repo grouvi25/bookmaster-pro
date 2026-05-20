@@ -48,7 +48,7 @@ export default function Consultations() {
   const [tab, setTab] = useState<'list' | 'stats'>('list');
 
   return (
-    <div className="min-h-screen bg-tg-bg text-tg-text pb-24 animate-fade-in">
+    <div >
       <PageHeader
         title="Консультации"
         left={<HeaderBackButton />}
