@@ -31,13 +31,25 @@ services:
     <<: *restart
     image: redis:7-alpine
     container_name: bm_redis
-    command: redis-server --appendonly yes
+    # Если REDIS_PASSWORD задан в .env — Redis стартует с авторизацией.
+    # Если пуст — стартует без пароля (для локального dev).
+    # Совпадает с REDIS_URL=redis://:<password>@redis:6379/0 в .env.
+    env_file: ../.env
+    command: >
+      sh -c '
+      if [ -n "$$REDIS_PASSWORD" ]; then
+        exec redis-server --appendonly yes --requirepass "$$REDIS_PASSWORD";
+      else
+        exec redis-server --appendonly yes;
+      fi
+      '
     volumes: [redisdata:/data]
     ports:
       - "127.0.0.1:6379:6379"
     networks: [bookmaster]
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      # Если REDIS_PASSWORD пуст — ping без авторизации; иначе с -a
+      test: ["CMD-SHELL", "redis-cli ${REDIS_PASSWORD:+-a $$REDIS_PASSWORD} ping || exit 1"]
       interval: 10s
 
   api:
