@@ -43,7 +43,7 @@ async function getMasters(params: SearchParams) {
     );
     return response.data;
   } catch {
-    return { items: [], total: 0 };
+    return { masters: [], total: 0 };
   }
 }
 
@@ -81,7 +81,7 @@ export default async function SearchPage({
   searchParams: SearchParams;
 }) {
   const data = await getMasters(searchParams);
-  const masters = data.items || [];
+  const masters = data.masters || data.items || [];
   const total = data.total || 0;
   const query = searchParams.q || searchParams.specialization || '';
 

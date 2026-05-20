@@ -5,7 +5,8 @@ interface MasterCardProps {
   master: {
     id: number;
     slug: string;
-    name: string;
+    name?: string;
+    display_name?: string;
     specialization: string;
     city?: string;
     avatar_url?: string;
@@ -16,6 +17,7 @@ interface MasterCardProps {
 }
 
 export default function MasterCard({ master }: MasterCardProps) {
+  const name = master.name || master.display_name || 'Мастер';
   return (
     <Link
       href={`/masters/${master.slug}`}
@@ -26,7 +28,7 @@ export default function MasterCard({ master }: MasterCardProps) {
         {master.avatar_url ? (
           <Image
             src={master.avatar_url}
-            alt={master.name}
+            alt={name}
             width={320}
             height={160}
             className="w-full h-full object-cover"
@@ -39,7 +41,7 @@ export default function MasterCard({ master }: MasterCardProps) {
       {/* Информация */}
       <div className="p-4">
         <div className="flex items-center gap-2 mb-1">
-          <h3 className="font-semibold text-lg">{master.name}</h3>
+          <h3 className="font-semibold text-lg">{name}</h3>
           {master.is_verified && (
             <span className="text-blue-500 text-xs">&#10003;</span>
           )}
