@@ -57,6 +57,44 @@ async def search_masters(
     )
 
 
+@router.get("/featured")
+async def get_featured_masters(
+    limit: int = Query(6, ge=1, le=20),
+    db: AsyncSession = Depends(get_db),
+):
+    """Топ мастера для главной страницы маркетплейса (по рейтингу, верифицированные)."""
+    from sqlalchemy import select
+
+    result = await db.execute(
+        select(Master)
+        .where(
+            Master.is_active.is_(True),
+            Master.is_verified.is_(True),
+            Master.rating_count > 0,
+        )
+        .order_by(Master.rating_avg.desc(), Master.rating_count.desc())
+        .limit(limit)
+    )
+    masters = result.scalars().all()
+
+    return {
+        "items": [
+            {
+                "id": m.id,
+                "slug": m.slug,
+                "name": m.display_name,
+                "specialization": m.specialization,
+                "city": m.city,
+                "avatar_url": m.avatar_url,
+                "rating_avg": float(m.rating_avg or 0),
+                "rating_count": m.rating_count or 0,
+                "is_verified": m.is_verified,
+            }
+            for m in masters
+        ]
+    }
+
+
 @router.get("/master/{slug}", response_model=MasterPublicProfile)
 async def get_master_profile(
     slug: str,
