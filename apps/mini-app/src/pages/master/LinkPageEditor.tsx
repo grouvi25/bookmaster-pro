@@ -154,6 +154,8 @@ export default function LinkPageEditor() {
 
   if (isLoading) return <div className="p-6"><FormSkeleton rows={6} /></div>;
 
+  const slug = profile?.slug as string | undefined;
+
   const SECTIONS = [
     { key: 'theme', label: 'Тема', icon: <Palette className="w-4 h-4" /> },
     { key: 'header', label: 'Шапка', icon: <Image className="w-4 h-4" /> },
@@ -161,6 +163,7 @@ export default function LinkPageEditor() {
     { key: 'cards', label: 'Карточки', icon: <Palette className="w-4 h-4" /> },
     { key: 'content', label: 'Контент', icon: <ToggleLeft className="w-4 h-4" /> },
     { key: 'links', label: 'Ссылки', icon: <Link2 className="w-4 h-4" /> },
+    { key: 'share', label: 'QR / Ссылка', icon: <ExternalLink className="w-4 h-4" /> },
   ];
 
   return (
@@ -332,6 +335,87 @@ export default function LinkPageEditor() {
               <input type="url" value={newLinkUrl} onChange={(e) => setNewLinkUrl(e.target.value)} placeholder="https://..." className="input-field" />
               <input type="text" value={newLinkLabel} onChange={(e) => setNewLinkLabel(e.target.value)} placeholder="Название (необязательно)" className="input-field" />
               <Button variant="secondary" size="sm" fullWidth onClick={addLink} disabled={!newLinkUrl.trim()}><Plus className="w-4 h-4" /> Добавить</Button>
+            </Card>
+          </div>
+        )}
+
+        {activeSection === 'share' && slug && (
+          <div className="space-y-4">
+            {/* Ссылка */}
+            <Card className="space-y-3">
+              <h3 className="text-body font-medium">Ваша страница</h3>
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  readOnly
+                  value={`${window.location.origin}/p/${slug}`}
+                  className="input-field text-aux flex-1"
+                  onClick={(e) => (e.target as HTMLInputElement).select()}
+                />
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => {
+                    navigator.clipboard.writeText(`${window.location.origin}/p/${slug}`);
+                    toast.success('Ссылка скопирована');
+                  }}
+                >
+                  📋
+                </Button>
+              </div>
+              <a
+                href={`/p/${slug}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block w-full text-center text-tg-link text-body font-medium py-2 interactive"
+              >
+                Открыть страницу ↗
+              </a>
+            </Card>
+
+            {/* QR */}
+            <Card className="text-center space-y-3">
+              <h3 className="text-body font-medium">QR-код</h3>
+              <img
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(`${window.location.origin}/p/${slug}`)}`}
+                alt="QR"
+                className="w-40 h-40 mx-auto rounded-xl"
+              />
+              <p className="text-aux text-tg-hint">
+                Распечатайте и разместите в кабинете или на визитке
+              </p>
+              <a
+                href={`https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(`${window.location.origin}/p/${slug}`)}`}
+                download={`qr-${slug}.png`}
+                className="text-tg-link text-aux font-medium interactive inline-block"
+              >
+                ⬇️ Скачать QR-код (PNG)
+              </a>
+            </Card>
+
+            {/* Бот-ссылка */}
+            <Card className="space-y-2">
+              <h3 className="text-body font-medium">Ссылка для Telegram</h3>
+              <p className="text-aux text-tg-hint">Клиент нажмёт → откроется Mini-App с записью к вам</p>
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  readOnly
+                  value={`https://t.me/${profile?.bot_username || 'swift_sellbot'}?startapp=m_${slug}`}
+                  className="input-field text-aux flex-1"
+                  onClick={(e) => (e.target as HTMLInputElement).select()}
+                />
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => {
+                    navigator.clipboard.writeText(`https://t.me/${profile?.bot_username || 'swift_sellbot'}?startapp=m_${slug}`);
+                    toast.success('Ссылка скопирована');
+                  }}
+                >
+                  📋
+                </Button>
+              </div>
             </Card>
           </div>
         )}
