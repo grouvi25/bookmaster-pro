@@ -35,10 +35,17 @@ export interface SupportTicket {
   created_at: string;
 }
 
-/** Аудит-лог. */
+/** Аудит-лог. Возвращает /api/v1/superadmin/audit-log. */
 export interface AuditLogEntry {
+  id: number;
+  admin_id?: string | null;
   action: string;
-  user_name: string;
-  details: string;
+  entity_type?: string | null;
+  entity_id?: number | null;
+  payload?: Record<string, unknown> | null;
+  /** @deprecated — backend больше не возвращает; сохранено для совместимости. */
+  user_name?: string;
+  /** @deprecated — backend больше не возвращает; сохранено для совместимости. */
+  details?: string;
   created_at: string;
 }

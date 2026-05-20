@@ -1,4 +1,4 @@
-"""Superadmin schemas."""
+"""Superadmin schemas (для документации; роуты возвращают dict для гибкости)."""
 
 from pydantic import BaseModel, Field
 from typing import Optional, List, Dict, Any
@@ -6,19 +6,41 @@ from datetime import datetime
 
 
 class SuperadminDashboard(BaseModel):
-    mrr: float  # Monthly Recurring Revenue
-    arr: float  # Annual Recurring Revenue
-    total_masters: int
-    active_masters: int  # мастера с хотя бы 1 записью за 30 дней
-    new_masters_30d: int
-    total_clients: int
-    total_appointments: int
+    """ТЗ 12.3 — ключевые метрики дашборда."""
+    # Финансы
+    mrr: float
+    arr: float
+    month_revenue: float
     total_revenue: float
+    transaction_revenue_month: float
     avg_revenue_per_master: float
-    churn_rate_30d: float  # % мастеров не было активно за 30 дней
-    conversion_rate: float  # registrations -> active
+    ltv_avg: float
+
+    # Мастера / клиенты
+    total_masters: int
+    active_masters: int
+    new_masters_30d: int
+    new_masters_week: int
+    total_clients: int
     plan_distribution: Dict[str, int]
+
+    # Записи
+    total_appointments: int
+    today_bookings: int
     appointments_by_day: List[dict]
+
+    # Воронка / удержание
+    churn_rate_30d: float
+    conversion_rate: float
+
+    # Поддержка
+    open_tickets: int
+    sla_breached_tickets: int
+
+    # NPS
+    nps_score: Optional[float] = None
+    nps_quarter: str
+    nps_responses: int
 
 
 class MasterAdminListItem(BaseModel):
@@ -43,8 +65,10 @@ class MasterAdminUpdate(BaseModel):
 
 
 class HealthCheckResponse(BaseModel):
-    status: str  # healthy | degraded | down
+    """ТЗ 12.2 — реальные системные тесты."""
+    status: str  # healthy | degraded | down | ok
     checks: Dict[str, dict]
+    checked_at: Optional[str] = None
 
 
 class SystemSettingsUpdate(BaseModel):

@@ -287,3 +287,16 @@ def get_stt_provider() -> STTProvider:
         except Exception as e:
             logger.warning(f"OpenAI STT init failed: {e}")
     return DummySTTProvider()
+
+
+def invalidate_provider_cache() -> None:
+    """Сбросить кэш AI-провайдеров.
+
+    Сейчас get_ai_provider/get_embed_provider/get_stt_provider создают
+    инстансы по запросу и не кэшируются, так что эта функция — no-op,
+    оставлена как точка интеграции для суперадминки (ТЗ 8.5: сменить
+    AI-провайдер без деплоя).
+
+    Если в будущем добавится lru_cache, нужно вызвать .cache_clear() здесь.
+    """
+    return None
