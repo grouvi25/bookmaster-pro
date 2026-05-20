@@ -100,7 +100,18 @@ export default function Billing() {
 
   const { data: subscription, isLoading } = useQuery({
     queryKey: ['my-subscription'],
-    queryFn: () => billingApi.current().then((r) => r.data),
+    queryFn: async () => {
+      try {
+        const resp = await billingApi.current();
+        return resp.data;
+      } catch (err: unknown) {
+        // 404 = нет активной подписки — это нормально
+        if ((err as { response?: { status?: number } })?.response?.status === 404) {
+          return null;
+        }
+        throw err;
+      }
+    },
   });
 
   const subscribeMutation = useMutation({
