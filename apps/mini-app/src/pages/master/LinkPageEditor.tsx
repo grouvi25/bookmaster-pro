@@ -11,17 +11,16 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { mastersApi, uploadsApi } from '@/api/endpoints';
+import { mastersApi, uploadsApi, servicesApi, reviewsApi, portfolioApi } from '@/api/endpoints';
 import Button from '@/shared/ui/Button';
 import Card from '@/shared/ui/Card';
 import { FormSkeleton } from '@/shared/ui/Skeleton';
 import { toast } from '@/shared/ui/Toast';
+import LinkPageRenderer from '@/components/LinkPageRenderer';
 import {
   type ThemeConfig,
   DEFAULT_THEME,
   THEME_PRESETS,
-  themeToStyle,
-  fontFamily,
 } from '@/shared/lib/linkPageThemes';
 import {
   Palette, Image, Type, ToggleLeft, Link2, Plus, Trash2,
@@ -47,6 +46,23 @@ export default function LinkPageEditor() {
   const { data: profile } = useQuery({
     queryKey: ['master-profile'],
     queryFn: () => mastersApi.getProfile().then((r) => r.data),
+  });
+
+  const { data: services } = useQuery({
+    queryKey: ['services-for-editor'],
+    queryFn: () => servicesApi.list().then((r) => r.data),
+  });
+
+  const { data: reviews } = useQuery({
+    queryKey: ['reviews-for-editor', profile?.id],
+    queryFn: () => reviewsApi.getByMaster(profile.id, { limit: '3' }).then((r) => r.data),
+    enabled: !!profile?.id,
+  });
+
+  const { data: portfolioItems } = useQuery({
+    queryKey: ['portfolio-for-editor', profile?.id],
+    queryFn: () => portfolioApi.list(profile.id).then((r) => r.data),
+    enabled: !!profile?.id,
   });
 
   const { data: pageData, isLoading } = useQuery<PageData>({
@@ -138,8 +154,6 @@ export default function LinkPageEditor() {
 
   if (isLoading) return <div className="p-6"><FormSkeleton rows={6} /></div>;
 
-  const previewStyle = themeToStyle(config);
-
   const SECTIONS = [
     { key: 'theme', label: 'Тема', icon: <Palette className="w-4 h-4" /> },
     { key: 'header', label: 'Шапка', icon: <Image className="w-4 h-4" /> },
@@ -163,24 +177,34 @@ export default function LinkPageEditor() {
       </div>
 
       {/* Preview */}
-      <div className={`relative shrink-0 overflow-hidden transition-all duration-300 ${previewExpanded ? 'flex-1' : 'h-[35vh]'}`}>
-        <div
-          className="w-full h-full overflow-y-auto origin-top"
-          style={{ ...previewStyle, backgroundColor: 'var(--lp-bg)', fontFamily: fontFamily(config.font_style) }}
-        >
-          {/* Mini preview of the page */}
-          <LivePreview
-            config={config}
+      <div className={`relative shrink-0 overflow-hidden transition-all duration-300 border-b border-tg-secondary ${previewExpanded ? 'flex-1' : 'h-[38vh]'}`}>
+        <div className="w-full h-full overflow-y-auto">
+          <LinkPageRenderer
+            data={{
+              display_name: profile?.display_name || 'Мастер',
+              specialization: profile?.specialization,
+              city: profile?.city,
+              description: profile?.description,
+              avatar_url: profile?.avatar_url,
+              rating_avg: profile?.rating_avg,
+              rating_count: profile?.rating_count,
+              services: Array.isArray(services) ? services : [],
+              reviews: reviews?.reviews || [],
+              portfolio: Array.isArray(portfolioItems) ? portfolioItems : [],
+              links,
+            }}
+            themeConfig={config}
             coverUrl={coverUrl}
-            profile={profile}
-            links={links}
             showServices={showServices}
+            showReviews={showReviews}
+            showPortfolio={showPortfolio}
+            showPrices={showPrices}
+            compact
           />
         </div>
-        {/* Toggle expand */}
         <button
           onClick={() => setPreviewExpanded(!previewExpanded)}
-          className="absolute bottom-2 right-2 bg-black/50 text-white rounded-full p-1.5 backdrop-blur"
+          className="absolute bottom-2 right-2 bg-black/60 text-white rounded-full p-1.5 backdrop-blur-sm z-10"
         >
           {previewExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
         </button>
@@ -313,67 +337,5 @@ export default function LinkPageEditor() {
         )}
       </div>
     </div>
-  );
-}
-
-/** Live preview — мини-версия страницы по текущему config. */
-function LivePreview({ config, coverUrl, profile, links, showServices }: {
-  config: ThemeConfig;
-  coverUrl: string | null;
-  profile: Record<string, unknown> | undefined;
-  links: { url: string; label?: string }[];
-  showServices: boolean;
-}) {
-  return (
-    <>
-      {/* Header */}
-      <div className="relative pt-8 pb-10 px-4 text-center" style={{ backgroundColor: config.header_style === 'image' && coverUrl ? undefined : config.header_bg }}>
-        {config.header_style === 'image' && coverUrl && (
-          <>
-            <img src={coverUrl} alt="" className="absolute inset-0 w-full h-full object-cover" />
-            <div className="absolute inset-0 bg-black/40" />
-          </>
-        )}
-        <div className="relative z-10">
-          <div className="w-20 h-20 mx-auto mb-3 overflow-hidden ring-3 ring-white/30" style={{ borderRadius: `${config.card_radius + 6}px` }}>
-            {(profile as Record<string, string>)?.avatar_url ? (
-              <img src={(profile as Record<string, string>).avatar_url} alt="" className="w-full h-full object-cover" />
-            ) : (
-              <div className="w-full h-full bg-white/20 flex items-center justify-center text-white/60 text-2xl">👤</div>
-            )}
-          </div>
-          <h2 className="text-lg font-bold text-white">{(profile as Record<string, string>)?.display_name || 'Имя мастера'}</h2>
-          <p className="text-white/70 text-xs mt-0.5">{(profile as Record<string, string>)?.specialization || 'Специализация'}</p>
-        </div>
-      </div>
-
-      {/* Content preview */}
-      <div className="px-3 -mt-4 relative z-10">
-        {/* CTA */}
-        <div className="w-full py-3 text-center font-bold text-sm mb-3" style={{ backgroundColor: config.button_bg, color: config.button_text, borderRadius: `${config.button_radius}px` }}>
-          ✨ Записаться
-        </div>
-
-        {/* Links preview */}
-        {links.slice(0, 2).map((link, i) => (
-          <div key={i} className="flex items-center gap-2 p-2.5 mb-2" style={{ backgroundColor: config.card_bg, borderRadius: `${config.card_radius}px`, boxShadow: config.card_shadow ? '0 1px 3px rgba(0,0,0,0.08)' : 'none' }}>
-            <ExternalLink className="w-3.5 h-3.5" style={{ color: config.button_bg }} />
-            <span className="text-xs font-medium truncate" style={{ color: config.text_color }}>{link.label || link.url}</span>
-          </div>
-        ))}
-
-        {/* Services placeholder */}
-        {showServices && (
-          <div className="mb-2" style={{ backgroundColor: config.card_bg, borderRadius: `${config.card_radius}px`, boxShadow: config.card_shadow ? '0 1px 3px rgba(0,0,0,0.08)' : 'none' }}>
-            {['Маникюр', 'Педикюр', 'Наращивание'].map((s) => (
-              <div key={s} className="flex justify-between px-3 py-2 border-b last:border-b-0" style={{ borderColor: 'rgba(0,0,0,0.05)' }}>
-                <span className="text-xs" style={{ color: config.text_color }}>{s}</span>
-                <span className="text-xs font-bold" style={{ color: config.button_bg }}>1 500 ₽</span>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </>
   );
 }
