@@ -3,6 +3,11 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { bookingApi, portfolioApi, uploadsApi } from '@/api/endpoints';
 import { toArray } from '@/shared/lib/normalize';
+import { fmtRub } from '@/shared/lib/format';
+import {
+  bookingStatusLabel,
+  bookingStatusVariant,
+} from '@/shared/lib/bookingStatus';
 import { ListSkeleton } from '@/shared/ui/Skeleton';
 import PageHeader from '@/shared/ui/PageHeader';
 import StatusBadge from '@/shared/ui/StatusBadge';
@@ -18,26 +23,6 @@ import { ru } from 'date-fns/locale';
 import clsx from 'clsx';
 import { ChevronLeft, ChevronRight, CalendarOff, Camera } from 'lucide-react';
 import type { Booking } from '@/shared/types/api';
-
-const STATUS_VARIANT: Record<string, 'success' | 'warning' | 'danger' | 'info' | 'neutral'> = {
-  confirmed: 'success',
-  paid: 'success',
-  completed: 'info',
-  cancelled_by_client: 'danger',
-  cancelled_by_master: 'danger',
-  no_show: 'warning',
-  pending: 'neutral',
-};
-
-const STATUS_LABEL: Record<string, string> = {
-  confirmed: 'Подтверждена',
-  paid: 'Оплачена',
-  pending: 'Ожидает',
-  completed: 'Завершена',
-  cancelled_by_client: 'Отменена клиентом',
-  cancelled_by_master: 'Отменена мастером',
-  no_show: 'Не пришёл',
-};
 
 export default function Schedule() {
   const navigate = useNavigate();
@@ -101,7 +86,7 @@ export default function Schedule() {
   const isActive = isPending || isConfirmed;
 
   return (
-    <div className="px-screen-x pt-section-y pb-24 animate-fade-in">
+    <div className="px-screen-x pb-24 animate-fade-in">
       <PageHeader
         title="Расписание"
         right={
@@ -265,14 +250,14 @@ export default function Schedule() {
                       </div>
                       <div className="text-xs text-tg-hint mt-1">
                         {b.service_name} · {b.duration_min} мин
-                        {b.price_final ? ` · ${Number(b.price_final).toLocaleString('ru')} ₽` : ''}
+                        {b.price_final ? ` · ${fmtRub(b.price_final)}` : ''}
                       </div>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
                     <StatusBadge
-                      label={STATUS_LABEL[b.status] || b.status}
-                      variant={STATUS_VARIANT[b.status] || 'neutral'}
+                      label={bookingStatusLabel(b.status)}
+                      variant={bookingStatusVariant(b.status)}
                     />
                     {canAct && <span className="text-tg-hint text-xs">›</span>}
                   </div>
@@ -295,8 +280,8 @@ export default function Schedule() {
               <div className="flex justify-between items-center">
                 <span className="text-sm text-tg-hint">Статус</span>
                 <StatusBadge
-                  label={STATUS_LABEL[selectedBooking.status] || selectedBooking.status}
-                  variant={STATUS_VARIANT[selectedBooking.status] || 'neutral'}
+                  label={bookingStatusLabel(selectedBooking.status)}
+                  variant={bookingStatusVariant(selectedBooking.status)}
                 />
               </div>
               <div className="flex justify-between">
@@ -325,7 +310,7 @@ export default function Schedule() {
                 <div className="flex justify-between">
                   <span className="text-sm text-tg-hint">Стоимость</span>
                   <span className="text-sm font-bold">
-                    {Number(selectedBooking.price_final).toLocaleString('ru')} ₽
+                    {fmtRub(selectedBooking.price_final)}
                   </span>
                 </div>
               )}
@@ -389,7 +374,7 @@ export default function Schedule() {
 
             {!isActive && (
               <div className="text-center text-sm text-tg-hint py-4">
-                Запись {STATUS_LABEL[selectedBooking.status]?.toLowerCase() || selectedBooking.status}
+                Запись {bookingStatusLabel(selectedBooking.status).toLowerCase()}
               </div>
             )}
           </div>

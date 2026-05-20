@@ -1,11 +1,18 @@
 /**
- * Общие типы и утилиты для суперадминских вкладок.
+ * Реэкспорт хелперов для совместимости с прежними импортами в `tabs/*`.
+ *
+ * Источник правды:
+ *  - shared/lib/format.ts        — fmtRub
+ *  - shared/lib/ticketStatus.ts  — TICKET_STATUS_VARIANT
  */
+export { fmtRub } from '@/shared/lib/format';
+export {
+  TICKET_STATUS_VARIANT,
+  ticketStatusLabel,
+  ticketStatusVariant,
+} from '@/shared/lib/ticketStatus';
 
-export function fmtRub(value?: number | null): string {
-  return `${(value ?? 0).toLocaleString('ru')} ₽`;
-}
-
+/** Цвет для произвольной строки статуса (используется в HealthTab). */
 export function statusVariant(
   status: string
 ): 'success' | 'warning' | 'danger' | 'neutral' {
@@ -13,15 +20,3 @@ export function statusVariant(
   if (status === 'not_configured') return 'neutral';
   return 'danger';
 }
-
-export const TICKET_STATUS_VARIANT: Record<
-  string,
-  'success' | 'warning' | 'danger' | 'neutral' | 'info'
-> = {
-  open: 'warning',
-  in_progress: 'info',
-  waiting_user: 'neutral',
-  resolved: 'success',
-  closed: 'neutral',
-  escalated: 'danger',
-};

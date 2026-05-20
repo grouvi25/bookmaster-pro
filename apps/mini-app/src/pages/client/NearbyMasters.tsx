@@ -54,7 +54,7 @@ export default function NearbyMasters() {
   };
 
   return (
-    <div className="px-screen-x pt-section-y pb-24 animate-fade-in">
+    <div className="px-screen-x pt-section-y animate-fade-in">
       <h1 className="text-h1 mb-1">Мастера рядом</h1>
       <p className="text-tg-hint text-sm mb-5">Найдите специалиста поблизости</p>
 

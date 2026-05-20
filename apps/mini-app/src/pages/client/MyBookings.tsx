@@ -3,6 +3,11 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { bookingApi } from '@/api/endpoints';
 import { toArray } from '@/shared/lib/normalize';
+import { fmtRub } from '@/shared/lib/format';
+import {
+  bookingStatusLabel,
+  bookingStatusVariant,
+} from '@/shared/lib/bookingStatus';
 import { useBookingStore } from '@/stores/booking';
 import BackButton from '@/components/common/BackButton';
 import { ListSkeleton } from '@/shared/ui/Skeleton';
@@ -14,28 +19,6 @@ import { format, parseISO } from 'date-fns';
 import { ru } from 'date-fns/locale';
 
 import type { Booking } from '@/shared/types/api';
-
-const STATUS_VARIANT: Record<string, 'success' | 'warning' | 'danger' | 'neutral'> = {
-  confirmed: 'success',
-  paid: 'success',
-  pending: 'warning',
-  completed: 'neutral',
-  cancelled: 'danger',
-  cancelled_by_client: 'danger',
-  cancelled_by_master: 'danger',
-  no_show: 'danger',
-};
-
-const STATUS_LABEL: Record<string, string> = {
-  confirmed: 'Подтверждена',
-  paid: 'Оплачена',
-  pending: 'Ожидает',
-  completed: 'Завершена',
-  cancelled: 'Отменена',
-  cancelled_by_client: 'Отменена',
-  cancelled_by_master: 'Отменена',
-  no_show: 'Не пришёл',
-};
 
 const TABS = [
   { key: 'upcoming', label: 'Предстоящие' },
@@ -79,7 +62,7 @@ export default function MyBookings({ hideBack }: { hideBack?: boolean } = {}) {
   };
 
   return (
-    <div className="px-screen-x pt-section-y pb-24 animate-fade-in">
+    <div className="px-screen-x pt-section-y animate-fade-in">
       {!hideBack && <BackButton to="/" />}
       <h1 className="text-2xl font-bold tracking-tight mb-5">Мои записи</h1>
 
@@ -115,8 +98,8 @@ export default function MyBookings({ hideBack }: { hideBack?: boolean } = {}) {
                     </div>
                   </div>
                   <StatusBadge
-                    label={STATUS_LABEL[b.status] || b.status}
-                    variant={STATUS_VARIANT[b.status] || 'neutral'}
+                    label={bookingStatusLabel(b.status)}
+                    variant={bookingStatusVariant(b.status)}
                   />
                 </div>
                 <div className="flex items-center justify-between">
@@ -128,7 +111,7 @@ export default function MyBookings({ hideBack }: { hideBack?: boolean } = {}) {
                   </div>
                   {b.price_final != null && (
                     <span className="text-sm font-bold text-tg-text">
-                      {Number(b.price_final).toLocaleString('ru')} ₽
+                      {fmtRub(b.price_final)}
                     </span>
                   )}
                 </div>

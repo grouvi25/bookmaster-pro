@@ -23,7 +23,7 @@ export default function ClientProfile() {
   });
 
   return (
-    <div className="px-screen-x py-section-y pb-24 animate-fade-in">
+    <div className="px-screen-x py-section-y animate-fade-in">
       <h1 className="text-h1 mb-section-y">Мой профиль</h1>
 
       <h2 className="text-h2 mb-3">Мои отзывы</h2>

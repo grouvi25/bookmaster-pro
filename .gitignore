@@ -27,5 +27,6 @@ _tz_*.txt
 
 # Локальные секреты для деплоя (НЕ КОММИТИТЬ)
 .deploy_secrets
+.deploy_*.py
 .gh_*.py
 .commit_msg.txt
