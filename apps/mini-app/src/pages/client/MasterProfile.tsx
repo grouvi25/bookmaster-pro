@@ -4,6 +4,7 @@ import { mastersApi, servicesApi, reviewsApi, loyaltyApi, subscriptionsApi } fro
 import { useBookingStore } from '@/stores/booking';
 import { MasterProfileSkeleton } from '@/shared/ui/Skeleton';
 import Button from '@/shared/ui/Button';
+import Card from '@/shared/ui/Card';
 import { fmtRub } from '@/shared/lib/format';
 import { User, Star, Package } from 'lucide-react';
 import { toast } from '@/shared/ui/Toast';
@@ -192,19 +193,19 @@ export default function MasterProfile({ slug }: MasterProfileProps) {
           <h2 className="font-bold text-lg mb-3">Отзывы</h2>
           <div className="flex flex-col gap-3">
             {(reviews.reviews as Review[]).slice(0, 3).map((r) => (
-              <div key={r.id} className="bg-surface-elevated rounded-card p-3.5">
+              <Card key={r.id}>
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-sm font-medium">{r.client_name}</span>
                   <div className="flex gap-0.5">
                     {Array.from({ length: r.rating }).map((_, i) => (
-                      <Star key={i} className="w-3 h-3 text-status-warning fill-yellow-400" />
+                      <Star key={i} className="w-3 h-3 text-status-warning fill-status-warning" />
                     ))}
                   </div>
                 </div>
                 {r.text ? (
                   <p className="text-xs text-tg-hint leading-relaxed">{r.text}</p>
                 ) : null}
-              </div>
+              </Card>
             ))}
           </div>
         </div>

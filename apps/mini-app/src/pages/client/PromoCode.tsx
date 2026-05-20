@@ -105,7 +105,7 @@ export default function PromoCode() {
       )}
 
       {/* Summary */}
-      <div className="bg-surface-elevated rounded-card p-4 mb-6">
+      <Card className="mb-6">
         <div className="flex justify-between text-sm">
           <span className="text-tg-hint">Стоимость</span>
           <span>{servicePrice.toLocaleString('ru')} \₽</span>
@@ -122,7 +122,7 @@ export default function PromoCode() {
           <span>Итого</span>
           <span className="text-brand-600">{finalPrice.toLocaleString('ru')} \₽</span>
         </div>
-      </div>
+      </Card>
 
       <Button onClick={() => navigate('/book/confirm')} fullWidth size="lg">
         {discount ? 'Далее со скидкой' : 'Продолжить'}

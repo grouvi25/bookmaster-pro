@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { HeaderBackButton } from "@/components/common/BackButton";
+import Card from '@/shared/ui/Card';
 import { useQuery } from '@tanstack/react-query';
 import { mastersApi } from '@/api/endpoints';
 import { APP_URL } from '@/shared/config';
@@ -49,7 +50,7 @@ function WidgetSettingsContent() {
       />
 
       <div className="px-screen-x space-y-4">
-        <div className="bg-surface-elevated rounded-card p-4">
+        <Card>
           <div className="flex items-center gap-3 mb-3">
             <Globe className="w-5 h-5 text-brand-500" />
             <div>
@@ -57,18 +58,18 @@ function WidgetSettingsContent() {
               <p className="text-xs text-tg-hint">Клиенты смогут записаться прямо с вашего сайта</p>
             </div>
           </div>
-        </div>
+        </Card>
 
         {!slug ? (
-          <div className="bg-surface-elevated rounded-card p-4 text-center">
+          <Card className="text-center">
             <p className="text-sm text-tg-hint">
               Заполните профиль и получите slug для генерации виджета
             </p>
-          </div>
+          </Card>
         ) : (
           <>
             {/* JS Widget */}
-            <div className="bg-surface-elevated rounded-card p-4 space-y-3">
+            <Card className="space-y-3">
               <div className="flex items-center gap-2">
                 <Code className="w-4 h-4 text-brand-500" />
                 <h3 className="font-semibold text-sm">JavaScript виджет</h3>
@@ -86,10 +87,10 @@ function WidgetSettingsContent() {
                 {copiedField === 'js' ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                 {copiedField === 'js' ? 'Скопировано' : 'Копировать код'}
               </button>
-            </div>
+            </Card>
 
             {/* iframe */}
-            <div className="bg-surface-elevated rounded-card p-4 space-y-3">
+            <Card className="space-y-3">
               <div className="flex items-center gap-2">
                 <Code className="w-4 h-4 text-status-info" />
                 <h3 className="font-semibold text-sm">iframe (альтернатива)</h3>
@@ -107,7 +108,7 @@ function WidgetSettingsContent() {
                 {copiedField === 'iframe' ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                 {copiedField === 'iframe' ? 'Скопировано' : 'Копировать код'}
               </button>
-            </div>
+            </Card>
           </>
         )}
       </div>

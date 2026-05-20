@@ -9,6 +9,7 @@ import {
   bookingStatusVariant,
 } from '@/shared/lib/bookingStatus';
 import { BookingCardSkeleton } from '@/shared/ui/Skeleton';
+import Card from '@/shared/ui/Card';
 import PageHeader from '@/shared/ui/PageHeader';
 import StatusBadge from '@/shared/ui/StatusBadge';
 import BottomSheet from '@/shared/ui/BottomSheet';
@@ -236,10 +237,10 @@ export default function Schedule() {
           {bookings.map((b) => {
             const canAct = ['pending', 'confirmed', 'paid'].includes(b.status);
             return (
-              <button
+              <Card
                 key={b.id}
                 onClick={() => setSelectedBooking(b)}
-                className="bg-surface-elevated rounded-card p-3.5 text-left active:scale-[0.98] transition-transform w-full"
+                className="text-left w-full"
               >
                 <div className="flex justify-between items-start">
                   <div className="flex items-start gap-3">
@@ -262,7 +263,7 @@ export default function Schedule() {
                     {canAct && <span className="text-tg-hint text-xs">›</span>}
                   </div>
                 </div>
-              </button>
+              </Card>
             );
           })}
         </div>

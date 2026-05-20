@@ -6,6 +6,7 @@ import api from '@/api/client';
 import PageHeader from '@/shared/ui/PageHeader';
 import EmptyState from '@/shared/ui/EmptyState';
 import Button from '@/shared/ui/Button';
+import Card from '@/shared/ui/Card';
 import FeatureGate from '@/shared/ui/FeatureGate';
 import { Package, Plus, Trash2 } from 'lucide-react';
 import { toast } from '@/shared/ui/Toast';
@@ -99,7 +100,7 @@ function SubscriptionPackagesContent() {
 
       <div className="px-screen-x space-y-4">
         {showForm && (
-          <div className="bg-surface-elevated rounded-card p-4 space-y-3">
+          <Card className="space-y-3">
             <h3 className="font-semibold text-sm">Новый пакет</h3>
 
             <div>
@@ -152,7 +153,7 @@ function SubscriptionPackagesContent() {
             >
               Создать пакет
             </Button>
-          </div>
+          </Card>
         )}
 
         {packages.length === 0 && !showForm ? (

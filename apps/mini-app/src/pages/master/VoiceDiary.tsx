@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback } from 'react';
 import { HeaderBackButton } from "@/components/common/BackButton";
+import Card from '@/shared/ui/Card';
 import { useQuery } from '@tanstack/react-query';
 import { aiApi } from '@/api/endpoints';
 import PageHeader from '@/shared/ui/PageHeader';
@@ -162,7 +163,7 @@ function VoiceDiaryContent() {
 
         {/* Last result */}
         {lastResult && (
-          <div className="bg-surface-elevated rounded-card p-4 space-y-3">
+          <Card className="space-y-3">
             <h3 className="font-semibold text-sm">Результат</h3>
             {lastResult.transcript && (
               <div>
@@ -176,7 +177,7 @@ function VoiceDiaryContent() {
                 <p className="text-sm whitespace-pre-wrap">{lastResult.notes}</p>
               </div>
             )}
-          </div>
+          </Card>
         )}
 
         {/* History */}
