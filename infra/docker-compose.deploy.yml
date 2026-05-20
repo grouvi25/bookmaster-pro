@@ -121,6 +121,22 @@ services:
       redis: { condition: service_healthy }
     networks: [bookmaster]
 
+  marketplace:
+    <<: [*restart, *env]
+    container_name: bm_marketplace
+    build:
+      context: ..
+      dockerfile: apps/marketplace/Dockerfile
+    environment:
+      API_URL: http://api:8000/api/v1
+      APP_URL: ${APP_URL:-https://app.freelance-gid.online}
+      NEXT_PUBLIC_TG_BOT_USERNAME: ${TG_BOT_USERNAME:-swift_sellbot}
+    ports:
+      - "127.0.0.1:3000:3000"
+    depends_on:
+      api: { condition: service_healthy }
+    networks: [bookmaster]
+
 volumes:
   pgdata:
   redisdata:
