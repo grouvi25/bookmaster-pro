@@ -66,20 +66,20 @@ function ClientsList() {
           </div>
 
           <div className="grid grid-cols-3 gap-2 mb-3">
-            <div className="text-center p-2.5 bg-tg-secondary rounded-card">
+            <Card padding="sm" className="text-center">
               <div className="font-bold text-sm">{selected.visits_count ?? selected.visit_count ?? 0}</div>
               <div className="text-2xs text-tg-hint mt-0.5">Визитов</div>
-            </div>
-            <div className="text-center p-2.5 bg-tg-secondary rounded-card">
+            </Card>
+            <Card padding="sm" className="text-center">
               <div className="font-bold text-sm">{selected.loyalty_points ?? 0}</div>
               <div className="text-2xs text-tg-hint mt-0.5">Баллов</div>
-            </div>
-            <div className="text-center p-2.5 bg-tg-secondary rounded-card">
+            </Card>
+            <Card padding="sm" className="text-center">
               <div className="font-bold text-sm">
                 {Number(selected.total_revenue ?? selected.total_spent ?? 0).toLocaleString('ru')}
               </div>
               <div className="text-2xs text-tg-hint mt-0.5">Выручка</div>
-            </div>
+            </Card>
           </div>
 
           {selected.tags?.length > 0 && (

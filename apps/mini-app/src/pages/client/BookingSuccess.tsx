@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useBookingStore } from '@/stores/booking';
 import Button from '@/shared/ui/Button';
+import Card from '@/shared/ui/Card';
 import { format, parseISO } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { CircleCheck, CalendarPlus } from 'lucide-react';
@@ -52,7 +53,7 @@ export default function BookingSuccess() {
         Напоминание придёт автоматически
       </p>
 
-      <div className="w-full bg-surface-elevated rounded-card p-4 mb-6">
+      <Card className="w-full mb-6">
         <div className="flex flex-col gap-2 text-sm">
           <div className="flex justify-between">
             <span className="text-tg-hint">Мастер</span>
@@ -71,7 +72,7 @@ export default function BookingSuccess() {
             <span className="font-medium">{store.selectedTime}</span>
           </div>
         </div>
-      </div>
+      </Card>
 
       <div className="flex flex-col gap-2 w-full">
         {calUrl && (

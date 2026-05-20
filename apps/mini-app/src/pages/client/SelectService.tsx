@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { servicesApi } from '@/api/endpoints';
 import { useBookingStore } from '@/stores/booking';
 import BackButton from '@/components/common/BackButton';
+import Card from '@/shared/ui/Card';
 import { ListSkeleton } from '@/shared/ui/Skeleton';
 import { Clock, ChevronRight } from 'lucide-react';
 import type { Service } from '@/shared/types/api';
@@ -66,10 +67,10 @@ export default function SelectService() {
 
       <div className="flex flex-col gap-2">
         {filteredServices.map((svc) => (
-          <button
+          <Card
             key={svc.id}
             onClick={() => handleSelect(svc)}
-            className="flex items-center p-4 bg-surface-elevated rounded-card text-left active:scale-[0.98] transition-all duration-200"
+            className="flex items-center text-left"
           >
             <div className="flex-1 min-w-0">
               <div className="font-medium text-tg-text">{svc.name}</div>
@@ -87,7 +88,7 @@ export default function SelectService() {
                   : 'Дог.'}
             </div>
             <ChevronRight className="w-4 h-4 text-tg-hint ml-2 flex-shrink-0" />
-          </button>
+          </Card>
         ))}
       </div>
     </div>

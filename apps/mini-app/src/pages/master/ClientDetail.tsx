@@ -153,22 +153,22 @@ export default function ClientDetail() {
         </div>
 
         <div className="grid grid-cols-3 gap-2 text-center">
-          <div className="bg-tg-secondary rounded-card p-2.5">
+          <Card padding="sm">
             <div className="font-bold text-lg">{client.visit_count}</div>
             <div className="text-2xs text-tg-hint">Визитов</div>
-          </div>
-          <div className="bg-tg-secondary rounded-card p-2.5">
+          </Card>
+          <Card padding="sm">
             <div className="font-bold text-lg">
               {client.total_spent > 0
                 ? `${(client.total_spent / 1000).toFixed(client.total_spent >= 10000 ? 0 : 1)}к`
                 : '0'}
             </div>
             <div className="text-2xs text-tg-hint">Выручка, ₽</div>
-          </div>
-          <div className="bg-tg-secondary rounded-card p-2.5">
+          </Card>
+          <Card padding="sm">
             <div className="font-bold text-lg">{client.no_show_count}</div>
             <div className="text-2xs text-tg-hint">Неявок</div>
-          </div>
+          </Card>
         </div>
       </Card>
 
