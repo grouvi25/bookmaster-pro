@@ -110,14 +110,16 @@ class MasterPage(BaseModel):
         Integer, ForeignKey("masters.id", ondelete="CASCADE"), unique=True, nullable=False
     )
 
-    theme = Column(String(50), default="default")
+    theme = Column(String(50), default="default")  # preset name: default|dark|warm|ocean|minimal|rose
+    theme_config = Column(JSON, default=dict)  # полная кастомизация визуала (см. ТЗ)
     custom_links = Column(JSON, default=list)
+    cover_image_url = Column(String(500), nullable=True)  # header cover image (S3)
     show_reviews = Column(Boolean, default=True)
     show_portfolio = Column(Boolean, default=True)
     show_services = Column(Boolean, default=True)
     show_prices = Column(Boolean, default=True)
     bio_text = Column(Text, nullable=True)
-    custom_domain = Column(String(200), nullable=True)  # опц.: 'anna-nails.ru'
+    custom_domain = Column(String(200), nullable=True)
     seo_title = Column(String(200), nullable=True)
     seo_description = Column(Text, nullable=True)
 

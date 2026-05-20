@@ -185,6 +185,9 @@ export const mastersApi = {
   getNotificationSettings: () => api.get('/masters/me/notification-settings'),
   updateNotificationSettings: (data: Record<string, boolean>) =>
     api.patch('/masters/me/notification-settings', data),
+  // Link Page (TapLink)
+  getPage: () => api.get('/masters/me/page'),
+  updatePage: (data: Record<string, unknown>) => api.patch('/masters/me/page', data),
 };
 
 // ── Services ──
