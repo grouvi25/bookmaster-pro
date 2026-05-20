@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { HeaderBackButton } from "@/components/common/BackButton";
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { locationsApi } from '@/api/endpoints';
 import { ListSkeleton } from '@/shared/ui/Skeleton';
@@ -7,10 +7,9 @@ import PageHeader from '@/shared/ui/PageHeader';
 import Card from '@/shared/ui/Card';
 import Button from '@/shared/ui/Button';
 import EmptyState from '@/shared/ui/EmptyState';
-import { ArrowLeft, MapPin, Plus, Trash2, Check } from 'lucide-react';
+import { MapPin, Plus, Trash2, Check } from 'lucide-react';
 
 export default function Locations() {
-  const navigate = useNavigate();
   const [showCreate, setShowCreate] = useState(false);
   const queryClient = useQueryClient();
 
@@ -38,11 +37,7 @@ export default function Locations() {
     <div className="min-h-screen bg-tg-bg text-tg-text pb-24 animate-fade-in">
       <PageHeader
         title="Локации"
-        left={
-          <button onClick={() => navigate('/master/settings')} className="p-2">
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-        }
+        left={<HeaderBackButton to="/master/settings" />}
         right={
           <button
             onClick={() => setShowCreate(!showCreate)}

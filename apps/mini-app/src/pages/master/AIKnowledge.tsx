@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
+import { HeaderBackButton } from "@/components/common/BackButton";
 import { aiApi } from '@/api/endpoints';
 import Card from '@/shared/ui/Card';
 import Button from '@/shared/ui/Button';
@@ -8,8 +8,9 @@ import PageHeader from '@/shared/ui/PageHeader';
 import EmptyState from '@/shared/ui/EmptyState';
 import { ListSkeleton } from '@/shared/ui/Skeleton';
 import { toast } from '@/shared/ui/Toast';
+import ConfirmDialog from '@/shared/ui/ConfirmDialog';
 import FeatureGate from '@/shared/ui/FeatureGate';
-import { ArrowLeft, FileText, Plus, Trash2, Loader2 } from 'lucide-react';
+import { FileText, Plus, Trash2, Loader2 } from 'lucide-react';
 
 interface KnowledgeDoc {
   id: number;
@@ -79,10 +80,10 @@ export default function AIKnowledge() {
 }
 
 function AIKnowledgeInner() {
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  const [docToDelete, setDocToDelete] = useState<KnowledgeDoc | null>(null);
 
   const { data, isLoading } = useQuery<KnowledgeDoc[]>({
     queryKey: ['ai-knowledge-docs'],
@@ -115,6 +116,7 @@ function AIKnowledgeInner() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['ai-knowledge-docs'] });
       toast.success('Документ удалён');
+      setDocToDelete(null);
     },
     onError: () => toast.error('Ошибка удаления'),
   });
@@ -142,10 +144,7 @@ function AIKnowledgeInner() {
   };
 
   const handleDelete = (doc: KnowledgeDoc) => {
-    const confirmed = window.confirm(
-      `Удалить «${doc.filename}»? AI больше не будет учитывать этот документ.`
-    );
-    if (confirmed) deleteMutation.mutate(doc.id);
+    setDocToDelete(doc);
   };
 
   const docs = data || [];
@@ -154,11 +153,7 @@ function AIKnowledgeInner() {
     <div className="min-h-screen bg-tg-bg text-tg-text pb-24 animate-fade-in">
       <PageHeader
         title="База знаний AI"
-        left={
-          <button onClick={() => navigate('/master/ai')} className="p-2">
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-        }
+        left={<HeaderBackButton to="/master/ai" />}
         right={
           <Button
             variant="primary"
@@ -248,6 +243,21 @@ function AIKnowledgeInner() {
         </div>
       )}
       </div>
+
+      <ConfirmDialog
+        isOpen={!!docToDelete}
+        onClose={() => setDocToDelete(null)}
+        onConfirm={() => docToDelete && deleteMutation.mutate(docToDelete.id)}
+        title="Удалить документ?"
+        description={
+          docToDelete
+            ? `«${docToDelete.filename}» — AI больше не будет учитывать этот документ.`
+            : undefined
+        }
+        confirmLabel="Удалить"
+        variant="danger"
+        loading={deleteMutation.isPending}
+      />
     </div>
   );
 }

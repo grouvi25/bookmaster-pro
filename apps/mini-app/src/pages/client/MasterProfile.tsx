@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { mastersApi, servicesApi, reviewsApi, loyaltyApi, subscriptionsApi } from '@/api/endpoints';
 import { useBookingStore } from '@/stores/booking';
 import { PageSkeleton } from '@/shared/ui/Skeleton';
+import Button from '@/shared/ui/Button';
+import { fmtRub } from '@/shared/lib/format';
 import { User, Star, Package } from 'lucide-react';
 import { toast } from '@/shared/ui/Toast';
 import type { Service } from '@/shared/types/api';
@@ -141,9 +143,9 @@ export default function MasterProfile({ slug }: MasterProfileProps) {
                 </div>
                 <div className="font-semibold text-brand-600 text-sm">
                   {svc.price
-                    ? `${Number(svc.price).toLocaleString('ru')} ₽`
+                    ? fmtRub(svc.price)
                     : svc.price_max
-                      ? `от ${Number(svc.price_max).toLocaleString('ru')} ₽`
+                      ? `от ${fmtRub(svc.price_max)}`
                       : 'Дог.'}
                 </div>
               </div>
@@ -173,9 +175,9 @@ export default function MasterProfile({ slug }: MasterProfileProps) {
                   </div>
                   <button
                     onClick={() => handleBuyPackage(pkg)}
-                    className="bg-brand-500 text-white text-xs font-bold px-4 py-2 rounded-xl"
+                    className="bg-brand-500 text-white text-xs font-bold px-4 py-2 rounded-xl active:scale-95 transition-transform"
                   >
-                    {Number(pkg.price).toLocaleString('ru')} ₽
+                    {fmtRub(pkg.price)}
                   </button>
                 </div>
               );
@@ -209,13 +211,10 @@ export default function MasterProfile({ slug }: MasterProfileProps) {
       )}
 
       {/* CTA */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-tg-bg border-t border-gray-100">
-        <button
-          onClick={handleBook}
-          className="w-full bg-tg-button text-tg-button-text py-3.5 rounded-xl font-bold text-base"
-        >
+      <div className="fixed bottom-0 left-0 right-0 p-4 bg-tg-bg border-t border-tg-secondary">
+        <Button onClick={handleBook} fullWidth size="lg">
           Записаться
-        </button>
+        </Button>
       </div>
     </div>
   );

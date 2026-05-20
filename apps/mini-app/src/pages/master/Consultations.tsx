@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
+import { HeaderBackButton } from "@/components/common/BackButton";
 import { consultationsApi } from '@/api/endpoints';
 import { ListSkeleton } from '@/shared/ui/Skeleton';
 import PageHeader from '@/shared/ui/PageHeader';
 import Card from '@/shared/ui/Card';
 import EmptyState from '@/shared/ui/EmptyState';
-import { ArrowLeft } from 'lucide-react';
+import {} from 'lucide-react';
 
 interface ConsultationItem {
   id: number;
@@ -46,18 +46,13 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export default function Consultations() {
-  const navigate = useNavigate();
   const [tab, setTab] = useState<'list' | 'stats'>('list');
 
   return (
     <div className="min-h-screen bg-tg-bg text-tg-text pb-24 animate-fade-in">
       <PageHeader
         title="Консультации"
-        left={
-          <button onClick={() => navigate(-1)} className="p-2">
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-        }
+        left={<HeaderBackButton />}
       />
 
       <div className="px-screen-x">

@@ -1,11 +1,11 @@
 import { useState, useRef, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { HeaderBackButton } from "@/components/common/BackButton";
 import { useQuery } from '@tanstack/react-query';
 import { aiApi } from '@/api/endpoints';
 import PageHeader from '@/shared/ui/PageHeader';
 import EmptyState from '@/shared/ui/EmptyState';
 import FeatureGate from '@/shared/ui/FeatureGate';
-import { Mic, MicOff, FileText, ChevronRight, ArrowLeft } from 'lucide-react';
+import { Mic, MicOff, FileText, ChevronRight } from 'lucide-react';
 import api from '@/api/client';
 
 interface DiaryEntry {
@@ -48,7 +48,6 @@ export default function VoiceDiary() {
 }
 
 function VoiceDiaryContent() {
-  const navigate = useNavigate();
   const [recording, setRecording] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [lastResult, setLastResult] = useState<{ transcript: string; notes: string } | null>(null);
@@ -124,11 +123,7 @@ function VoiceDiaryContent() {
     <div className="min-h-screen bg-tg-bg text-tg-text pb-24 animate-fade-in">
       <PageHeader
         title="Голосовой дневник"
-        left={
-          <button onClick={() => navigate('/master/ai')} className="p-2">
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-        }
+        left={<HeaderBackButton to="/master/ai" />}
       />
 
       <div className="px-screen-x space-y-4">

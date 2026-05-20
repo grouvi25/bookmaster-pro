@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
+import { HeaderBackButton } from "@/components/common/BackButton";
 import { aiApi } from '@/api/endpoints';
 import Card from '@/shared/ui/Card';
 import Button from '@/shared/ui/Button';
 import PageHeader from '@/shared/ui/PageHeader';
 import { ListSkeleton } from '@/shared/ui/Skeleton';
 import { toast } from '@/shared/ui/Toast';
-import { ArrowLeft, Sparkles, Copy, Check } from 'lucide-react';
+import { Sparkles, Copy, Check } from 'lucide-react';
 
 interface Template {
   key: string;
@@ -16,7 +16,6 @@ interface Template {
 }
 
 export default function AIContentTools() {
-  const navigate = useNavigate();
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
   const [params, setParams] = useState<Record<string, string>>({});
   const [result, setResult] = useState<string | null>(null);
@@ -61,11 +60,7 @@ export default function AIContentTools() {
     <div className="min-h-screen bg-tg-bg text-tg-text pb-24 animate-fade-in">
       <PageHeader
         title="AI контент-мастер"
-        left={
-          <button onClick={() => navigate(-1)} className="p-2">
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-        }
+        left={<HeaderBackButton />}
       />
 
       <div className="px-screen-x">

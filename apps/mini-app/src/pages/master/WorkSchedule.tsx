@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
+import { HeaderBackButton } from "@/components/common/BackButton";
 import { mastersApi } from '@/api/endpoints';
 import { ListSkeleton } from '@/shared/ui/Skeleton';
 import Card from '@/shared/ui/Card';
 import PageHeader from '@/shared/ui/PageHeader';
 import Button from '@/shared/ui/Button';
 import { toast } from '@/shared/ui/Toast';
-import { ArrowLeft, Clock, Save } from 'lucide-react';
+import { Clock, Save } from 'lucide-react';
 import clsx from 'clsx';
 
 const DAYS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'] as const;
@@ -32,7 +32,6 @@ const DEFAULT_SCHEDULE: DaySchedule[] = DAYS.map((_, i) => ({
 }));
 
 export default function WorkSchedule() {
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [schedule, setSchedule] = useState<DaySchedule[]>(DEFAULT_SCHEDULE);
   const [initialized, setInitialized] = useState(false);
@@ -89,11 +88,7 @@ export default function WorkSchedule() {
     <div className="min-h-screen bg-tg-bg text-tg-text pb-24 animate-fade-in">
       <PageHeader
         title="Рабочее расписание"
-        left={
-          <button onClick={() => navigate('/master/settings')} className="p-2">
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-        }
+        left={<HeaderBackButton to="/master/settings" />}
       />
       <div className="px-screen-x">
       <p className="text-sm text-tg-hint mb-5">Настройте рабочие часы по дням недели</p>

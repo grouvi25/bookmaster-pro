@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useBookingStore } from '@/stores/booking';
+import Button from '@/shared/ui/Button';
 import { format, parseISO } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { CircleCheck, CalendarPlus } from 'lucide-react';
@@ -78,24 +79,23 @@ export default function BookingSuccess() {
             href={calUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="w-full bg-brand-500 text-white py-3.5 rounded-btn font-bold shadow-button active:scale-[0.97] transition-all flex items-center justify-center gap-2"
+            className="w-full inline-flex items-center justify-center gap-2 h-[52px] bg-brand-500 text-white rounded-btn font-semibold text-base shadow-button active:scale-[0.97] active:opacity-80 transition-all"
           >
             <CalendarPlus className="w-5 h-5" />
             Добавить в календарь
           </a>
         )}
-        <button
+        <Button
+          variant="secondary"
+          fullWidth
+          size="lg"
           onClick={() => navigate('/client')}
-          className="w-full bg-tg-secondary text-tg-text py-3.5 rounded-btn font-bold active:scale-[0.97] transition-all"
         >
           Мои записи
-        </button>
-        <button
-          onClick={handleDone}
-          className="w-full text-tg-link py-2 text-sm"
-        >
+        </Button>
+        <Button variant="ghost" fullWidth onClick={handleDone}>
           На главную
-        </button>
+        </Button>
       </div>
     </div>
   );

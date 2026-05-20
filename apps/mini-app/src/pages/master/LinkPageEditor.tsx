@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
+import { HeaderBackButton } from "@/components/common/BackButton";
 import { mastersApi, servicesApi, portfolioApi, uploadsApi } from '@/api/endpoints';
 import { toArray } from '@/shared/lib/normalize';
 import { PageSkeleton } from '@/shared/ui/Skeleton';
@@ -9,7 +10,7 @@ import Button from '@/shared/ui/Button';
 import PageHeader from '@/shared/ui/PageHeader';
 import { toast } from '@/shared/ui/Toast';
 import {
-  ArrowLeft, Link2, Eye, Copy, Plus, Trash2,
+  Link2, Eye, Copy, Plus, Trash2,
   User, Image, QrCode, Download,
 } from 'lucide-react';
 import type { Service, PortfolioItem } from '@/shared/types/api';
@@ -143,11 +144,7 @@ export default function LinkPageEditor() {
     <div className="min-h-screen bg-tg-bg text-tg-text pb-24 animate-fade-in">
       <PageHeader
         title="Моя страница-визитка"
-        left={
-          <button onClick={() => navigate('/master/settings')} className="p-2">
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-        }
+        left={<HeaderBackButton to="/master/settings" />}
       />
 
       <div className="px-screen-x">

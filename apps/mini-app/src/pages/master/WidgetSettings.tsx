@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { HeaderBackButton } from "@/components/common/BackButton";
 import { useQuery } from '@tanstack/react-query';
 import { mastersApi } from '@/api/endpoints';
 import { APP_URL } from '@/shared/config';
 import PageHeader from '@/shared/ui/PageHeader';
 import FeatureGate from '@/shared/ui/FeatureGate';
-import { ArrowLeft, Copy, Check, Code, Globe } from 'lucide-react';
+import { Copy, Check, Code, Globe } from 'lucide-react';
 import { toast } from '@/shared/ui/Toast';
 
 export default function WidgetSettings() {
@@ -17,7 +17,6 @@ export default function WidgetSettings() {
 }
 
 function WidgetSettingsContent() {
-  const navigate = useNavigate();
   const [copiedField, setCopiedField] = useState<string | null>(null);
 
   const { data: profile } = useQuery({
@@ -46,11 +45,7 @@ function WidgetSettingsContent() {
     <div className="min-h-screen bg-tg-bg text-tg-text pb-24 animate-fade-in">
       <PageHeader
         title="Виджет для сайта"
-        left={
-          <button onClick={() => navigate('/master/settings')} className="p-2">
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-        }
+        left={<HeaderBackButton to="/master/settings" />}
       />
 
       <div className="px-screen-x space-y-4">

@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
+import { HeaderBackButton } from "@/components/common/BackButton";
 import { billingApi } from '@/api/endpoints';
 import { ListSkeleton } from '@/shared/ui/Skeleton';
 import Card from '@/shared/ui/Card';
 import Button from '@/shared/ui/Button';
 import { toast } from '@/shared/ui/Toast';
-import { ArrowLeft, Check, Crown, Zap, Sparkles, Rocket, Building2 } from 'lucide-react';
+import { Check, Crown, Zap, Sparkles, Rocket, Building2 } from 'lucide-react';
 import PageHeader from '@/shared/ui/PageHeader';
 import type { LucideIcon } from 'lucide-react';
 import clsx from 'clsx';
@@ -94,7 +94,6 @@ const PLANS: Plan[] = [
 ];
 
 export default function Billing() {
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('monthly');
@@ -139,11 +138,7 @@ export default function Billing() {
     <div className="min-h-screen bg-tg-bg text-tg-text pb-24 animate-fade-in">
       <PageHeader
         title="Тарифы и подписка"
-        left={
-          <button onClick={() => navigate('/master/settings')} className="p-2">
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-        }
+        left={<HeaderBackButton to="/master/settings" />}
       />
 
       <div className="px-screen-x">

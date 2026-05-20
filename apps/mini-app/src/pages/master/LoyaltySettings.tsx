@@ -1,10 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
+import { HeaderBackButton } from "@/components/common/BackButton";
 import { loyaltyApi } from '@/api/endpoints';
 import { ListSkeleton } from '@/shared/ui/Skeleton';
 import Card from '@/shared/ui/Card';
 import PageHeader from '@/shared/ui/PageHeader';
-import { ArrowLeft, Star, Users, Gift, Clock } from 'lucide-react';
+import { Star, Users, Gift, Clock } from 'lucide-react';
 
 interface TierInfo {
   threshold: number;
@@ -32,7 +32,6 @@ const TIER_NAMES: Record<string, string> = {
 };
 
 export default function LoyaltySettings() {
-  const navigate = useNavigate();
 
   const { data: settings, isLoading } = useQuery<LoyaltySettingsData>({
     queryKey: ['loyalty-settings'],
@@ -46,11 +45,7 @@ export default function LoyaltySettings() {
     <div className="min-h-screen bg-tg-bg text-tg-text pb-24 animate-fade-in">
       <PageHeader
         title="Настройки лояльности"
-        left={
-          <button onClick={() => navigate('/master/settings')} className="p-2">
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-        }
+        left={<HeaderBackButton to="/master/settings" />}
       />
 
       <div className="px-screen-x">

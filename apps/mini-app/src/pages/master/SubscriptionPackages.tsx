@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { HeaderBackButton } from "@/components/common/BackButton";
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { servicesApi } from '@/api/endpoints';
 import api from '@/api/client';
@@ -7,7 +7,7 @@ import PageHeader from '@/shared/ui/PageHeader';
 import EmptyState from '@/shared/ui/EmptyState';
 import Button from '@/shared/ui/Button';
 import FeatureGate from '@/shared/ui/FeatureGate';
-import { ArrowLeft, Package, Plus, Trash2 } from 'lucide-react';
+import { Package, Plus, Trash2 } from 'lucide-react';
 import { toast } from '@/shared/ui/Toast';
 
 interface SubscriptionPackage {
@@ -35,7 +35,6 @@ export default function SubscriptionPackages() {
 }
 
 function SubscriptionPackagesContent() {
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
@@ -90,11 +89,7 @@ function SubscriptionPackagesContent() {
     <div className="min-h-screen bg-tg-bg text-tg-text pb-24 animate-fade-in">
       <PageHeader
         title="Абонементы"
-        left={
-          <button onClick={() => navigate('/master/settings')} className="p-2">
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-        }
+        left={<HeaderBackButton to="/master/settings" />}
         right={
           <button onClick={() => setShowForm(!showForm)} className="p-2 text-brand-500">
             <Plus className="w-5 h-5" />

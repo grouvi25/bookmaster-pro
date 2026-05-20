@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
+import { HeaderBackButton } from "@/components/common/BackButton";
 import { ListSkeleton } from '@/shared/ui/Skeleton';
 import Card from '@/shared/ui/Card';
 import Button from '@/shared/ui/Button';
 import PageHeader from '@/shared/ui/PageHeader';
 import EmptyState from '@/shared/ui/EmptyState';
 import { toast } from '@/shared/ui/Toast';
-import { ArrowLeft, Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 import api from '@/api/client';
 
 interface BlockedSlot {
@@ -20,7 +20,6 @@ interface BlockedSlot {
 }
 
 export default function BlockedSlots() {
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [showCreate, setShowCreate] = useState(false);
 
@@ -45,11 +44,7 @@ export default function BlockedSlots() {
     <div className="min-h-screen bg-tg-bg text-tg-text pb-24 animate-fade-in">
       <PageHeader
         title="Выходные и перерывы"
-        left={
-          <button onClick={() => navigate(-1)} className="p-2">
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-        }
+        left={<HeaderBackButton />}
         right={
           <Button variant="primary" size="sm" onClick={() => setShowCreate(!showCreate)}>
             <Plus className="w-3.5 h-3.5" /> Добавить
