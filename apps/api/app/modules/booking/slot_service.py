@@ -65,18 +65,28 @@ class SlotService:
         duration = service.duration_min
         buffer = master.buffer_minutes
 
-        # 3. Получаем шаблон расписания на этот день недели
+        # 3. Получаем шаблон расписания на этот день недели ИЛИ specific_date
         day_of_week = target_date.weekday()
         result = await self.db.execute(
             select(ScheduleTemplate).where(
                 ScheduleTemplate.master_id == master_id,
-                ScheduleTemplate.day_of_week == day_of_week,
                 ScheduleTemplate.is_active.is_(True),
+                # Ищем: конкретная дата ИЛИ день недели
+                (ScheduleTemplate.specific_date == target_date)
+                | (
+                    ScheduleTemplate.specific_date.is_(None)
+                    & (ScheduleTemplate.day_of_week == day_of_week)
+                ),
             )
         )
         templates = list(result.scalars().all())
         if not templates:
             return []
+
+        # specific_date имеет приоритет над day_of_week
+        specific = [t for t in templates if t.specific_date is not None]
+        if specific:
+            templates = specific
 
         # Фильтруем по локации если указана
         if location_id:
@@ -151,6 +161,14 @@ class SlotService:
             for appt in existing:
                 appt_start = appt.time_start
                 appt_end = appt.time_end
+                # Нормализуем timezone: убираем tzinfo для корректного сравнения
+                # (current_time naive, appt.time_start может быть aware UTC)
+                if appt_start and hasattr(appt_start, 'replace'):
+                    appt_start = appt_start.replace(tzinfo=None)
+                if appt_end and hasattr(appt_end, 'replace'):
+                    appt_end = appt_end.replace(tzinfo=None)
+                if not appt_start or not appt_end:
+                    continue
                 # Буфер: защищаем окно после И перед записью
                 appt_start_with_buffer = appt_start - timedelta(minutes=buffer)
                 appt_end_with_buffer = appt_end + timedelta(minutes=buffer)

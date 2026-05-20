@@ -152,9 +152,12 @@ async def cleanup_pending():
 async def admin_daily():
     """
     Ежедневно в 9:00 — отправить мастеру список записей на сегодня.
+    Дата берётся по TIMEZONE из .env (а не UTC) — мастера в РФ.
     """
     async with async_session_factory() as db:
-        today = datetime.now(timezone.utc).date()
+        from zoneinfo import ZoneInfo
+        tz = ZoneInfo(settings.TIMEZONE)
+        today = datetime.now(tz).date()
 
         result = await db.execute(
             select(

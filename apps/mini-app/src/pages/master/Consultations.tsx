@@ -6,7 +6,6 @@ import { BookingCardSkeleton, StatGridSkeleton } from '@/shared/ui/Skeleton';
 import PageHeader from '@/shared/ui/PageHeader';
 import Card from '@/shared/ui/Card';
 import EmptyState from '@/shared/ui/EmptyState';
-import {} from 'lucide-react';
 
 interface ConsultationItem {
   id: number;

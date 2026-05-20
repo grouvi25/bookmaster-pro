@@ -19,6 +19,7 @@ interface DaySchedule {
   end_time: string;
   break_start: string | null;
   break_end: string | null;
+  slot_step_min: number;
   is_active: boolean;
 }
 
@@ -28,6 +29,7 @@ const DEFAULT_SCHEDULE: DaySchedule[] = DAYS.map((_, i) => ({
   end_time: '18:00',
   break_start: '13:00',
   break_end: '14:00',
+  slot_step_min: 30,
   is_active: i < 5,
 }));
 
@@ -66,6 +68,7 @@ export default function WorkSchedule() {
         end_time: d.end_time,
         break_start: d.break_start || undefined,
         break_end: d.break_end || undefined,
+        slot_step_min: d.slot_step_min || 30,
       }));
       return mastersApi.updateSchedule(active);
     },
@@ -150,6 +153,20 @@ export default function WorkSchedule() {
                     onChange={(e) => updateDay(day.day_of_week, { break_end: e.target.value || null })}
                     className="input-field !h-auto !py-1 !px-2 !text-sm flex-1"
                   />
+                </div>
+                <div className="flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-tg-hint opacity-30" />
+                  <span className="text-xs text-tg-hint w-16">Шаг:</span>
+                  <select
+                    value={day.slot_step_min}
+                    onChange={(e) => updateDay(day.day_of_week, { slot_step_min: Number(e.target.value) })}
+                    className="input-field !h-auto !py-1 !px-2 !text-sm flex-1"
+                  >
+                    <option value={15}>15 мин</option>
+                    <option value={30}>30 мин</option>
+                    <option value={45}>45 мин</option>
+                    <option value={60}>60 мин</option>
+                  </select>
                 </div>
               </div>
             )}

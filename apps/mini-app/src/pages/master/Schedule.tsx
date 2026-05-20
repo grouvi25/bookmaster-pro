@@ -40,7 +40,7 @@ export default function Schedule() {
   const { data, isLoading } = useQuery({
     queryKey: ['master-schedule', selectedDate],
     queryFn: () =>
-      bookingApi.masterBookings({ date: selectedDate }).then((r) => r.data),
+      bookingApi.masterBookings({ date_from: selectedDate, date_to: selectedDate }).then((r) => r.data),
   });
 
   if (isLoading) return <div className="px-screen-x py-section-y"><BookingCardSkeleton count={5} /></div>;

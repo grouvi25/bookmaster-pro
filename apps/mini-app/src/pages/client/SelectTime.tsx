@@ -95,6 +95,14 @@ export default function SelectTime() {
           emoji="⏰"
           title="Нет доступных слотов"
           description="Нет доступных слотов на эту дату"
+          action={
+            <button
+              onClick={() => navigate('/book/waitlist')}
+              className="text-tg-link text-sm interactive"
+            >
+              Встать в лист ожидания
+            </button>
+          }
         />
       ) : (
         <>

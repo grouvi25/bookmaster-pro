@@ -69,9 +69,24 @@ async def get_available_dates(
     tz: Optional[str] = Query(None, description="Client IANA timezone"),
     db: AsyncSession = Depends(get_db),
 ):
-    """Получить список дат с доступными слотами на ближайшие N дней."""
+    """Получить список дат с доступными слотами на ближайшие N дней.
+    Кэшируется в Redis на 5 минут (по master_id + service_id + location_id)."""
+    import json as _json
     from datetime import timedelta as td
     from app.core.config import settings
+    from app.core.redis import get_redis
+
+    # Redis кэш — тяжёлый эндпоинт (N запросов к БД)
+    cache_key = f"avail_dates:{master_id}:{service_id}:{location_id or 0}"
+    try:
+        redis = await get_redis()
+        cached = await redis.get(cache_key)
+        if cached:
+            dates = _json.loads(cached)
+            return AvailableDatesOut(dates=[date.fromisoformat(d) for d in dates])
+    except Exception:
+        pass  # Redis недоступен — считаем без кэша
+
     slot_service = SlotService(db)
     available = []
     try:
@@ -86,6 +101,17 @@ async def get_available_dates(
         )
         if any(s["available"] for s in slots):
             available.append(d)
+
+    # Сохраняем в кэш на 5 мин
+    try:
+        await redis.set(
+            cache_key,
+            _json.dumps([d.isoformat() for d in available]),
+            ex=300,
+        )
+    except Exception:
+        pass
+
     return AvailableDatesOut(dates=available)
 
 

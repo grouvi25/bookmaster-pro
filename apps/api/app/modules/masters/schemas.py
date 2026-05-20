@@ -120,6 +120,7 @@ class ScheduleTemplateIn(BaseModel):
     end_time: str    # "18:00"
     break_start: Optional[str] = None
     break_end: Optional[str] = None
+    slot_step_min: Optional[int] = None  # шаг слотов (15/30/45/60), default 30
     location_id: Optional[int] = None
 
 
@@ -130,6 +131,7 @@ class ScheduleTemplateOut(BaseModel):
     end_time: str
     break_start: Optional[str] = None
     break_end: Optional[str] = None
+    slot_step_min: int = 30
     location_id: Optional[int] = None
     is_active: bool = True
 
