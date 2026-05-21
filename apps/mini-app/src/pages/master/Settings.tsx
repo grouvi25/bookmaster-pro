@@ -501,6 +501,7 @@ function SupportSection() {
   const [subject, setSubject] = useState('');
   const [category, setCategory] = useState('technical');
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const { data, isLoading } = useQuery({
     queryKey: ['support-tickets'],
@@ -576,7 +577,7 @@ function SupportSection() {
           <h3 className="text-h3 mb-2">Ваши обращения</h3>
           <div className="flex flex-col gap-card-gap">
             {tickets.map((t) => (
-              <Card key={t.id}>
+              <Card key={t.id} onClick={() => navigate(`/support/ticket/${t.id}`)}>
                 <div className="flex justify-between text-body">
                   <span className="font-medium">{t.subject}</span>
                   <span className={`text-micro px-2 py-0.5 rounded-badge ${

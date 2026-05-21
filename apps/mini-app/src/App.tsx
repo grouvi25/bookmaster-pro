@@ -54,6 +54,9 @@ import WaitlistJoin from '@/pages/client/WaitlistJoin';
 import ReviewForm from '@/pages/client/ReviewForm';
 import NearbyMasters from '@/pages/client/NearbyMasters';
 
+// Тикет поддержки
+import TicketDetail from '@/pages/support/TicketDetail';
+
 // Специальные страницы
 import LinkPage from '@/pages/LinkPage';
 import EmbedPage from '@/pages/EmbedPage';
@@ -170,6 +173,10 @@ function AppRouter() {
           navigate('/book/waitlist');
         } else if (startParam === 'billing') {
           navigate('/billing');
+        } else if (startParam.startsWith('ticket_')) {
+          navigate(`/support/ticket/${startParam.slice(7)}`);
+        } else if (startParam.startsWith('rate_ticket_')) {
+          navigate(`/support/ticket/${startParam.slice(12)}?rate=1`);
         } else if (startParam.startsWith('ref_')) {
           navigate(`/?ref=${startParam.slice(4)}`);
         }
@@ -236,6 +243,7 @@ function AppRouter() {
         <Route path="/loyalty/:masterId" element={<LoyaltyHistory />} />
         <Route path="/subscriptions" element={<ClientSubscriptions />} />
         <Route path="/review/:appointmentId" element={<ReviewForm />} />
+        <Route path="/support/ticket/:ticketId" element={<TicketDetail />} />
         <Route path="/nearby" element={<NearbyMasters />} />
 
         {/* Мастерские роуты — обёрнуты в MasterLayout (pb-24, bg, animate) */}
