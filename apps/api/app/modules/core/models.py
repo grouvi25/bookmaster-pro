@@ -16,6 +16,7 @@ class SystemSetting(BaseModel):
 
     key = Column(String(100), unique=True, nullable=False, index=True)
     value = Column(Text, nullable=True)
+    type = Column(String(20), default="string")  # 'string' | 'int' | 'bool' | 'json'
     description = Column(Text, nullable=True)
 
 

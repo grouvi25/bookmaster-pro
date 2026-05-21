@@ -13,6 +13,8 @@ logger = logging.getLogger(__name__)
 
 
 class AIProvider(ABC):
+    last_usage_tokens: int = 0  # Real token count from last API call (0 = unknown)
+
     @abstractmethod
     async def chat(
         self,
@@ -45,8 +47,22 @@ class EmbedProvider(ABC):
 class OpenAIProvider(AIProvider):
     def __init__(self):
         import openai
-        self.client = openai.AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
+
+        kwargs: dict = {"api_key": settings.OPENAI_API_KEY}
+
+        # Поддержка Railway прокси (ТЗ Архитектура):
+        # Если AI_PROXY_URL задан — все запросы идут через прокси-сервер,
+        # обходя блокировку OpenAI API из российских IP.
+        if settings.AI_PROXY_URL:
+            kwargs["base_url"] = settings.AI_PROXY_URL
+            if settings.AI_PROXY_SECRET:
+                kwargs["default_headers"] = {
+                    "X-Proxy-Secret": settings.AI_PROXY_SECRET,
+                }
+
+        self.client = openai.AsyncOpenAI(**kwargs)
         self.model = settings.OPENAI_MODEL_DEFAULT or "gpt-4o-mini"
+        self.last_usage_tokens: int = 0  # Total tokens from last request
 
     async def chat(
         self,
@@ -60,6 +76,11 @@ class OpenAIProvider(AIProvider):
             temperature=temperature,
             max_tokens=max_tokens,
         )
+        # Сохраняем реальное использование токенов из API
+        if response.usage:
+            self.last_usage_tokens = response.usage.total_tokens
+        else:
+            self.last_usage_tokens = 0
         return response.choices[0].message.content or ""
 
     async def chat_stream(
@@ -74,11 +95,14 @@ class OpenAIProvider(AIProvider):
             temperature=temperature,
             max_tokens=max_tokens,
             stream=True,
+            stream_options={"include_usage": True},
         )
+        self.last_usage_tokens = 0
         async for chunk in stream:
-            delta = chunk.choices[0].delta
-            if delta.content:
-                yield delta.content
+            if chunk.usage:
+                self.last_usage_tokens = chunk.usage.total_tokens
+            if chunk.choices and chunk.choices[0].delta.content:
+                yield chunk.choices[0].delta.content
 
 
 class STTProvider(ABC):
@@ -90,7 +114,14 @@ class STTProvider(ABC):
 class OpenAISTTProvider(STTProvider):
     def __init__(self):
         import openai
-        self.client = openai.AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
+
+        kwargs: dict = {"api_key": settings.OPENAI_API_KEY}
+        if settings.AI_PROXY_URL:
+            kwargs["base_url"] = settings.AI_PROXY_URL
+            if settings.AI_PROXY_SECRET:
+                kwargs["default_headers"] = {"X-Proxy-Secret": settings.AI_PROXY_SECRET}
+
+        self.client = openai.AsyncOpenAI(**kwargs)
 
     async def transcribe(self, audio_bytes: bytes, filename: str = "audio.ogg") -> str:
         import io
@@ -112,7 +143,14 @@ class DummySTTProvider(STTProvider):
 class OpenAIEmbedProvider(EmbedProvider):
     def __init__(self):
         import openai
-        self.client = openai.AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
+
+        kwargs: dict = {"api_key": settings.OPENAI_API_KEY}
+        if settings.AI_PROXY_URL:
+            kwargs["base_url"] = settings.AI_PROXY_URL
+            if settings.AI_PROXY_SECRET:
+                kwargs["default_headers"] = {"X-Proxy-Secret": settings.AI_PROXY_SECRET}
+
+        self.client = openai.AsyncOpenAI(**kwargs)
 
     async def embed(self, text: str) -> List[float]:
         response = await self.client.embeddings.create(

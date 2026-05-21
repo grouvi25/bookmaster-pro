@@ -36,6 +36,9 @@ class Settings(BaseSettings):
 
     # === AI ===
     AI_DEFAULT_PROVIDER: str = "openai"
+    AI_PROXY_URL: str = ""  # Railway proxy URL (обход блокировок OpenAI из РФ)
+    AI_PROXY_SECRET: str = ""  # Секрет для авторизации на прокси
+    AI_FALLBACK_PROVIDER: str = "yandexgpt"  # Fallback если прокси недоступен
     OPENAI_API_KEY: str = ""
     OPENAI_MODEL_DEFAULT: str = "gpt-4o-mini"
     OPENAI_MODEL_FAST: str = "gpt-4o-mini"
