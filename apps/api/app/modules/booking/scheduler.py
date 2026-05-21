@@ -677,7 +677,9 @@ async def waitlist_notify():
                 entry.status = "expired"
                 expired += 1
 
-        # Find waiting entries with matching available slots
+        # Find waiting entries and check real slot availability
+        from app.modules.booking.slot_service import SlotService
+
         result = await db.execute(
             select(WaitlistEntry).where(
                 WaitlistEntry.status == "waiting",
@@ -685,11 +687,44 @@ async def waitlist_notify():
         )
         waiting = result.scalars().all()
         notified_count = 0
+        slot_svc = SlotService(db)
+
         for entry in waiting:
             master = await db.get(Master, entry.master_id)
             if not master:
                 continue
 
+            # Определяем дату для проверки слотов
+            check_date = entry.preferred_date or now.date()
+            if check_date < now.date():
+                check_date = now.date()
+
+            # Без service_id не можем проверить длительность — пропускаем
+            if not entry.service_id:
+                continue
+
+            # Проверяем наличие реально свободных слотов
+            slots = await slot_svc.get_available_slots(
+                master_id=entry.master_id,
+                target_date=check_date,
+                service_id=entry.service_id,
+            )
+            available_slots = [s for s in slots if s.get("available")]
+
+            # Если указано предпочтительное время — фильтруем по нему
+            if available_slots and entry.preferred_time_from:
+                filtered = [
+                    s for s in available_slots
+                    if s["start"] >= entry.preferred_time_from
+                    and (not entry.preferred_time_to or s["start"] <= entry.preferred_time_to)
+                ]
+                if filtered:
+                    available_slots = filtered
+
+            if not available_slots:
+                continue
+
+            # Слот реально свободен — уведомляем клиента
             entry.status = "notified"
             entry.notified_at = now
             entry.slot_reserved_until = now + confirm_limit

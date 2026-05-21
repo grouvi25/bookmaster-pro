@@ -15,13 +15,13 @@ class TestPlanPrices:
 
     def test_all_plans_have_prices(self):
         assert "start" in PLAN_PRICES
-        assert "base" in PLAN_PRICES
+        assert "basic" in PLAN_PRICES
         assert "pro" in PLAN_PRICES
+        assert "pro_ai" in PLAN_PRICES
         assert "business" in PLAN_PRICES
-        assert "enterprise" in PLAN_PRICES
 
     def test_prices_increase_by_plan(self):
-        plans = ["start", "base", "pro", "business", "enterprise"]
+        plans = ["start", "basic", "pro", "pro_ai", "business"]
         prices = [PLAN_PRICES[p] for p in plans]
         for i in range(len(prices) - 1):
             assert prices[i] <= prices[i + 1]

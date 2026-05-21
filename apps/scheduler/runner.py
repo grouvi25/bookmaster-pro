@@ -150,11 +150,33 @@ async def main():
     for job in jobs:
         logger.info(f"  - {job.id}: {job.trigger}")
 
+    # Health check HTTP сервер — для Docker healthcheck
+    from aiohttp import web
+
+    async def health_handler(request):
+        running = scheduler.running
+        job_count = len(scheduler.get_jobs())
+        status = "ok" if running and job_count > 0 else "unhealthy"
+        code = 200 if status == "ok" else 503
+        return web.json_response(
+            {"status": status, "jobs": job_count, "running": running},
+            status=code,
+        )
+
+    health_app = web.Application()
+    health_app.router.add_get("/health", health_handler)
+    runner = web.AppRunner(health_app)
+    await runner.setup()
+    site = web.TCPSite(runner, "0.0.0.0", 8090)
+    await site.start()
+    logger.info("Scheduler health endpoint listening on :8090/health")
+
     try:
         while True:
             await asyncio.sleep(60)
     except (KeyboardInterrupt, SystemExit):
         logger.info("Shutting down scheduler...")
+        await runner.cleanup()
         scheduler.shutdown(wait=True)
         logger.info("Scheduler stopped.")
 

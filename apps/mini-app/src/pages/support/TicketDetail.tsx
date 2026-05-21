@@ -10,7 +10,6 @@ import { supportApi } from '@/api/endpoints';
 import { HeaderBackButton } from '@/components/common/BackButton';
 import PageHeader from '@/shared/ui/PageHeader';
 import Button from '@/shared/ui/Button';
-import Card from '@/shared/ui/Card';
 import { ListSkeleton } from '@/shared/ui/Skeleton';
 import { toast } from '@/shared/ui/Toast';
 import { Send, Star } from 'lucide-react';

@@ -23,11 +23,13 @@ async def check_master_access(master_id: int, db: AsyncSession) -> str:
 
     Приоритет:
     1. Активный grant (trial/promo/manual/gift) — перекрывает всё
-    2. Активная платная подписка
+    2. Активная платная подписка (MasterSubscription со status='active')
     3. Дефолт — тариф 'start' (минимальный)
     """
     from app.modules.core.models import AccessGrant
+    from app.modules.payments.models import MasterSubscription
 
+    # 1. Проверяем активные гранты (trial, promo, manual, gift)
     result = await db.execute(
         select(AccessGrant).where(
             and_(
@@ -41,7 +43,19 @@ async def check_master_access(master_id: int, db: AsyncSession) -> str:
     if active_grant:
         return active_grant.plan
 
-    # TODO: check active paid subscription when billing is implemented
+    # 2. Проверяем активную платную подписку
+    sub_result = await db.execute(
+        select(MasterSubscription).where(
+            and_(
+                MasterSubscription.master_id == master_id,
+                MasterSubscription.status == "active",
+            )
+        ).order_by(MasterSubscription.id.desc())
+    )
+    active_sub = sub_result.scalars().first()
+
+    if active_sub:
+        return active_sub.plan
 
     return "start"
 
