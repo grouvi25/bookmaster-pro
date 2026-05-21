@@ -187,6 +187,32 @@ async def voice_diary(
     return result
 
 
+@router.post("/tts")
+async def text_to_speech(
+    req: AIAskRequest,
+    master: Master = Depends(require_feature("ai_voice")),
+):
+    """TTS — синтез речи из текста (Yandex SpeechKit / OpenAI TTS)."""
+    from app.modules.ai.voice_service import TTSService
+
+    if not req.message or not req.message.strip():
+        raise HTTPException(status_code=400, detail="Empty text")
+
+    if len(req.message) > 5000:
+        raise HTTPException(status_code=400, detail="Text too long (max 5000 chars)")
+
+    tts = TTSService()
+    audio_bytes = await tts.synthesize(req.message)
+    if not audio_bytes:
+        raise HTTPException(status_code=503, detail="TTS providers unavailable")
+
+    return Response(
+        content=audio_bytes,
+        media_type="audio/mpeg",
+        headers={"Content-Disposition": "inline; filename=speech.mp3"},
+    )
+
+
 @router.post("/client-message", response_model=AIClientMessageResponse)
 async def client_message(
     req: AIClientMessageRequest,
