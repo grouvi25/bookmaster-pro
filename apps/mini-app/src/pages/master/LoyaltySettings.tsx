@@ -254,8 +254,8 @@ export default function LoyaltySettings() {
             className="w-full mb-6"
             onClick={() => saveMutation.mutate()}
             loading={saveMutation.isPending}
-            icon={<Save className="w-4 h-4" />}
           >
+            <Save className="w-4 h-4" />
             Сохранить настройки
           </Button>
         )}
