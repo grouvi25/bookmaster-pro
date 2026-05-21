@@ -239,6 +239,7 @@ class MarketplaceService:
         ]
 
         # Portfolio photos (6)
+        from app.core.config import settings as _settings
         photo_result = await self.db.execute(
             select(WorkPhoto)
             .where(
@@ -252,6 +253,7 @@ class MarketplaceService:
             {
                 "id": p.id,
                 "s3_key": p.s3_key,
+                "url": f"{_settings.S3_PUBLIC_URL.rstrip('/')}/{p.s3_key}" if p.s3_key else None,
                 "caption": p.caption,
             }
             for p in photo_result.scalars().all()

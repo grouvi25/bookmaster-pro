@@ -53,7 +53,7 @@ export async function generateMetadata({
 async function getMaster(slug: string) {
   try {
     const resp = await axios.get(
-      `${process.env.API_URL}/masters/${slug}`,
+      `${process.env.API_URL}/marketplace/master/${slug}`,
       { timeout: 5000, headers: { 'Cache-Control': 'no-cache' } }
     );
     return resp.data;
@@ -62,7 +62,7 @@ async function getMaster(slug: string) {
   }
 }
 
-async function getReviews(masterId: number) {
+async function getReviewsStats(masterId: number) {
   try {
     const resp = await axios.get(
       `${process.env.API_URL}/reviews/master/${masterId}`,
@@ -83,7 +83,13 @@ export default async function MasterProfilePage({
   if (!master) notFound();
 
   const name = master.display_name || master.name || 'Мастер';
-  const reviewsData = await getReviews(master.id);
+  // master уже включает recent_reviews из marketplace endpoint;
+  // дополнительно тянем общую статистику для шапки секции отзывов
+  const reviewsData = await getReviewsStats(master.id);
+  const reviewsList =
+    master.recent_reviews && master.recent_reviews.length > 0
+      ? master.recent_reviews
+      : reviewsData.reviews || [];
   const appUrl = `${process.env.APP_URL}?startParam=m_${params.slug}`;
 
   return (
@@ -162,11 +168,13 @@ export default async function MasterProfilePage({
                   </div>
                 </div>
                 <div className="font-semibold text-blue-600">
-                  {svc.price
-                    ? `${Number(svc.price).toLocaleString('ru')} \u20bd`
-                    : svc.price_from
-                      ? `от ${Number(svc.price_from).toLocaleString('ru')} \u20bd`
-                      : 'Дог.'}
+                  {svc.price && svc.price_max && Number(svc.price_max) > Number(svc.price)
+                    ? `${Number(svc.price).toLocaleString('ru')}\u2013${Number(svc.price_max).toLocaleString('ru')} \u20bd`
+                    : svc.price
+                      ? `${Number(svc.price).toLocaleString('ru')} \u20bd`
+                      : svc.price_from
+                        ? `от ${Number(svc.price_from).toLocaleString('ru')} \u20bd`
+                        : 'Дог.'}
                 </div>
               </div>
             ))}
@@ -174,26 +182,53 @@ export default async function MasterProfilePage({
         </section>
       )}
 
+      {/* Портфолио */}
+      {master.portfolio_photos?.length > 0 && (
+        <section className="mb-8">
+          <h2 className="text-xl font-bold mb-4">Портфолио</h2>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            {master.portfolio_photos.map((photo: any) =>
+              photo.url ? (
+                <div
+                  key={photo.id}
+                  className="aspect-square rounded-xl overflow-hidden bg-gray-100"
+                >
+                  <Image
+                    src={photo.url}
+                    alt={photo.caption || 'Работа мастера'}
+                    width={300}
+                    height={300}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              ) : null
+            )}
+          </div>
+        </section>
+      )}
+
       {/* Отзывы */}
-      {reviewsData.reviews?.length > 0 && (
+      {reviewsList.length > 0 && (
         <section className="mb-8">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold">Отзывы</h2>
-            <div className="flex items-center gap-2">
-              <span className="text-yellow-400 text-lg">{'\u2605'}</span>
-              <span className="font-bold">
-                {reviewsData.stats?.average?.toFixed(1)}
-              </span>
-              <span className="text-gray-400 text-sm">
-                &middot; {reviewsData.stats?.total} отзывов
-              </span>
-            </div>
+            {(reviewsData.stats?.total ?? 0) > 0 && (
+              <div className="flex items-center gap-2">
+                <span className="text-yellow-400 text-lg">{'\u2605'}</span>
+                <span className="font-bold">
+                  {reviewsData.stats?.average?.toFixed(1) ?? master.rating_avg?.toFixed(1)}
+                </span>
+                <span className="text-gray-400 text-sm">
+                  &middot; {reviewsData.stats?.total ?? master.rating_count} отзывов
+                </span>
+              </div>
+            )}
           </div>
           <div className="flex flex-col gap-4">
-            {reviewsData.reviews.map((review: any) => (
+            {reviewsList.map((review: any) => (
               <div key={review.id} className="bg-gray-50 rounded-xl p-4">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="font-medium">{review.client_name}</span>
+                  <span className="font-medium">{review.client_name || 'Клиент'}</span>
                   <div className="flex text-yellow-400 text-sm">
                     {'\u2605'.repeat(review.rating)}
                   </div>

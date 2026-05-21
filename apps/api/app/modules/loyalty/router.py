@@ -156,7 +156,7 @@ async def get_loyalty_settings(
     user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """Настройки лояльности для мастера."""
+    """Настройки лояльности для мастера (per-master, читаются из Master)."""
     master = await MasterService(db).get_by_identity(int(user["sub"]))
     if not master:
         raise HTTPException(status_code=403, detail="Not a master")
@@ -170,18 +170,57 @@ async def get_loyalty_settings(
         points_expiry_months=12,
         streak_threshold=3,
         streak_bonus=100,
-        referral_bonus=200,
+        referral_bonus=master.loyalty_referral_bonus or 500,
+        earn_rate=master.loyalty_earn_rate or 10,
+        first_visit_bonus=master.loyalty_first_visit_bonus or 200,
+        review_bonus=master.loyalty_review_bonus or 50,
+        birthday_bonus=master.loyalty_birthday_bonus or 300,
+        max_spend_percent=master.loyalty_max_spend_percent or 30,
     )
 
 
-@router.put("/settings")
+@router.put("/settings", response_model=LoyaltySettingsOut)
 async def update_loyalty_settings(
     body: LoyaltySettingsUpdate,
     user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """Обновить настройки лояльности (заглушка, настройки пока глобальные)."""
+    """Обновить настройки лояльности (per-master)."""
     master = await MasterService(db).get_by_identity(int(user["sub"]))
     if not master:
         raise HTTPException(status_code=403, detail="Not a master")
-    return {"status": "ok"}
+
+    # Маппинг schema field → Master column
+    if body.referral_bonus is not None:
+        master.loyalty_referral_bonus = max(0, body.referral_bonus)
+    if body.earn_rate is not None:
+        master.loyalty_earn_rate = max(1, body.earn_rate)
+    if body.first_visit_bonus is not None:
+        master.loyalty_first_visit_bonus = max(0, body.first_visit_bonus)
+    if body.review_bonus is not None:
+        master.loyalty_review_bonus = max(0, body.review_bonus)
+    if body.birthday_bonus is not None:
+        master.loyalty_birthday_bonus = max(0, body.birthday_bonus)
+    if body.max_spend_percent is not None:
+        # Ограничиваем от 0 до 100%
+        master.loyalty_max_spend_percent = max(0, min(100, body.max_spend_percent))
+
+    await db.commit()
+    await db.refresh(master)
+
+    return LoyaltySettingsOut(
+        tiers={
+            "new": {"threshold": 0, "cashback_percent": TIER_CASHBACK_PERCENT["new"]},
+            "regular": {"threshold": TIER_THRESHOLDS["regular"], "cashback_percent": TIER_CASHBACK_PERCENT["regular"]},
+            "vip": {"threshold": TIER_THRESHOLDS["vip"], "cashback_percent": TIER_CASHBACK_PERCENT["vip"]},
+        },
+        points_expiry_months=12,
+        streak_threshold=3,
+        streak_bonus=100,
+        referral_bonus=master.loyalty_referral_bonus or 500,
+        earn_rate=master.loyalty_earn_rate or 10,
+        first_visit_bonus=master.loyalty_first_visit_bonus or 200,
+        review_bonus=master.loyalty_review_bonus or 50,
+        birthday_bonus=master.loyalty_birthday_bonus or 300,
+        max_spend_percent=master.loyalty_max_spend_percent or 30,
+    )

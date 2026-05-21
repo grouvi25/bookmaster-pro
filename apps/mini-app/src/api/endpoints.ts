@@ -75,10 +75,13 @@ interface PromoPayload {
 }
 
 interface LoyaltySettingsPayload {
-  cashback_percent?: number;
-  welcome_bonus?: number;
-  review_bonus?: number;
   referral_bonus?: number;
+  streak_bonus?: number;
+  earn_rate?: number;
+  first_visit_bonus?: number;
+  review_bonus?: number;
+  birthday_bonus?: number;
+  max_spend_percent?: number;
 }
 
 interface ReviewPayload {

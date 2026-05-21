@@ -24,6 +24,37 @@ app = FastAPI(docs_url=None, redoc_url=None)
 MAX_API = "https://botapi.max.ru/v1"
 
 
+# ─── Хелпер: AI клиентский бот ───────────────────────────────────────
+async def _get_master_id_for_user(user_id: int) -> Optional[int]:
+    """Получить master_id, с которым пользователь MAX взаимодействовал последним."""
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            resp = await client.get(
+                f"{settings.API_URL}/api/v1/clients/last-master",
+                params={"platform_id": str(user_id)},
+            )
+            if resp.status_code == 200:
+                return resp.json().get("master_id")
+    except Exception as e:
+        logger.error(f"Get last master error (MAX): {e}")
+    return None
+
+
+async def _forward_to_ai_client_bot(user_id: int, text: str, master_id: int) -> Optional[str]:
+    """Переслать сообщение пользователя MAX в AI клиентский бот."""
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            resp = await client.post(
+                f"{settings.API_URL}/api/v1/ai/client-message",
+                json={"master_id": master_id, "message": text},
+            )
+            if resp.status_code == 200:
+                return resp.json().get("response")
+    except Exception as e:
+        logger.error(f"AI client-message error (MAX): {e}")
+    return None
+
+
 # ─── Верификация подписи MAX ──────────────────────────────────────────
 def verify_max_signature(body: bytes, signature: str) -> bool:
     """
@@ -116,6 +147,14 @@ async def max_webhook(request: Request):
             param = parts[1] if len(parts) > 1 else ""
             await _handle_start(user_id, param)
         else:
+            # Пересылаем текст в AI клиентский бот (паритет с TG ботом)
+            master_id = await _get_master_id_for_user(user_id)
+            if master_id:
+                ai_response = await _forward_to_ai_client_bot(user_id, text, master_id)
+                if ai_response:
+                    await send_max_message(user_id=user_id, text=ai_response)
+                    return {"status": "ok"}
+
             await send_max_message(
                 user_id=user_id,
                 text="Используйте приложение для записи и управления \U0001f447",

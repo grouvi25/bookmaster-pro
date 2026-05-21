@@ -43,8 +43,18 @@ class LoyaltySettingsOut(BaseModel):
     streak_threshold: int
     streak_bonus: int
     referral_bonus: int
+    earn_rate: int = 10              # 1 балл = N рублей
+    first_visit_bonus: int = 200
+    review_bonus: int = 50
+    birthday_bonus: int = 300
+    max_spend_percent: int = 30      # макс % от заказа, который можно покрыть баллами
 
 
 class LoyaltySettingsUpdate(BaseModel):
     referral_bonus: Optional[int] = None
     streak_bonus: Optional[int] = None
+    earn_rate: Optional[int] = None
+    first_visit_bonus: Optional[int] = None
+    review_bonus: Optional[int] = None
+    birthday_bonus: Optional[int] = None
+    max_spend_percent: Optional[int] = None

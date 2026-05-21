@@ -9,6 +9,7 @@ class MaxSettings(BaseSettings):
     MAX_BOT_TOKEN: str = ""
     MAX_WEBHOOK_SECRET: str = ""
     APP_URL: str = "http://localhost:5173"
+    API_URL: str = "http://localhost:8000"
     BOT_MAX_PORT: int = 8082
     ENVIRONMENT: str = "development"
 
