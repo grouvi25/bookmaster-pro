@@ -14,6 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.core.auth import get_current_master
 from app.core.feature_flags import require_feature
+from app.core.rate_limit import rate_limit
 from app.modules.ai.service import AIService, CONTENT_TEMPLATES
 from app.modules.ai.providers import get_stt_provider
 from app.modules.ai.indexer import AIIndexer
@@ -52,6 +53,7 @@ async def ai_ask(
     req: AIAskRequest,
     master: Master = Depends(require_feature("ai_advisor")),
     db: AsyncSession = Depends(get_db),
+    _rl=rate_limit("ai_ask", max_requests=20, window_seconds=60),
 ):
     """Синхронный POST-чат с AI-советником."""
     service = AIService(db)
@@ -110,6 +112,7 @@ async def generate_content(
     req: AIContentRequest,
     master: Master = Depends(require_feature("ai_advisor")),
     db: AsyncSession = Depends(get_db),
+    _rl=rate_limit("ai_content", max_requests=10, window_seconds=60),
 ):
     """Генерация контента по шаблону."""
     service = AIService(db)

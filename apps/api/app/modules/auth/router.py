@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth import validate_telegram_init_data, get_current_user
 from app.core.database import get_db
+from app.core.rate_limit import rate_limit
 from app.modules.auth.schemas import (
     IdentifyRequest,
     IdentifyResponse,
@@ -47,6 +48,7 @@ def _resolve_platform(body) -> tuple[str, str, dict | None]:
 async def identify(
     body: IdentifyRequest,
     db: AsyncSession = Depends(get_db),
+    _rl=rate_limit("auth_identify", max_requests=30, window_seconds=60),
 ):
     """Определить роль пользователя по initData или platform + platform_id."""
     platform, platform_id, tg_user = _resolve_platform(body)

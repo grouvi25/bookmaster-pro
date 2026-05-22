@@ -178,7 +178,6 @@ class AIService:
                 max_tokens=1500,
             ):
                 full_response += chunk
-                tokens_used += len(chunk) // 4
                 yield chunk
         except ValueError:
             raise
@@ -187,6 +186,10 @@ class AIService:
             error_msg = "Извините, произошла ошибка. Попробуйте ещё раз."
             yield error_msg
             full_response = error_msg
+
+        # Используем реальное значение от провайдера (stream_options: include_usage),
+        # fallback на приблизительную оценку
+        tokens_used = self.provider.last_usage_tokens or (len(full_response) // 4)
 
         await self._save_message(
             master_id=master_id,
@@ -231,7 +234,7 @@ class AIService:
             logger.error(f"AI chat error: {e}")
             response = "Извините, произошла ошибка. Попробуйте ещё раз."
 
-        tokens_used = len(response) // 4
+        tokens_used = self.provider.last_usage_tokens or (len(response) // 4)
 
         await self._save_message(
             master_id=master_id,
@@ -273,7 +276,7 @@ class AIService:
             logger.error(f"AI client answer error: {e}")
             return "Извините, не могу ответить прямо сейчас. Напишите мастеру напрямую."
 
-        await self._consume_tokens(master_id, len(response) // 4)
+        await self._consume_tokens(master_id, self.provider.last_usage_tokens or (len(response) // 4))
         return response
 
     # ─── Генерация контента ───────────────────────────────────────────
@@ -339,7 +342,7 @@ class AIService:
             logger.error(f"Content generation error: {e}")
             raise
 
-        tokens_used = len(result) // 4
+        tokens_used = self.provider.last_usage_tokens or (len(result) // 4)
         await self._consume_tokens(master_id, tokens_used)
 
         return {
@@ -406,7 +409,7 @@ class AIService:
             client_id=client_id,
             transcript=transcript,
             ai_response=json.dumps(extracted, ensure_ascii=False),
-            tokens_used=len(transcript) // 4,
+            tokens_used=self.provider.last_usage_tokens or (len(transcript) // 4),
         )
         self.db.add(vs)
         await self.db.flush()

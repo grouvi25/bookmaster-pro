@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth import get_current_user
 from app.core.database import get_db
+from app.core.rate_limit import rate_limit
 from app.modules.booking.schemas import (
     BookingCreate,
     BookingOut,
@@ -142,6 +143,7 @@ async def create_booking(
     body: BookingCreate,
     user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
+    _rl=rate_limit("booking_create", max_requests=10, window_seconds=60),
 ):
     """Создать запись (от клиента или мастера вручную)."""
     # Определяем client_id

@@ -103,9 +103,11 @@ app.include_router(services_router, prefix="/api/v1/services", tags=["services"]
 from app.modules.booking.router import router as booking_router
 app.include_router(booking_router, prefix="/api/v1/booking", tags=["booking"])
 
-from app.modules.payments.router import router as payments_router, router_webhook
+from app.modules.payments.router import router as payments_router
 app.include_router(payments_router, prefix="/api/v1/payments", tags=["payments"])
-app.include_router(router_webhook, prefix="/webhook", tags=["webhooks"])
+
+from app.modules.webhooks.router import router as webhook_router
+app.include_router(webhook_router, prefix="/webhook", tags=["webhooks"])
 
 from app.modules.promo.router import router as promo_router
 app.include_router(promo_router, prefix="/api/v1/promo", tags=["promo"])

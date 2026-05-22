@@ -281,37 +281,5 @@ async def delete_subscription_package(
     return {"status": "ok"}
 
 
-router_webhook = APIRouter()
-
-
-@router_webhook.post("/yookassa")
-async def yookassa_webhook(
-    request: Request,
-    db: AsyncSession = Depends(get_db),
-):
-    """Webhook от ЮKassa — обновление статуса платежа.
-
-    Безопасность (ЮKassa не подписывает webhook'и HMAC):
-    1. IP отправителя должен быть в списке доверенных подсетей ЮKassa.
-    2. Статус из тела запроса не доверяем — перезапрашиваем платёж по API
-       для подтверждения (см. PaymentService.handle_webhook).
-    """
-    from app.modules.payments.security import verify_yookassa_ip
-
-    verify_yookassa_ip(request)
-
-    try:
-        body = await request.json()
-    except Exception as e:
-        logger.warning(f"YooKassa webhook: invalid JSON: {e}")
-        raise HTTPException(status_code=400, detail="Invalid JSON")
-
-    event_type = body.get("event")
-    payment_data = body.get("object", {}) or {}
-    if not isinstance(payment_data, dict) or not event_type:
-        raise HTTPException(status_code=400, detail="Malformed notification")
-
-    service = PaymentService(db)
-    await service.handle_webhook(event_type, payment_data)
-    await db.commit()
-    return {"status": "ok"}
+# Backward-compatible re-export: webhook логика перенесена в app.modules.webhooks.router
+from app.modules.webhooks.router import router as router_webhook  # noqa: F401, E402

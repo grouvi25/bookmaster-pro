@@ -60,9 +60,20 @@ def verify_max_signature(body: bytes, signature: str) -> bool:
     """
     Верифицируем подпись вебхука от MAX.
     Документация: https://dev.vk.com/max/bots-api/webhooks
+
+    В production: если MAX_WEBHOOK_SECRET не задан — отклоняем запрос.
+    В development: пропускаем проверку для удобства тестирования.
     """
     if not settings.MAX_WEBHOOK_SECRET:
+        if settings.ENVIRONMENT == "production":
+            logger.error(
+                "MAX_WEBHOOK_SECRET not configured in production — rejecting webhook"
+            )
+            return False
+        # В dev-режиме пропускаем проверку
         return True
+    if not signature:
+        return False
     expected = hmac.HMAC(
         settings.MAX_WEBHOOK_SECRET.encode(),
         body,
