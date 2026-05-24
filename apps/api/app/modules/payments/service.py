@@ -142,6 +142,13 @@ class PaymentService:
                 return
 
         if event_type == "payment.succeeded":
+            # Идемпотентность: если уже обработан — пропускаем (Баг №3)
+            if payment.status == "succeeded":
+                logger.info(
+                    f"Payment {payment.id} already succeeded, "
+                    f"skipping duplicate webhook (idempotency)"
+                )
+                return
             payment.status = "succeeded"
             # Обновляем статус записи
             result = await self.db.execute(
@@ -155,9 +162,15 @@ class PaymentService:
             await self._notify_payment_succeeded(payment)
 
         elif event_type == "payment.canceled":
+            if payment.status == "failed":
+                logger.info(f"Payment {payment.id} already failed, skipping (idempotency)")
+                return
             payment.status = "failed"
 
         elif event_type == "refund.succeeded":
+            if payment.status == "refunded":
+                logger.info(f"Payment {payment.id} already refunded, skipping (idempotency)")
+                return
             payment.status = "refunded"
 
         await self.db.flush()

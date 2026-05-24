@@ -161,11 +161,16 @@ class SlotService:
             for appt in existing:
                 appt_start = appt.time_start
                 appt_end = appt.time_end
-                # Нормализуем timezone: убираем tzinfo для корректного сравнения
-                # (current_time naive, appt.time_start может быть aware UTC)
-                if appt_start and hasattr(appt_start, 'replace'):
+                # Конвертируем UTC → локальное время мастера, потом снимаем tzinfo
+                # (current_time — naive local, appt.time_start — aware UTC)
+                tz_local = ZoneInfo(client_tz) if client_tz else ZoneInfo(settings.TIMEZONE)
+                if appt_start and appt_start.tzinfo is not None:
+                    appt_start = appt_start.astimezone(tz_local).replace(tzinfo=None)
+                elif appt_start and hasattr(appt_start, 'replace'):
                     appt_start = appt_start.replace(tzinfo=None)
-                if appt_end and hasattr(appt_end, 'replace'):
+                if appt_end and appt_end.tzinfo is not None:
+                    appt_end = appt_end.astimezone(tz_local).replace(tzinfo=None)
+                elif appt_end and hasattr(appt_end, 'replace'):
                     appt_end = appt_end.replace(tzinfo=None)
                 if not appt_start or not appt_end:
                     continue

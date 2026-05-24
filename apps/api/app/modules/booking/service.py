@@ -44,6 +44,50 @@ class BookingService:
         """Создать запись, проверив доступность слота и лимит тарифа."""
         from sqlalchemy import func
         from app.modules.core.models import FeatureFlags
+        from app.core.redis import get_redis
+
+        # ═══ Redis SET NX — атомарная блокировка слота (ТЗ, Баг №1) ═══
+        redis = await get_redis()
+        lock_key = f"slot_lock:{master_id}:{target_date}:{time_start_str}"
+        locked = await redis.set(lock_key, "1", ex=60, nx=True)
+        if not locked:
+            raise ValueError("Этот слот уже бронируется другим клиентом. Попробуйте снова.")
+
+        try:
+            return await self._create_appointment_inner(
+                master_id=master_id,
+                service_id=service_id,
+                target_date=target_date,
+                time_start_str=time_start_str,
+                client_id=client_id,
+                client_name=client_name,
+                client_phone=client_phone,
+                client_comment=client_comment,
+                location_id=location_id,
+                promotion_id=promotion_id,
+                source=source,
+            )
+        except Exception:
+            await redis.delete(lock_key)
+            raise
+
+    async def _create_appointment_inner(
+        self,
+        master_id: int,
+        service_id: int,
+        target_date: date,
+        time_start_str: str,
+        client_id: Optional[int] = None,
+        client_name: Optional[str] = None,
+        client_phone: Optional[str] = None,
+        client_comment: Optional[str] = None,
+        location_id: Optional[int] = None,
+        promotion_id: Optional[int] = None,
+        source: str = "mini_app",
+    ) -> Appointment:
+        """Внутренняя логика создания записи (вызывается под Redis-блокировкой)."""
+        from sqlalchemy import func
+        from app.modules.core.models import FeatureFlags
 
         # Проверяем лимит записей по тарифу
         flags_result = await self.db.execute(
