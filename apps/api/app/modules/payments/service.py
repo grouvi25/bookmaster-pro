@@ -119,8 +119,18 @@ class PaymentService:
             select(Payment).where(Payment.yookassa_payment_id == yookassa_id)
         )
         payment = result.scalar_one_or_none()
-        if not payment:
-            logger.warning(f"Payment not found for yookassa_id: {yookassa_id}")
+
+        # Платёж может относиться к подписке мастера (yookassa_recurring_id),
+        # а не к оплате записи. Ищем оба варианта.
+        sub_result = await self.db.execute(
+            select(MasterSubscription).where(
+                MasterSubscription.yookassa_recurring_id == yookassa_id
+            )
+        )
+        subscription = sub_result.scalar_one_or_none()
+
+        if not payment and not subscription:
+            logger.warning(f"No payment or subscription for yookassa_id: {yookassa_id}")
             return
 
         if event_type in ("payment.succeeded", "payment.canceled"):
@@ -142,36 +152,65 @@ class PaymentService:
                 return
 
         if event_type == "payment.succeeded":
-            # Идемпотентность: если уже обработан — пропускаем (Баг №3)
-            if payment.status == "succeeded":
-                logger.info(
-                    f"Payment {payment.id} already succeeded, "
-                    f"skipping duplicate webhook (idempotency)"
-                )
-                return
-            payment.status = "succeeded"
-            # Обновляем статус записи
-            result = await self.db.execute(
-                select(Appointment).where(Appointment.id == payment.appointment_id)
-            )
-            appointment = result.scalar_one_or_none()
-            if appointment:
-                appointment.status = AppointmentStatus.PAID.value
+            # --- Подписка мастера ---
+            if subscription:
+                if subscription.status == "active":
+                    logger.info(
+                        f"Subscription {subscription.id} already active, "
+                        f"skipping duplicate webhook (idempotency)"
+                    )
+                else:
+                    subscription.status = "active"
+                    master_res = await self.db.execute(
+                        select(Master).where(Master.id == subscription.master_id)
+                    )
+                    master = master_res.scalar_one_or_none()
+                    if master:
+                        master.current_plan = subscription.plan
+                    await self._update_feature_flags(
+                        subscription.master_id, subscription.plan
+                    )
+                    logger.info(
+                        f"Subscription {subscription.id} activated via webhook "
+                        f"(master={subscription.master_id}, plan={subscription.plan})"
+                    )
 
-            # Уведомить клиента и мастера об успешной оплате
-            await self._notify_payment_succeeded(payment)
+            # --- Оплата записи ---
+            if payment:
+                # Идемпотентность: если уже обработан — пропускаем (Баг №3)
+                if payment.status == "succeeded":
+                    logger.info(
+                        f"Payment {payment.id} already succeeded, "
+                        f"skipping duplicate webhook (idempotency)"
+                    )
+                else:
+                    payment.status = "succeeded"
+                    # Обновляем статус записи
+                    result = await self.db.execute(
+                        select(Appointment).where(Appointment.id == payment.appointment_id)
+                    )
+                    appointment = result.scalar_one_or_none()
+                    if appointment:
+                        appointment.status = AppointmentStatus.PAID.value
+
+                    # Уведомить клиента и мастера об успешной оплате
+                    await self._notify_payment_succeeded(payment)
 
         elif event_type == "payment.canceled":
-            if payment.status == "failed":
-                logger.info(f"Payment {payment.id} already failed, skipping (idempotency)")
-                return
-            payment.status = "failed"
+            if subscription and subscription.status != "active":
+                subscription.status = "canceled"
+            if payment:
+                if payment.status == "failed":
+                    logger.info(f"Payment {payment.id} already failed, skipping (idempotency)")
+                else:
+                    payment.status = "failed"
 
         elif event_type == "refund.succeeded":
-            if payment.status == "refunded":
-                logger.info(f"Payment {payment.id} already refunded, skipping (idempotency)")
-                return
-            payment.status = "refunded"
+            if payment:
+                if payment.status == "refunded":
+                    logger.info(f"Payment {payment.id} already refunded, skipping (idempotency)")
+                    return
+                payment.status = "refunded"
 
         await self.db.flush()
 
@@ -210,16 +249,19 @@ class PaymentService:
             )
         self.db.add(subscription)
 
-        # Обновляем тариф мастера
-        result = await self.db.execute(
-            select(Master).where(Master.id == master_id)
-        )
-        master = result.scalar_one_or_none()
-        if master:
-            master.current_plan = plan
+        # Обновляем тариф мастера и фичи ТОЛЬКО при немедленной активации.
+        # При оплате через ЮKassa (status=pending) тариф применяется
+        # вебхуком payment.succeeded после фактической оплаты.
+        if subscription.status == "active":
+            result = await self.db.execute(
+                select(Master).where(Master.id == master_id)
+            )
+            master = result.scalar_one_or_none()
+            if master:
+                master.current_plan = plan
 
-        # Обновляем feature flags
-        await self._update_feature_flags(master_id, plan)
+            await self._update_feature_flags(master_id, plan)
+
         await self.db.flush()
         return subscription
 

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { HeaderBackButton } from "@/components/common/BackButton";
 import { billingApi } from '@/api/endpoints';
@@ -6,7 +6,7 @@ import { ListSkeleton } from '@/shared/ui/Skeleton';
 import Card from '@/shared/ui/Card';
 import Button from '@/shared/ui/Button';
 import { toast } from '@/shared/ui/Toast';
-import { Check, Crown, Zap, Sparkles, Rocket, Building2 } from 'lucide-react';
+import { Check, Crown, Zap, Sparkles, Rocket, Building2, CheckCircle2, XCircle } from 'lucide-react';
 import PageHeader from '@/shared/ui/PageHeader';
 import type { LucideIcon } from 'lucide-react';
 import clsx from 'clsx';
@@ -97,6 +97,32 @@ export default function Billing() {
   const queryClient = useQueryClient();
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('monthly');
+  const [showResult, setShowResult] = useState<'success' | 'fail' | null>(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const status = params.get('status');
+    if (status === 'success' || status === 'fail') {
+      setShowResult(status);
+      // Убираем query-параметр из URL, чтобы модалка не всплывала повторно.
+      const url = new URL(window.location.href);
+      url.searchParams.delete('status');
+      window.history.replaceState({}, '', url.toString());
+
+      if (status === 'success') {
+        // Подписка активируется вебхуком ЮKassa асинхронно — опрашиваем
+        // несколько раз, чтобы свежий тариф подтянулся в UI.
+        let attempts = 0;
+        const poll = () => {
+          attempts += 1;
+          queryClient.invalidateQueries({ queryKey: ['my-subscription'] });
+          queryClient.invalidateQueries({ queryKey: ['feature-flags'], refetchType: 'all' });
+          if (attempts < 5) setTimeout(poll, 2000);
+        };
+        poll();
+      }
+    }
+  }, [queryClient]);
 
   const { data: subscription, isLoading } = useQuery({
     queryKey: ['my-subscription'],
@@ -151,6 +177,58 @@ export default function Billing() {
         title="Тарифы и подписка"
         left={<HeaderBackButton to="/master/settings" />}
       />
+
+      {showResult && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-6 animate-fade-in"
+          onClick={() => {
+            setShowResult(null);
+            queryClient.invalidateQueries({ queryKey: ['my-subscription'] });
+            queryClient.invalidateQueries({ queryKey: ['feature-flags'], refetchType: 'all' });
+          }}
+        >
+          <div
+            className="bg-tg-bg rounded-card p-6 max-w-sm w-full text-center animate-scale-in"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {showResult === 'success' ? (
+              <>
+                <div className="w-16 h-16 rounded-full bg-accent-emerald/10 flex items-center justify-center mx-auto mb-4">
+                  <CheckCircle2 className="w-9 h-9 text-accent-emerald" strokeWidth={1.8} />
+                </div>
+                <h2 className="text-xl font-bold mb-2">Оплата прошла успешно</h2>
+                <p className="text-tg-hint text-sm mb-5">
+                  Тариф активируется в течение нескольких секунд. Можно начинать
+                  пользоваться новыми возможностями!
+                </p>
+                <Button
+                  fullWidth
+                  onClick={() => {
+                    setShowResult(null);
+                    queryClient.invalidateQueries({ queryKey: ['my-subscription'] });
+                    queryClient.invalidateQueries({ queryKey: ['feature-flags'], refetchType: 'all' });
+                  }}
+                >
+                  Готово
+                </Button>
+              </>
+            ) : (
+              <>
+                <div className="w-16 h-16 rounded-full bg-status-danger/10 flex items-center justify-center mx-auto mb-4">
+                  <XCircle className="w-9 h-9 text-status-danger" strokeWidth={1.8} />
+                </div>
+                <h2 className="text-xl font-bold mb-2">Оплата не прошла</h2>
+                <p className="text-tg-hint text-sm mb-5">
+                  Платёж не был завершён. Попробуйте оформить подписку ещё раз.
+                </p>
+                <Button fullWidth onClick={() => setShowResult(null)}>
+                  Попробовать снова
+                </Button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="px-screen-x">
       <p className="text-tg-hint text-sm mb-5">Выберите подходящий тариф</p>

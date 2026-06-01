@@ -39,3 +39,9 @@ BookMaster-Deploy/
 .run_remote.ps1
 *_handoff.md
 BookMaster_*.pdf
+
+.env
+.env.bak*
+*.env.bak*
+*.bak*
+*.orig
