@@ -168,8 +168,17 @@ interface LocationPayload {
 export const authApi = {
   identify: (initData: string, platform?: string) =>
     api.post('/auth/identify', { init_data: initData, platform }),
-  register: (data: { init_data: string; role: string; name?: string; specialization?: string; city?: string; phone?: string }) =>
-    api.post('/auth/register', data),
+  register: (data: { init_data: string; role: string; name?: string; specialization?: string; city?: string; phone?: string; platform?: string; platform_id?: string }) =>
+    api.post('/auth/register', {
+      init_data: data.init_data,
+      role: data.role,
+      display_name: data.name,
+      specialization: data.specialization,
+      city: data.city,
+      phone: data.phone,
+      platform: data.platform,
+      platform_id: data.platform_id,
+    }),
   switchRole: (targetRole: string) =>
     api.post('/auth/switch-role', { target_role: targetRole }),
 };

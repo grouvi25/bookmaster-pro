@@ -23,6 +23,9 @@ router = APIRouter()
 def _resolve_platform(body) -> tuple[str, str, dict | None]:
     """Extract platform, platform_id and platform_user from request body.
     If init_data is present, validate and parse it for the right platform.
+    When platform is not explicitly provided, auto-detect: try Telegram
+    first, then MAX. This makes register/identify resilient to clients
+    that forget to send `platform`.
     """
     tg_user = None
     platform = body.platform
@@ -36,12 +39,25 @@ def _resolve_platform(body) -> tuple[str, str, dict | None]:
             platform = "max"
             platform_id = platform_id or str(max_user["id"])
             tg_user = max_user
-        else:
+        elif platform == "telegram":
             tg_user = validate_telegram_init_data(body.init_data)
             if tg_user is None:
                 raise HTTPException(status_code=401, detail="Invalid initData")
-            platform = platform or "telegram"
+            platform = "telegram"
             platform_id = platform_id or str(tg_user["id"])
+        else:
+            # Platform not specified — auto-detect.
+            tg_user = validate_telegram_init_data(body.init_data)
+            if tg_user is not None:
+                platform = "telegram"
+                platform_id = platform_id or str(tg_user["id"])
+            else:
+                max_user = validate_max_init_data(body.init_data)
+                if max_user is None:
+                    raise HTTPException(status_code=401, detail="Invalid initData")
+                platform = "max"
+                platform_id = platform_id or str(max_user["id"])
+                tg_user = max_user
 
     if not platform or not platform_id:
         raise HTTPException(

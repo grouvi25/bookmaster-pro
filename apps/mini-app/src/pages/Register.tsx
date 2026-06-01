@@ -36,12 +36,15 @@ export default function Register() {
     setLoading(true);
     try {
       const initData = PlatformAdapter.getInitData();
+      const user = await PlatformAdapter.getUser();
       const resp = await authApi.register({
         init_data: initData || '',
         role: 'master',
         name: name.trim(),
         specialization,
         city: city.trim(),
+        platform: PlatformAdapter.platform,
+        platform_id: user?.id,
       });
       const data = resp.data;
       setAuth(data.access_token, data.role, data.master_id);
@@ -60,8 +63,8 @@ export default function Register() {
 
       toast.success('Добро пожаловать!');
       navigate('/master', { replace: true });
-    } catch {
-      toast.error('Ошибка регистрации. Попробуйте снова.');
+    } catch (err: any) {
+      toast.error(err?.response?.data?.detail || 'Ошибка регистрации. Попробуйте снова.');
     } finally {
       setLoading(false);
     }
@@ -75,18 +78,21 @@ export default function Register() {
     setLoading(true);
     try {
       const initData = PlatformAdapter.getInitData();
+      const user = await PlatformAdapter.getUser();
       const resp = await authApi.register({
         init_data: initData || '',
         role: 'client',
         name: name.trim(),
+        platform: PlatformAdapter.platform,
+        platform_id: user?.id,
         ...(phone ? { phone } : {}),
       });
       const data = resp.data;
       setAuth(data.access_token, data.role, data.master_id);
       toast.success('Добро пожаловать!');
       navigate('/', { replace: true });
-    } catch {
-      toast.error('Ошибка регистрации.');
+    } catch (err: any) {
+      toast.error(err?.response?.data?.detail || 'Ошибка регистрации.');
     } finally {
       setLoading(false);
     }
