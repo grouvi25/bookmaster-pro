@@ -435,11 +435,17 @@ class SuperadminService:
             return {"status": "error", "detail": str(e)[:200]}
 
     async def _check_scheduler(self) -> dict:
-        """Сколько задач в Redis jobstore APScheduler."""
+        """Сколько задач в Redis jobstore APScheduler.
+
+        APScheduler RedisJobStore хранит задачи в Redis-ХЕШЕ
+        (ключ bookmaster:scheduler:jobs), поэтому считаем через HLEN.
+        Раньше тут был ZCARD → Redis отвечал WRONGTYPE, и проверка
+        ошибочно показывала error при полностью рабочем планировщике.
+        """
         try:
             from app.core.redis import get_redis
             redis = await get_redis()
-            count = await redis.zcard("bookmaster:scheduler:jobs")
+            count = await redis.hlen("bookmaster:scheduler:jobs")
             return {
                 "status": "ok" if count > 0 else "error",
                 "jobs_count": int(count),
@@ -499,9 +505,20 @@ class SuperadminService:
             return {"status": "not_configured"}
         try:
             import openai
-            client = openai.AsyncOpenAI(
-                api_key=settings.OPENAI_API_KEY, timeout=10
-            )
+            # Используем тот же путь, что и боевые AI-провайдеры: если задан
+            # Railway-прокси (AI_PROXY_URL) — ходим через него. Иначе прямой
+            # вызов из РФ-региона YC даёт 403 unsupported_country, хотя само
+            # приложение работает через прокси. (см. providers.OpenAIProvider)
+            kwargs: dict = {"api_key": settings.OPENAI_API_KEY, "timeout": 10}
+            via_proxy = False
+            if settings.AI_PROXY_URL:
+                kwargs["base_url"] = settings.AI_PROXY_URL
+                via_proxy = True
+                if settings.AI_PROXY_SECRET:
+                    kwargs["default_headers"] = {
+                        "X-Proxy-Secret": settings.AI_PROXY_SECRET,
+                    }
+            client = openai.AsyncOpenAI(**kwargs)
             t0 = time.perf_counter()
             # минимальный completion для проверки end-to-end
             resp = await client.chat.completions.create(
@@ -513,6 +530,7 @@ class SuperadminService:
             return {
                 "status": "ok",
                 "model": resp.model,
+                "via_proxy": via_proxy,
                 "response_time_ms": elapsed_ms,
             }
         except Exception as e:
