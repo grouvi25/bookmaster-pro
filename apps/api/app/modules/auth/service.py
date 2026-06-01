@@ -42,6 +42,11 @@ def generate_slug(display_name: str, identity_id: int) -> str:
     return f"{slug}-{identity_id}"
 
 
+# Роли, которым identify() доверяет из БД напрямую. Любая другая роль
+# (включая залежавшийся 'superadmin') НЕ выдаётся без проверки SUPERADMIN_IDS.
+_VALID_USER_ROLES = {"master", "client", "moderator"}
+
+
 class AuthService:
     def __init__(self, db: AsyncSession):
         self.db = db
@@ -87,6 +92,16 @@ class AuthService:
         identity = await self._get_identity(platform, platform_id)
         if not identity:
             return {"role": "new", "token": None, "user_id": None, "display_name": None, "master_id": None}
+
+        # Забаненный пользователь — без токена.
+        if identity.is_banned:
+            return {"role": "banned", "token": None, "user_id": identity.id, "display_name": None, "master_id": None}
+
+        # Жёсткая привязка привилегий к конфигу: если в БД осталась роль
+        # 'superadmin' (или любая другая вне whitelist), но platform_id уже
+        # не в SUPERADMIN_IDS — НЕ доверяем БД. Пользователь проходит онбординг.
+        if identity.role not in _VALID_USER_ROLES:
+            return {"role": "new", "token": None, "user_id": identity.id, "display_name": None, "master_id": None}
 
         # Получаем display_name
         display_name = await self._get_display_name(identity)

@@ -124,7 +124,7 @@ function RequireAuth({ children, allowedRoles }: { children: ReactNode; allowedR
 function AppRouter() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { role, setUser, setAuth } = useAuthStore();
+  const { role, setUser, setAuth, logout } = useAuthStore();
   useBookingStore.getState();
   const [initializing, setInitializing] = useState(true);
   const [isNewUser, setIsNewUser] = useState(false);
@@ -147,11 +147,21 @@ function AppRouter() {
           if (data.access_token) {
             setAuth(data.access_token, data.role, data.master_id);
             authRole = data.role;
-          } else if (data.role === 'new') {
+          } else if (data.role === 'new' || data.role === 'banned') {
+            // Сервер не выдал токен — чистим любые stale-данные и шлём в онбординг.
+            logout();
             setIsNewUser(true);
           }
-        } catch {
-          // не авторизован
+        } catch (err: any) {
+          if (err?.response?.status === 401) {
+            // Невалидный/просроченный токен — принудительный онбординг.
+            logout();
+            setIsNewUser(true);
+          } else {
+            // Сетевая ошибка / сервер недоступен — оффлайн-режим:
+            // доверяем закэшированной роли (master/client) из localStorage.
+            authRole = useAuthStore.getState().role;
+          }
         }
       }
 

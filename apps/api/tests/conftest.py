@@ -11,12 +11,31 @@ import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
+from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.pool import StaticPool
+from sqlalchemy import ARRAY as _GenericARRAY
+from sqlalchemy.dialects.postgresql import ARRAY as _PGARRAY
+from sqlalchemy.dialects.postgresql import TSVECTOR as _PGTSVECTOR
 
 from app.core.base_model import Base
 from app.core.auth import create_access_token
 from app.core.database import get_db
 from app.main import app
+
+
+# ─── SQLite-совместимость для Postgres-типов ──────────────────────────
+# Модели используют Postgres-специфичные типы (ARRAY, TSVECTOR), которых нет
+# в SQLite. Для тестовой in-memory БД рендерим их как JSON/TEXT — этого
+# достаточно для unit-тестов бизнес-логики. Прод (Postgres) шим не затрагивает.
+@compiles(_GenericARRAY, "sqlite")
+@compiles(_PGARRAY, "sqlite")
+def _compile_array_as_json_sqlite(element, compiler, **kw):  # noqa: ANN001
+    return "JSON"
+
+
+@compiles(_PGTSVECTOR, "sqlite")
+def _compile_tsvector_as_text_sqlite(element, compiler, **kw):  # noqa: ANN001
+    return "TEXT"
 
 # ─── SQLite async engine для тестов ───────────────────────────────────
 TEST_DB_URL = "sqlite+aiosqlite:///file::memory:?cache=shared&uri=true"

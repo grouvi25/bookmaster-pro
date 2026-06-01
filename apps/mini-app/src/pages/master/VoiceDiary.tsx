@@ -88,7 +88,7 @@ function VoiceDiaryContent() {
             method: 'POST',
             body: formData,
             headers: {
-              Authorization: `Bearer ${localStorage.getItem('access_token') || ''}`,
+              Authorization: `Bearer ${localStorage.getItem('bm_access_token') || ''}`,
             },
           });
           const sttData = await sttResp.json();

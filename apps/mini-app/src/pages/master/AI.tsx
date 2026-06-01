@@ -208,7 +208,7 @@ function AIChat() {
             method: 'POST',
             body: formData,
             headers: {
-              Authorization: `Bearer ${localStorage.getItem('access_token') || ''}`,
+              Authorization: `Bearer ${localStorage.getItem('bm_access_token') || ''}`,
             },
           });
           const data = await resp.json();

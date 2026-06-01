@@ -30,3 +30,12 @@ _tz_*.txt
 .deploy_*.py
 .gh_*.py
 .commit_msg.txt
+
+# Секреты заказчика и временные деплой-артефакты (НЕ КОММИТИТЬ)
+BookMaster-Deploy/
+*.deploy
+.srv_*.sh
+.nginx_*.conf
+.run_remote.ps1
+*_handoff.md
+BookMaster_*.pdf

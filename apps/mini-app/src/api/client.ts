@@ -12,7 +12,7 @@ api.interceptors.request.use((config) => {
   if (initData) {
     config.headers['X-Init-Data'] = initData;
   }
-  const token = localStorage.getItem('access_token');
+  const token = localStorage.getItem('bm_access_token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -23,7 +23,9 @@ api.interceptors.response.use(
   (r) => r,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('access_token');
+      localStorage.removeItem('bm_access_token');
+      localStorage.removeItem('bm_user_role');
+      localStorage.removeItem('bm_master_id');
     }
     return Promise.reject(error);
   }

@@ -3,6 +3,32 @@ import type { PlatformUser } from '@/platform/platform-adapter';
 
 type Role = 'client' | 'master' | 'moderator' | 'superadmin' | null;
 
+// localStorage-ключи (с префиксом bm_). Старый 'access_token' больше не
+// используется и устареет сам.
+const TOKEN_KEY = 'bm_access_token';
+const ROLE_KEY = 'bm_user_role';
+const MASTER_ID_KEY = 'bm_master_id';
+
+/**
+ * Восстановление роли из localStorage при старте.
+ * superadmin и moderator НИКОГДА не восстанавливаются из кэша — эти роли
+ * подтверждаются только сервером через identify(). Это защищает от того,
+ * что stale-роль в localStorage даст доступ к привилегированным экранам.
+ */
+function readPersistedRole(): Role {
+  const v = localStorage.getItem(ROLE_KEY);
+  if (v === 'superadmin' || v === 'moderator') return null;
+  if (v === 'client' || v === 'master') return v;
+  return null;
+}
+
+function readPersistedMasterId(): number | null {
+  const v = localStorage.getItem(MASTER_ID_KEY);
+  if (!v) return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+
 interface AuthState {
   user: PlatformUser | null;
   role: Role;
@@ -15,16 +41,29 @@ interface AuthState {
 
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
-  role: null,
-  token: localStorage.getItem('access_token'),
-  masterId: null,
+  role: readPersistedRole(),
+  token: localStorage.getItem(TOKEN_KEY),
+  masterId: readPersistedMasterId(),
   setUser: (user) => set({ user }),
   setAuth: (token, role, masterId = null) => {
-    localStorage.setItem('access_token', token);
+    localStorage.setItem(TOKEN_KEY, token);
+    // Привилегированные роли в localStorage не пишем.
+    if (role === 'master' || role === 'client') {
+      localStorage.setItem(ROLE_KEY, role);
+    } else {
+      localStorage.removeItem(ROLE_KEY);
+    }
+    if (masterId != null) {
+      localStorage.setItem(MASTER_ID_KEY, String(masterId));
+    } else {
+      localStorage.removeItem(MASTER_ID_KEY);
+    }
     set({ token, role, masterId });
   },
   logout: () => {
-    localStorage.removeItem('access_token');
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(ROLE_KEY);
+    localStorage.removeItem(MASTER_ID_KEY);
     set({ token: null, role: null, user: null, masterId: null });
   },
 }));

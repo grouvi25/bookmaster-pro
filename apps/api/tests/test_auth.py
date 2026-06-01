@@ -55,6 +55,57 @@ class TestSuperadmin:
         assert is_superadmin("") is False
 
 
+class TestIdentifySuperadminGuard:
+    """Регрессия: залежавшаяся role='superadmin' в БД не должна давать
+    superadmin-токен, если platform_id уже не в SUPERADMIN_IDS."""
+
+    @pytest.mark.asyncio
+    async def test_orphan_superadmin_gets_new_role(self, db, monkeypatch):
+        from app.modules.auth.models import Identity
+        from app.modules.auth.service import AuthService
+
+        # platform_id 555 НЕ в списке суперадминов
+        monkeypatch.setattr("app.core.auth.settings.SUPERADMIN_IDS", "123")
+
+        orphan = Identity(platform="telegram", platform_id="555", role="superadmin")
+        db.add(orphan)
+        await db.commit()
+
+        result = await AuthService(db).identify("telegram", "555")
+
+        assert result["role"] == "new"
+        assert result["token"] is None
+
+    @pytest.mark.asyncio
+    async def test_listed_superadmin_still_works(self, db, monkeypatch):
+        from app.modules.auth.service import AuthService
+
+        monkeypatch.setattr("app.core.auth.settings.SUPERADMIN_IDS", "123")
+
+        result = await AuthService(db).identify("telegram", "123")
+
+        assert result["role"] == "superadmin"
+        assert result["token"] is not None
+
+    @pytest.mark.asyncio
+    async def test_banned_identity_gets_no_token(self, db, monkeypatch):
+        from app.modules.auth.models import Identity
+        from app.modules.auth.service import AuthService
+
+        monkeypatch.setattr("app.core.auth.settings.SUPERADMIN_IDS", "123")
+
+        banned = Identity(
+            platform="telegram", platform_id="777", role="client", is_banned=True
+        )
+        db.add(banned)
+        await db.commit()
+
+        result = await AuthService(db).identify("telegram", "777")
+
+        assert result["role"] == "banned"
+        assert result["token"] is None
+
+
 class TestAuthEndpoints:
     """Тесты API эндпоинтов аутентификации."""
 
