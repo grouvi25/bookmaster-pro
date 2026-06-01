@@ -128,7 +128,7 @@ function AppRouter() {
   useBookingStore.getState();
   const [initializing, setInitializing] = useState(true);
   const [isNewUser, setIsNewUser] = useState(false);
-  const [hasTelegramContext, setHasTelegramContext] = useState(false);
+  const [hasPlatformContext, setHasPlatformContext] = useState(false);
 
   useEffect(() => {
     const init = async () => {
@@ -140,9 +140,9 @@ function AppRouter() {
 
       const initData = PlatformAdapter.getInitData();
       if (initData) {
-        setHasTelegramContext(true);
+        setHasPlatformContext(true);
         try {
-          const resp = await authApi.identify(initData);
+          const resp = await authApi.identify(initData, PlatformAdapter.platform);
           const data = resp.data;
           if (data.access_token) {
             setAuth(data.access_token, data.role, data.master_id);
@@ -224,7 +224,7 @@ function AppRouter() {
               <Navigate to="/master" replace />
             ) : role === 'client' ? (
               <Navigate to="/client" replace />
-            ) : isNewUser || (hasTelegramContext && !role) ? (
+            ) : isNewUser || (hasPlatformContext && !role) ? (
               <Navigate to="/register" replace />
             ) : (
               <HomePage />

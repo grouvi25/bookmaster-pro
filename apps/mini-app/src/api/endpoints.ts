@@ -166,8 +166,8 @@ interface LocationPayload {
 
 // ── Auth ──
 export const authApi = {
-  identify: (initData: string) =>
-    api.post('/auth/identify', { init_data: initData }),
+  identify: (initData: string, platform?: string) =>
+    api.post('/auth/identify', { init_data: initData, platform }),
   register: (data: { init_data: string; role: string; name?: string; specialization?: string; city?: string; phone?: string }) =>
     api.post('/auth/register', data),
   switchRole: (targetRole: string) =>

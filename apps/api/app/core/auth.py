@@ -90,6 +90,67 @@ def validate_telegram_init_data(init_data: str) -> Optional[dict]:
         return None
 
 
+def validate_max_init_data(init_data: str) -> Optional[dict]:
+    """
+    Validate MAX Mini-App initData (WebAppData), per:
+    https://dev.max.ru/docs/webapps/validation
+
+    `init_data` is the value of the `WebAppData` launch param, a
+    `key=value&key=value` string (URL-encoded values). Returns the parsed
+    `user` dict on success, or None if the signature is invalid/missing.
+    """
+    try:
+        if not init_data or not settings.MAX_BOT_TOKEN:
+            return None
+
+        # Split into key=value pairs (split only on first '=' per pair).
+        pairs = [p.split("=", 1) for p in init_data.split("&") if "=" in p]
+
+        # hash must appear exactly once.
+        hashes = [v for (k, v) in pairs if k == "hash"]
+        if len(hashes) != 1:
+            return None
+        received_hash = hashes[0]
+
+        # URL-decode all values.
+        decoded = [(k, unquote(v)) for (k, v) in pairs]
+
+        # auth_date freshness check (<= 24h). MAX recommends 1h, we allow 24h.
+        auth_date_val = next((v for (k, v) in decoded if k == "auth_date"), None)
+        if auth_date_val is not None:
+            try:
+                if time.time() - int(auth_date_val) > 86400:
+                    return None
+            except (TypeError, ValueError):
+                return None
+
+        # Sort by key a->z, exclude hash, join with \n.
+        launch_pairs = sorted(
+            [(k, v) for (k, v) in decoded if k != "hash"], key=lambda x: x[0]
+        )
+        launch_params = "\n".join(f"{k}={v}" for (k, v) in launch_pairs)
+
+        # secret_key = HMAC_SHA256(key="WebAppData", msg=BOT_TOKEN)
+        secret_key = hmac.HMAC(
+            b"WebAppData", settings.MAX_BOT_TOKEN.encode(), hashlib.sha256
+        ).digest()
+
+        # computed = hex(HMAC_SHA256(key=secret_key, msg=launch_params))
+        computed_hash = hmac.HMAC(
+            secret_key, launch_params.encode(), hashlib.sha256
+        ).hexdigest()
+
+        if not hmac.compare_digest(computed_hash, received_hash):
+            return None
+
+        user_str = next((v for (k, v) in decoded if k == "user"), None)
+        if user_str:
+            return json.loads(user_str)
+        return None
+    except Exception:
+        return None
+
+
 def is_superadmin(platform_id: str) -> bool:
     return platform_id in settings.superadmin_list
 

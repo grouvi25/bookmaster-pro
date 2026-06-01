@@ -1,6 +1,10 @@
 /**
- * Platform Adapter — абстракция над Telegram и MAX (VK) API.
+ * Platform Adapter — абстракция над Telegram и MAX.
  * Единый интерфейс для обеих платформ.
+ *
+ * Telegram: глобальный объект window.Telegram.WebApp (telegram-web-app.js)
+ * MAX:      глобальный объект window.WebApp (MAX Bridge, max-web-app.js)
+ *           https://dev.max.ru/docs/webapps/bridge
  */
 
 export type Platform = 'telegram' | 'max' | 'unknown';
@@ -14,6 +18,61 @@ export interface PlatformUser {
   platform: Platform;
 }
 
+interface MaxInitDataUnsafe {
+  query_id?: string;
+  auth_date?: number;
+  hash?: string;
+  user?: {
+    id: number;
+    first_name: string;
+    last_name?: string;
+    username?: string;
+    language_code?: string;
+    photo_url?: string;
+  };
+  chat?: { id: number; type: string };
+  start_param?: string;
+}
+
+interface MaxWebApp {
+  initData?: string;
+  initDataUnsafe?: MaxInitDataUnsafe;
+  platform?: string;
+  version?: string;
+  ready?: () => void;
+  expand?: () => void;
+}
+
+interface TelegramWebApp {
+  initData?: string;
+  initDataUnsafe?: {
+    user?: {
+      id: number;
+      first_name: string;
+      last_name?: string;
+      username?: string;
+      photo_url?: string;
+    };
+    start_param?: string;
+  };
+  ready?: () => void;
+  expand?: () => void;
+}
+
+function getTelegram(): TelegramWebApp | undefined {
+  return (window as unknown as Record<string, { WebApp?: TelegramWebApp }>).Telegram?.WebApp;
+}
+
+function getMax(): MaxWebApp | undefined {
+  // MAX Bridge exposes window.WebApp. Make sure it isn't the Telegram object.
+  const w = window as unknown as Record<string, unknown>;
+  const maxApp = w.WebApp as MaxWebApp | undefined;
+  if (maxApp && (maxApp.initDataUnsafe !== undefined || maxApp.initData !== undefined || maxApp.version !== undefined)) {
+    return maxApp;
+  }
+  return undefined;
+}
+
 class PlatformAdapterClass {
   private _platform: Platform = 'unknown';
 
@@ -23,19 +82,32 @@ class PlatformAdapterClass {
 
   /**
    * Определяем платформу по окружению.
+   * MAX проверяем первым: его собственный window.WebApp.
    */
   detectPlatform(): Platform {
     if (typeof window !== 'undefined') {
+      // MAX — собственный мост window.WebApp
+      const maxApp = getMax();
+      if (maxApp && maxApp.initDataUnsafe?.user) {
+        this._platform = 'max';
+        try {
+          maxApp.ready?.();
+          maxApp.expand?.();
+        } catch { /* noop */ }
+        return 'max';
+      }
       // Telegram
-      if ((window as unknown as Record<string, unknown>).Telegram) {
+      const tg = getTelegram();
+      if (tg && (tg.initDataUnsafe?.user || tg.initData)) {
         this._platform = 'telegram';
+        try {
+          tg.ready?.();
+          tg.expand?.();
+        } catch { /* noop */ }
         return 'telegram';
       }
-      // VK MAX — проверяем URL параметры или vk-bridge
-      if (
-        window.location.search.includes('vk_') ||
-        window.location.search.includes('sign=')
-      ) {
+      // MAX без пользователя (например, открыт вне диалога) — всё равно MAX
+      if (maxApp) {
         this._platform = 'max';
         return 'max';
       }
@@ -58,16 +130,28 @@ class PlatformAdapterClass {
   }
 
   /**
-   * Получить initData для авторизации на сервере.
+   * Получить initData для серверной авторизации.
    */
   getInitData(): string {
     if (this._platform === 'telegram') {
-      const tg = (window as unknown as Record<string, { WebApp?: { initData?: string } }>)
-        .Telegram;
-      return tg?.WebApp?.initData || '';
+      return getTelegram()?.initData || '';
     }
-    // MAX: данные из URL
-    return window.location.search;
+    if (this._platform === 'max') {
+      // MAX Bridge отдаёт строку WebAppData в window.WebApp.initData.
+      const fromBridge = getMax()?.initData;
+      if (fromBridge) return fromBridge;
+      // Fallback: WebAppData во фрагменте URL (#WebAppData=...)
+      try {
+        const frag = window.location.hash.startsWith('#')
+          ? window.location.hash.slice(1)
+          : '';
+        const params = new URLSearchParams(frag);
+        return params.get('WebAppData') || '';
+      } catch {
+        return '';
+      }
+    }
+    return '';
   }
 
   /**
@@ -75,31 +159,25 @@ class PlatformAdapterClass {
    */
   getStartParam(): string {
     if (this._platform === 'telegram') {
-      const tg = (window as unknown as Record<string, { WebApp?: { initDataUnsafe?: { start_param?: string } } }>)
-        .Telegram;
-      const tgParam = tg?.WebApp?.initDataUnsafe?.start_param || '';
+      const tgParam = getTelegram()?.initDataUnsafe?.start_param || '';
       if (tgParam) return tgParam;
     }
-    // Fallback: check URL query params (used by bot's WebAppInfo url)
+    if (this._platform === 'max') {
+      const maxParam = getMax()?.initDataUnsafe?.start_param || '';
+      if (maxParam) return maxParam;
+    }
+    // Fallback: query-параметры (?startParam=... / ?startapp=... / ?ref=...)
     const params = new URLSearchParams(window.location.search);
-    return params.get('startParam') || params.get('ref') || '';
+    return (
+      params.get('startParam')
+      || params.get('startapp')
+      || params.get('ref')
+      || ''
+    );
   }
 
   private getTelegramUser(): PlatformUser | null {
-    const tg = (window as unknown as Record<string, {
-      WebApp?: {
-        initDataUnsafe?: {
-          user?: {
-            id: number;
-            first_name: string;
-            last_name?: string;
-            username?: string;
-            photo_url?: string;
-          };
-        };
-      };
-    }>).Telegram;
-    const user = tg?.WebApp?.initDataUnsafe?.user;
+    const user = getTelegram()?.initDataUnsafe?.user;
     if (!user) return null;
     return {
       id: String(user.id),
@@ -111,22 +189,17 @@ class PlatformAdapterClass {
     };
   }
 
-  private async getMaxUser(): Promise<PlatformUser | null> {
-    try {
-      const vkBridge = await import('@vkontakte/vk-bridge');
-      const bridge = vkBridge.default;
-      await bridge.send('VKWebAppInit');
-      const data = await bridge.send('VKWebAppGetUserInfo');
-      return {
-        id: String(data.id),
-        firstName: data.first_name,
-        lastName: data.last_name,
-        photoUrl: data.photo_200,
-        platform: 'max',
-      };
-    } catch {
-      return null;
-    }
+  private getMaxUser(): PlatformUser | null {
+    const user = getMax()?.initDataUnsafe?.user;
+    if (!user) return null;
+    return {
+      id: String(user.id),
+      firstName: user.first_name,
+      lastName: user.last_name,
+      username: user.username,
+      photoUrl: user.photo_url,
+      platform: 'max',
+    };
   }
 }
 

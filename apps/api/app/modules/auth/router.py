@@ -5,7 +5,7 @@ Auth router — /api/v1/auth
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.auth import validate_telegram_init_data, get_current_user
+from app.core.auth import validate_telegram_init_data, validate_max_init_data, get_current_user
 from app.core.database import get_db
 from app.core.rate_limit import rate_limit
 from app.modules.auth.schemas import (
@@ -21,19 +21,27 @@ router = APIRouter()
 
 
 def _resolve_platform(body) -> tuple[str, str, dict | None]:
-    """Extract platform, platform_id and tg_user from request body.
-    If init_data is present, validate and parse Telegram initData.
+    """Extract platform, platform_id and platform_user from request body.
+    If init_data is present, validate and parse it for the right platform.
     """
     tg_user = None
     platform = body.platform
     platform_id = body.platform_id
 
     if body.init_data:
-        tg_user = validate_telegram_init_data(body.init_data)
-        if tg_user is None:
-            raise HTTPException(status_code=401, detail="Invalid initData")
-        platform = platform or "telegram"
-        platform_id = platform_id or str(tg_user["id"])
+        if platform == "max":
+            max_user = validate_max_init_data(body.init_data)
+            if max_user is None:
+                raise HTTPException(status_code=401, detail="Invalid initData")
+            platform = "max"
+            platform_id = platform_id or str(max_user["id"])
+            tg_user = max_user
+        else:
+            tg_user = validate_telegram_init_data(body.init_data)
+            if tg_user is None:
+                raise HTTPException(status_code=401, detail="Invalid initData")
+            platform = platform or "telegram"
+            platform_id = platform_id or str(tg_user["id"])
 
     if not platform or not platform_id:
         raise HTTPException(
