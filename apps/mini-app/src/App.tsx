@@ -300,8 +300,15 @@ function AppRouter() {
       </Suspense>
       </RouteErrorBoundary>
 
-      {/* TabBar для мастеров. Не показываем в суперадмин/модератор-режимах */}
+      {/* TabBar для мастеров. Показываем ТОЛЬКО на мастерских экранах,
+          чтобы он не перекрывал кнопки на клиентских страницах записи
+          (/m/:slug, /book/*), когда мастер открывает ссылку для записи. */}
       {isMaster
+        && (
+          location.pathname.startsWith('/master')
+          || location.pathname.startsWith('/billing')
+          || location.pathname.startsWith('/link-page')
+        )
         && !location.pathname.startsWith('/superadmin')
         && !location.pathname.startsWith('/moderator')
         && <TabBar />}
