@@ -1,4 +1,4 @@
-import { useEffect, useState, Component, type ReactNode } from 'react';
+import { useEffect, useState, Component, lazy, Suspense, type ReactNode } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useParams, useLocation } from 'react-router-dom';
 import { PlatformAdapter } from '@/platform/platform-adapter';
 import { useAuthStore } from '@/stores/auth';
@@ -6,68 +6,68 @@ import { useBookingStore } from '@/stores/booking';
 import { authApi } from '@/api/endpoints';
 import { ShieldAlert, CalendarDays } from 'lucide-react';
 import { ToastContainer } from '@/shared/ui/Toast';
+import FullscreenLoader from '@/shared/ui/FullscreenLoader';
 
-// Layouts
+// Layouts (eager — нужны сразу)
 import ClientLayout from '@/layouts/ClientLayout';
 import MasterLayout from '@/layouts/MasterLayout';
-
-// Клиентские экраны
-import MasterProfile from '@/pages/client/MasterProfile';
-import SelectService from '@/pages/client/SelectService';
-import SelectDate from '@/pages/client/SelectDate';
-import SelectTime from '@/pages/client/SelectTime';
-import PromoCode from '@/pages/client/PromoCode';
-import Confirm from '@/pages/client/Confirm';
-import BookingSuccess from '@/pages/client/BookingSuccess';
-import MyBookings from '@/pages/client/MyBookings';
-import ClientLoyalty from '@/pages/client/ClientLoyalty';
-import ClientProfile from '@/pages/client/ClientProfile';
-
-// Мастерские экраны
-import Dashboard from '@/pages/master/Dashboard';
-import Schedule from '@/pages/master/Schedule';
-import Clients from '@/pages/master/Clients';
-import ClientDetail from '@/pages/master/ClientDetail';
-import Services from '@/pages/master/Services';
-import Tools from '@/pages/master/Tools';
-import AIAssistant from '@/pages/master/AI';
-import Settings from '@/pages/master/Settings';
-import Consultations from '@/pages/master/Consultations';
-import LoyaltySettings from '@/pages/master/LoyaltySettings';
-import Broadcast from '@/pages/master/Broadcast';
-import Locations from '@/pages/master/Locations';
-import Billing from '@/pages/master/Billing';
-import LinkPageEditor from '@/pages/master/LinkPageEditor';
-import BlockedSlots from '@/pages/master/BlockedSlots';
-import AIContentTools from '@/pages/master/AIContentTools';
-import AIKnowledge from '@/pages/master/AIKnowledge';
-import VoiceDiary from '@/pages/master/VoiceDiary';
-import WidgetSettings from '@/pages/master/WidgetSettings';
-import SubscriptionPackages from '@/pages/master/SubscriptionPackages';
-import WorkSchedule from '@/pages/master/WorkSchedule';
 import TabBar from '@/components/common/TabBar';
 
-// Клиентские дополнительные экраны
-import LoyaltyHistory from '@/pages/client/LoyaltyHistory';
-import ClientSubscriptions from '@/pages/client/Subscriptions';
-import WaitlistJoin from '@/pages/client/WaitlistJoin';
-import ReviewForm from '@/pages/client/ReviewForm';
-import NearbyMasters from '@/pages/client/NearbyMasters';
+// Клиентские экраны (lazy — код-сплиттинг)
+const MasterProfile = lazy(() => import('@/pages/client/MasterProfile'));
+const SelectService = lazy(() => import('@/pages/client/SelectService'));
+const SelectDate = lazy(() => import('@/pages/client/SelectDate'));
+const SelectTime = lazy(() => import('@/pages/client/SelectTime'));
+const PromoCode = lazy(() => import('@/pages/client/PromoCode'));
+const Confirm = lazy(() => import('@/pages/client/Confirm'));
+const BookingSuccess = lazy(() => import('@/pages/client/BookingSuccess'));
+const MyBookings = lazy(() => import('@/pages/client/MyBookings'));
+const ClientLoyalty = lazy(() => import('@/pages/client/ClientLoyalty'));
+const ClientProfile = lazy(() => import('@/pages/client/ClientProfile'));
 
-// Тикет поддержки
-import TicketDetail from '@/pages/support/TicketDetail';
+// Мастерские экраны (lazy)
+const Dashboard = lazy(() => import('@/pages/master/Dashboard'));
+const Schedule = lazy(() => import('@/pages/master/Schedule'));
+const Clients = lazy(() => import('@/pages/master/Clients'));
+const ClientDetail = lazy(() => import('@/pages/master/ClientDetail'));
+const Services = lazy(() => import('@/pages/master/Services'));
+const Tools = lazy(() => import('@/pages/master/Tools'));
+const AIAssistant = lazy(() => import('@/pages/master/AI'));
+const Settings = lazy(() => import('@/pages/master/Settings'));
+const Consultations = lazy(() => import('@/pages/master/Consultations'));
+const LoyaltySettings = lazy(() => import('@/pages/master/LoyaltySettings'));
+const Broadcast = lazy(() => import('@/pages/master/Broadcast'));
+const Locations = lazy(() => import('@/pages/master/Locations'));
+const Billing = lazy(() => import('@/pages/master/Billing'));
+const LinkPageEditor = lazy(() => import('@/pages/master/LinkPageEditor'));
+const BlockedSlots = lazy(() => import('@/pages/master/BlockedSlots'));
+const AIContentTools = lazy(() => import('@/pages/master/AIContentTools'));
+const AIKnowledge = lazy(() => import('@/pages/master/AIKnowledge'));
+const VoiceDiary = lazy(() => import('@/pages/master/VoiceDiary'));
+const WidgetSettings = lazy(() => import('@/pages/master/WidgetSettings'));
+const SubscriptionPackages = lazy(() => import('@/pages/master/SubscriptionPackages'));
+const WorkSchedule = lazy(() => import('@/pages/master/WorkSchedule'));
 
-// Специальные страницы
-import LinkPage from '@/pages/LinkPage';
-import EmbedPage from '@/pages/EmbedPage';
+// Клиентские дополнительные экраны (lazy)
+const LoyaltyHistory = lazy(() => import('@/pages/client/LoyaltyHistory'));
+const ClientSubscriptions = lazy(() => import('@/pages/client/Subscriptions'));
+const WaitlistJoin = lazy(() => import('@/pages/client/WaitlistJoin'));
+const ReviewForm = lazy(() => import('@/pages/client/ReviewForm'));
+const NearbyMasters = lazy(() => import('@/pages/client/NearbyMasters'));
+
+// Тикет поддержки (lazy)
+const TicketDetail = lazy(() => import('@/pages/support/TicketDetail'));
+
+// Специальные страницы (lazy)
+const LinkPage = lazy(() => import('@/pages/LinkPage'));
+const EmbedPage = lazy(() => import('@/pages/EmbedPage'));
+const ModeratorPanel = lazy(() => import('@/pages/moderator/ModeratorPanel'));
+const SuperadminPanel = lazy(() => import('@/pages/superadmin/SuperadminPanel'));
+const Register = lazy(() => import('@/pages/Register'));
+
+// NpsPopup и SuperadminReturnButton — мелкие, грузим eager
 import NpsPopup from '@/components/NpsPopup';
-import ModeratorPanel from '@/pages/moderator/ModeratorPanel';
-import SuperadminPanel from '@/pages/superadmin/SuperadminPanel';
 import { SuperadminReturnButton } from '@/pages/superadmin/SuperadminPanel';
-
-import FullscreenLoader from '@/shared/ui/FullscreenLoader';
-import Register from '@/pages/Register';
-
 
 class RouteErrorBoundary extends Component<
   { children: ReactNode },
@@ -208,6 +208,7 @@ function AppRouter() {
   return (
     <>
       <RouteErrorBoundary>
+      <Suspense fallback={<FullscreenLoader text="Загрузка…" />}>
       <Routes>
         {/* Регистрация для новых пользователей */}
         <Route path="/register" element={<Register />} />
@@ -296,6 +297,7 @@ function AppRouter() {
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      </Suspense>
       </RouteErrorBoundary>
 
       {/* TabBar для мастеров. Не показываем в суперадмин/модератор-режимах */}

@@ -14,7 +14,7 @@ const TARIFF_LABELS: Record<string, string> = {
   waitlist_enabled: 'Базовый',
   ai_advisor: 'Профи',
   ai_voice: 'Профи+AI',
-  ai_content: 'Профи',
+  ai_content: 'Профи+AI',
   custom_branding: 'Бизнес',
   widget_enabled: 'Бизнес',
   client_subscriptions: 'Профи',

@@ -2,6 +2,14 @@ import { useQuery } from '@tanstack/react-query';
 import { featureFlagsApi } from '@/api/endpoints';
 import { useAuthStore } from '@/stores/auth';
 
+export interface TrialInfo {
+  is_trial: boolean;
+  grant_type: string | null;
+  grant_plan: string | null;
+  grant_valid_until: string | null;
+  grant_days_left: number | null;
+}
+
 export interface FeatureFlags {
   tariff_plan: string;
   ai_advisor: boolean;
@@ -19,7 +27,16 @@ export interface FeatureFlags {
   custom_branding: boolean;
   widget_enabled: boolean;
   client_subscriptions: boolean;
+  trial?: TrialInfo;
 }
+
+const NO_TRIAL: TrialInfo = {
+  is_trial: false,
+  grant_type: null,
+  grant_plan: null,
+  grant_valid_until: null,
+  grant_days_left: null,
+};
 
 const FREE_FLAGS: FeatureFlags = {
   tariff_plan: 'start',
@@ -38,6 +55,7 @@ const FREE_FLAGS: FeatureFlags = {
   custom_branding: false,
   widget_enabled: false,
   client_subscriptions: false,
+  trial: NO_TRIAL,
 };
 
 export function useFeatureFlags() {
@@ -70,6 +88,7 @@ export function useFeatureFlags() {
       custom_branding: true,
       widget_enabled: true,
       client_subscriptions: true,
+      trial: NO_TRIAL,
     };
     return { flags: allEnabled, isLoading: false };
   }

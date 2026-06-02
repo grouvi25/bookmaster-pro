@@ -6,10 +6,11 @@ import { ListSkeleton } from '@/shared/ui/Skeleton';
 import Card from '@/shared/ui/Card';
 import Button from '@/shared/ui/Button';
 import { toast } from '@/shared/ui/Toast';
-import { Check, Crown, Zap, Sparkles, Rocket, Building2 } from 'lucide-react';
+import { Check, Crown, Zap, Sparkles, Rocket, Building2, Clock } from 'lucide-react';
 import PageHeader from '@/shared/ui/PageHeader';
 import type { LucideIcon } from 'lucide-react';
 import clsx from 'clsx';
+import { useFeatureFlags } from '@/hooks/useFeatureFlag';
 
 interface Plan {
   key: string;
@@ -216,6 +217,10 @@ export default function Billing() {
   const currentPlan = subscription?.plan || null;
   const yearlyDiscount = 0.8;
   const currentCommission = PLANS.find((p) => p.key === currentPlan)?.commission ?? 7;
+  const { flags } = useFeatureFlags();
+  const trial = flags.trial;
+  const isTrialActive = !!trial?.is_trial && (trial?.grant_days_left ?? 0) >= 0;
+  const trialPlanName = trial?.grant_plan ? (PLANS.find((p) => p.key === trial.grant_plan)?.name || trial.grant_plan) : null;
 
   const handleSubscribe = (planKey: string) => {
     subscribeMutation.mutate({
@@ -233,6 +238,46 @@ export default function Billing() {
 
       <div className="px-screen-x">
       <p className="text-tg-hint text-sm mb-5">Выберите подходящий тариф</p>
+
+      {isTrialActive && (
+        <Card className="mb-5 !bg-orange-500/10 border border-orange-500/20">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-xs text-orange-600 font-medium flex items-center gap-1">
+                <Clock className="w-3.5 h-3.5" /> Пробный период
+              </div>
+              <div className="font-bold text-lg text-orange-700">
+                {trialPlanName ? `Тариф «${trialPlanName}»` : 'Активен'}
+              </div>
+            </div>
+            <div className="text-right">
+              <div className="font-bold text-lg text-orange-700">
+                {trial?.grant_days_left ?? 0}
+              </div>
+              <div className="text-2xs text-tg-hint">
+                {(() => {
+                  const d = trial?.grant_days_left ?? 0;
+                  const n = d % 100;
+                  if (n >= 11 && n <= 14) return 'дней осталось';
+                  const k = d % 10;
+                  if (k === 1) return 'день остался';
+                  if (k >= 2 && k <= 4) return 'дня осталось';
+                  return 'дней осталось';
+                })()}
+              </div>
+            </div>
+          </div>
+          {trial?.grant_valid_until && (
+            <div className="text-xs text-tg-hint mt-2">
+              Действует до: {new Date(trial.grant_valid_until).toLocaleDateString('ru-RU')}
+            </div>
+          )}
+          <div className="text-2xs text-tg-hint mt-2 leading-relaxed">
+            После окончания пробного периода выберите тариф ниже, иначе доступ
+            переключится на «Старт».
+          </div>
+        </Card>
+      )}
 
       {currentPlan && (
         <Card className="mb-5 !bg-brand-500/10 border border-brand-500/20">

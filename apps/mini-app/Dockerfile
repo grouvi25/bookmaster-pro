@@ -21,6 +21,8 @@ ENV VITE_APP_URL=$VITE_APP_URL
 
 RUN npm run build
 
+# Предсжатие статики в .gz (nginx gzip_static отдаёт их вмест
+
 FROM nginx:alpine
 COPY --from=build /app/apps/mini-app/dist /usr/share/nginx/html
 COPY apps/mini-app/nginx.conf /etc/nginx/conf.d/default.conf

@@ -10,6 +10,7 @@ import { format, addDays } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import clsx from 'clsx';
 import type { MasterProfile } from '@/shared/types/api';
+import { useFeatureFlags } from '@/hooks/useFeatureFlag';
 
 interface Props {
   isOpen: boolean;
@@ -39,6 +40,7 @@ interface Slot {
 export default function NewBookingModal({ isOpen, onClose, initialDate }: Props) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const { flags } = useFeatureFlags();
 
   const [clientName, setClientName] = useState('');
   const [clientPhone, setClientPhone] = useState('');
@@ -63,7 +65,7 @@ export default function NewBookingModal({ isOpen, onClose, initialDate }: Props)
   const { data: clientsData } = useQuery({
     queryKey: ['clients', clientName],
     queryFn: () => clientsApi.list({ q: clientName }).then((r) => r.data),
-    enabled: isOpen && clientName.length >= 2 && pickedClientId === null,
+    enabled: isOpen && flags.crm_enabled && clientName.length >= 2 && pickedClientId === null,
   });
 
   const masterId = master?.id ?? null;
