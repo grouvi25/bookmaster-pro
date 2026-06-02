@@ -176,6 +176,7 @@ export default function Billing() {
   const queryClient = useQueryClient();
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('monthly');
+  const { flags } = useFeatureFlags();
 
   const { data: subscription, isLoading } = useQuery({
     queryKey: ['my-subscription'],
@@ -217,9 +218,11 @@ export default function Billing() {
   const currentPlan = subscription?.plan || null;
   const yearlyDiscount = 0.8;
   const currentCommission = PLANS.find((p) => p.key === currentPlan)?.commission ?? 7;
-  const { flags } = useFeatureFlags();
   const trial = flags.trial;
-  const isTrialActive = !!trial?.is_trial && (trial?.grant_days_left ?? 0) >= 0;
+  // Плашку пробного периода показываем только пока нет купленной подписки
+  // (первый вход / триал). После покупки тарифа — скрываем.
+  const isTrialActive =
+    !currentPlan && !!trial?.is_trial && (trial?.grant_days_left ?? 0) >= 0;
   const trialPlanName = trial?.grant_plan ? (PLANS.find((p) => p.key === trial.grant_plan)?.name || trial.grant_plan) : null;
 
   const handleSubscribe = (planKey: string) => {

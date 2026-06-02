@@ -110,7 +110,7 @@ async def ai_chat_ws(
 @router.post("/content", response_model=AIContentResponse)
 async def generate_content(
     req: AIContentRequest,
-    master: Master = Depends(require_feature("ai_advisor")),
+    master: Master = Depends(require_feature("ai_client_bot")),
     db: AsyncSession = Depends(get_db),
     _rl=rate_limit("ai_content", max_requests=10, window_seconds=60),
 ):
@@ -175,7 +175,7 @@ async def transcribe_audio(
 @router.post("/voice-diary", response_model=AIVoiceDiaryResponse)
 async def voice_diary(
     req: AIVoiceRequest,
-    master: Master = Depends(require_feature("ai_advisor")),
+    master: Master = Depends(require_feature("ai_voice")),
     db: AsyncSession = Depends(get_db),
 ):
     """Голосовой дневник — мастер надиктовывает заметку, AI структурирует."""
@@ -264,7 +264,7 @@ async def get_tokens_info(
 @router.get("/voice-diary/entries")
 async def get_voice_diary_entries(
     limit: int = 50,
-    master: Master = Depends(require_feature("ai_advisor")),
+    master: Master = Depends(require_feature("ai_voice")),
     db: AsyncSession = Depends(get_db),
 ):
     """Список голосовых заметок мастера."""

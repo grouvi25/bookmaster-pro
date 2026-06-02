@@ -3,7 +3,6 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useCallback } from 'react';
 import clsx from 'clsx';
 import { mastersApi, clientsApi } from '@/api/endpoints';
-import { useFeatureFlags } from '@/hooks/useFeatureFlag';
 
 interface Tab {
   path: string;
@@ -42,7 +41,6 @@ export default function TabBar() {
   const navigate = useNavigate();
   const location = useLocation();
   const queryClient = useQueryClient();
-  const { flags } = useFeatureFlags();
 
   const handlePrefetch = useCallback((path: string) => {
     const queries = PREFETCH_MAP[path];
@@ -52,16 +50,11 @@ export default function TabBar() {
     });
   }, [queryClient]);
 
-  // Вкладка «Клиенты» (CRM) доступна только при разблокированной CRM.
-  const tabs = MASTER_TABS.filter(
-    (tab) => tab.path !== '/master/clients' || flags.crm_enabled
-  );
-
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 safe-area-bottom px-4 pb-2">
       <div className="bg-tg-bg/95 backdrop-blur-lg shadow-tab-bar rounded-card">
         <div className="flex justify-around items-center h-[56px]">
-          {tabs.map((tab) => {
+          {MASTER_TABS.map((tab) => {
             const active =
               tab.path === '/master'
                 ? location.pathname === '/master'

@@ -8,6 +8,7 @@ import PageHeader from '@/shared/ui/PageHeader';
 import { ListSkeleton } from '@/shared/ui/Skeleton';
 import { toast } from '@/shared/ui/Toast';
 import { Sparkles, Copy, Check } from 'lucide-react';
+import FeatureGate from '@/shared/ui/FeatureGate';
 
 interface Template {
   key: string;
@@ -15,7 +16,7 @@ interface Template {
   required_params: string[];
 }
 
-export default function AIContentTools() {
+function AIContentToolsContent() {
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
   const [params, setParams] = useState<Record<string, string>>({});
   const [result, setResult] = useState<string | null>(null);
@@ -66,7 +67,7 @@ export default function AIContentTools() {
       <div className="px-screen-x">
       {tokensInfo && (
         <p className="text-xs text-tg-hint mb-4">
-          Токены: {tokensInfo.used?.toLocaleString('ru') ?? 0} / {tokensInfo.limit?.toLocaleString('ru') ?? '∞'}
+          Токены: {(tokensInfo.tokens_used_this_month ?? 0).toLocaleString('ru')} / {tokensInfo.tokens_monthly_limit ? tokensInfo.tokens_monthly_limit.toLocaleString('ru') : '—'}
         </p>
       )}
 
@@ -151,5 +152,13 @@ export default function AIContentTools() {
       )}
       </div>
     </div>
+  );
+}
+
+export default function AIContentTools() {
+  return (
+    <FeatureGate flag="ai_content">
+      <AIContentToolsContent />
+    </FeatureGate>
   );
 }

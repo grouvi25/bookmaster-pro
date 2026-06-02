@@ -42,7 +42,7 @@ function parseNotes(raw: string): string {
 
 export default function VoiceDiary() {
   return (
-    <FeatureGate flag="ai_advisor">
+    <FeatureGate flag="ai_voice">
       <VoiceDiaryContent />
     </FeatureGate>
   );
