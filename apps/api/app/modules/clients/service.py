@@ -2,6 +2,7 @@
 Clients CRM service.
 """
 
+from datetime import date
 from typing import Optional, List, Dict, Any
 
 from sqlalchemy import select
