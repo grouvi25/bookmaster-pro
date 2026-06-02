@@ -99,28 +99,56 @@ async def create_subscription(
                 {"phone": _digits} if len(_digits) >= 11
                 else {"email": app_settings.RECEIPT_FALLBACK_EMAIL}
             )
-            yk_payment = YKPayment.create({
-                "amount": {"value": str(sub.price), "currency": "RUB"},
-                "confirmation": {
-                    "type": "redirect",
-                    "return_url": f"{app_settings.APP_URL}/billing?status=success",
-                },
-                "capture": True,
-                "description": f"Подписка {sub.plan} — {sub.billing_period}",
-                "metadata": {"subscription_id": sub.id, "master_id": master.id},
-                "save_payment_method": True,
-                "receipt": {
-                    "customer": _customer,
-                    "items": [{
-                        "description": f"Подписка {sub.plan} ({sub.billing_period})"[:128],
-                        "quantity": "1.00",
-                        "amount": {"value": str(sub.price), "currency": "RUB"},
-                        "vat_code": 1,
-                        "payment_subject": "service",
-                        "payment_mode": "full_payment",
-                    }],
-                },
-            })
+
+            def _build_payload(save_method: bool) -> dict:
+                payload = {
+                    "amount": {"value": str(sub.price), "currency": "RUB"},
+                    "confirmation": {
+                        "type": "redirect",
+                        "return_url": f"{app_settings.APP_URL}/billing?status=success",
+                    },
+                    "capture": True,
+                    "description": f"Подписка {sub.plan} — {sub.billing_period}",
+                    "metadata": {"subscription_id": sub.id, "master_id": master.id},
+                    "receipt": {
+                        "customer": _customer,
+                        "items": [{
+                            "description": f"Подписка {sub.plan} ({sub.billing_period})"[:128],
+                            "quantity": "1.00",
+                            "amount": {"value": str(sub.price), "currency": "RUB"},
+                            "vat_code": 1,
+                            "payment_subject": "service",
+                            "payment_mode": "full_payment",
+                        }],
+                    },
+                }
+                # Рекуррентный платёж (сохранение карты для автопродления).
+                # Если магазин ЮKassa не имеет права на рекуррентные платежи —
+                # ниже сработает фоллбэк на обычный разовый платёж.
+                if save_method:
+                    payload["save_payment_method"] = True
+                return payload
+
+            def _is_recurring_forbidden(err: Exception) -> bool:
+                msg = str(err).lower()
+                return "recurring" in msg or "save_payment_method" in msg
+
+            try:
+                # 1) Пытаемся создать рекуррентный платёж (с автопродлением).
+                yk_payment = YKPayment.create(_build_payload(save_method=True))
+            except Exception as rec_err:
+                if _is_recurring_forbidden(rec_err):
+                    # 2) Магазин пока не умеет рекуррентные платежи —
+                    #    откатываемся на обычный разовый платёж.
+                    #    Когда ЮKassa включит рекуррентные, попытка №1
+                    #    начнёт проходить сама, без изменений кода.
+                    logger.warning(
+                        "YooKassa recurring not available, falling back to "
+                        f"one-time payment for subscription {sub.id}: {rec_err}"
+                    )
+                    yk_payment = YKPayment.create(_build_payload(save_method=False))
+                else:
+                    raise
 
             sub.yookassa_recurring_id = yk_payment.id
             await db.commit()
