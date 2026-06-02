@@ -9,9 +9,10 @@ import SearchInput from '@/shared/ui/SearchInput';
 import EmptyState from '@/shared/ui/EmptyState';
 import Card from '@/shared/ui/Card';
 import Button from '@/shared/ui/Button';
-import { User, X, ChevronRight } from 'lucide-react';
+import { User, X, ChevronRight, Plus } from 'lucide-react';
 import type { ClientCRM } from '@/shared/types/api';
 import FeatureGate from '@/shared/ui/FeatureGate';
+import AddClientModal from '@/components/master/AddClientModal';
 
 export default function Clients() {
   return (
@@ -25,6 +26,7 @@ function ClientsList() {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [addOpen, setAddOpen] = useState(false);
 
   const { data, isLoading } = useQuery({
     queryKey: ['clients', search],
@@ -37,7 +39,7 @@ function ClientsList() {
   const selected = clients.find((c) => (c.client_id ?? c.id) === selectedId);
 
   return (
-    <div className="px-screen-x">
+    <div className="px-screen-x pb-24">
       <PageHeader title="Клиенты" />
 
       <div className="mb-5">
@@ -137,6 +139,20 @@ function ClientsList() {
           ))}
         </div>
       )}
+
+      {/* Большая кнопка добавления клиента над таб-баром */}
+      <div className="fixed left-0 right-0 bottom-[84px] px-screen-x z-40 pointer-events-none">
+        <Button
+          fullWidth
+          size="lg"
+          onClick={() => setAddOpen(true)}
+          className="shadow-button pointer-events-auto"
+        >
+          <Plus className="w-5 h-5" /> Добавить клиента
+        </Button>
+      </div>
+
+      <AddClientModal isOpen={addOpen} onClose={() => setAddOpen(false)} />
     </div>
   );
 }

@@ -75,3 +75,12 @@ class ClientCRMUpdate(BaseModel):
 
 class ClientNoteCreate(BaseModel):
     text: str
+
+
+class ClientCreate(BaseModel):
+    """Ручное создание клиента мастером (раздел «Клиенты»)."""
+    name: str
+    phone: Optional[str] = None
+    birthday: Optional[date] = None
+    notes: Optional[str] = None
+    tags: Optional[List[str]] = None

@@ -15,15 +15,25 @@ class ClientService:
         self.db = db
 
     async def get_master_clients(
-        self, master_id: int
+        self, master_id: int, search: Optional[str] = None
     ) -> List[dict]:
         """Список клиентов мастера с CRM-данными."""
-        result = await self.db.execute(
+        query = (
             select(ClientMasterLink, Client)
             .join(Client, ClientMasterLink.client_id == Client.id)
             .where(ClientMasterLink.master_id == master_id)
-            .order_by(ClientMasterLink.last_visit_date.desc().nullslast())
         )
+        if search:
+            from sqlalchemy import or_
+            pattern = f"%{search.strip()}%"
+            query = query.where(
+                or_(
+                    Client.display_name.ilike(pattern),
+                    Client.phone.ilike(pattern),
+                )
+            )
+        query = query.order_by(ClientMasterLink.last_visit_date.desc().nullslast())
+        result = await self.db.execute(query)
         rows = result.all()
         clients = []
         for link, client in rows:
@@ -158,3 +168,50 @@ class ClientService:
         self.db.add(link)
         await self.db.flush()
         return link
+
+    async def create_client_for_master(
+        self,
+        master_id: int,
+        name: str,
+        phone: Optional[str] = None,
+        birthday: Optional[date] = None,
+        tags: Optional[List[str]] = None,
+        notes: Optional[str] = None,
+    ) -> Client:
+        """Создать клиента вручную (мастер добавляет в свою CRM).
+
+        Под каждого ручного клиента создаём синтетическую Identity
+        (platform='manual'), т.к. Client.identity_id NOT NULL + unique.
+        """
+        import uuid
+        from datetime import date as _date
+        from app.modules.auth.models import Identity
+
+        identity = Identity(
+            platform="manual",
+            platform_id=f"manual_{master_id}_{uuid.uuid4().hex[:16]}",
+            role="client",
+        )
+        self.db.add(identity)
+        await self.db.flush()
+
+        client = Client(
+            identity_id=identity.id,
+            display_name=name.strip(),
+            phone=phone.strip() if phone else None,
+            birthday=birthday,
+        )
+        self.db.add(client)
+        await self.db.flush()
+
+        link = ClientMasterLink(
+            master_id=master_id,
+            client_id=client.id,
+            tags=tags or [],
+            master_notes=notes,
+            source="manual",
+            first_visit_date=_date.today(),
+        )
+        self.db.add(link)
+        await self.db.flush()
+        return client

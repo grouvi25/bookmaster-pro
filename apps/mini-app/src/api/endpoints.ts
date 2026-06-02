@@ -314,6 +314,8 @@ export const clientsApi = {
   list: (params?: Record<string, string>) =>
     api.get('/clients/', { params }),
   get: (id: number) => api.get(`/clients/${id}/detail`),
+  create: (data: { name: string; phone?: string; birthday?: string; notes?: string; tags?: string[] }) =>
+    api.post('/clients/', data),
   addTag: (id: number, data: ClientTagPayload) =>
     api.patch(`/clients/${id}`, data),
   addNote: (id: number, data: ClientNotePayload) =>

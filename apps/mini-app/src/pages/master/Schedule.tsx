@@ -22,8 +22,9 @@ import {
 } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import clsx from 'clsx';
-import { ChevronLeft, ChevronRight, CalendarOff, Camera } from 'lucide-react';
+import { ChevronLeft, ChevronRight, CalendarOff, Camera, Plus } from 'lucide-react';
 import type { Booking } from '@/shared/types/api';
+import NewBookingModal from '@/components/master/NewBookingModal';
 
 export default function Schedule() {
   const navigate = useNavigate();
@@ -37,6 +38,7 @@ export default function Schedule() {
   const [cancelReason, setCancelReason] = useState('');
   const [photoPromptBooking, setPhotoPromptBooking] = useState<Booking | null>(null);
   const [photoUploading, setPhotoUploading] = useState(false);
+  const [showNewBooking, setShowNewBooking] = useState(false);
 
   const { data, isLoading } = useQuery({
     queryKey: ['master-schedule', selectedDate],
@@ -440,6 +442,21 @@ export default function Schedule() {
           </div>
         )}
       </BottomSheet>
+
+      {/* Кнопка создания записи — фиксирована над таб-баром */}
+      <button
+        onClick={() => setShowNewBooking(true)}
+        className="fixed left-1/2 -translate-x-1/2 bottom-[88px] z-40 h-[52px] px-6 rounded-full bg-tg-button text-tg-button-text font-semibold text-[16px] shadow-lg flex items-center gap-2 active:scale-[0.97] transition-transform"
+      >
+        <Plus className="w-5 h-5" strokeWidth={2.4} />
+        Новая запись
+      </button>
+
+      <NewBookingModal
+        isOpen={showNewBooking}
+        onClose={() => setShowNewBooking(false)}
+        initialDate={selectedDate}
+      />
     </div>
   );
 }

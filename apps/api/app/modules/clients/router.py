@@ -2,7 +2,7 @@
 Clients CRM router — /api/v1/clients
 """
 
-from typing import List
+from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select
@@ -11,7 +11,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.auth import get_current_user
 from app.core.database import get_db
 from app.modules.masters.service import MasterService
-from app.modules.clients.schemas import ClientCRMOut, ClientCRMUpdate, ClientDetailOut, ClientNoteCreate, ClientNoteOut
+from app.modules.clients.schemas import (
+    ClientCRMOut, ClientCRMUpdate, ClientDetailOut,
+    ClientNoteCreate, ClientNoteOut, ClientCreate,
+)
 from app.modules.clients.service import ClientService
 
 router = APIRouter()
@@ -21,14 +24,52 @@ router = APIRouter()
 async def get_my_clients(
     user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
+    q: Optional[str] = Query(None, description="Поиск по имени или телефону"),
 ):
     """Список клиентов мастера с CRM-данными."""
     master = await MasterService(db).get_by_identity(int(user["sub"]))
     if not master:
         raise HTTPException(status_code=403, detail="Not a master")
     service = ClientService(db)
-    clients = await service.get_master_clients(master.id)
+    clients = await service.get_master_clients(master.id, search=q)
     return [ClientCRMOut(**c) for c in clients]
+
+
+@router.post("/", response_model=ClientCRMOut, status_code=201)
+async def create_client(
+    body: ClientCreate,
+    user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Создать клиента вручную (мастер добавляет в свою CRM)."""
+    master = await MasterService(db).get_by_identity(int(user["sub"]))
+    if not master:
+        raise HTTPException(status_code=403, detail="Not a master")
+    if not body.name or not body.name.strip():
+        raise HTTPException(status_code=400, detail="Имя клиента обязательно")
+
+    service = ClientService(db)
+    client = await service.create_client_for_master(
+        master_id=master.id,
+        name=body.name,
+        phone=body.phone,
+        birthday=body.birthday,
+        tags=body.tags,
+        notes=body.notes,
+    )
+    return ClientCRMOut(
+        client_id=client.id,
+        display_name=client.display_name,
+        phone=client.phone,
+        tags=body.tags or [],
+        master_notes=body.notes,
+        first_visit_date=None,
+        last_visit_date=None,
+        visit_count=0,
+        total_spent=0,
+        no_show_count=0,
+        source="manual",
+    )
 
 
 @router.get("/{client_id}/detail", response_model=ClientDetailOut)
