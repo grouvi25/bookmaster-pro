@@ -182,6 +182,18 @@ async def health_checks(
     return await svc.run_health_checks()
 
 
+@router.get("/logs")
+async def get_service_logs(
+    service: str = Query("bot_max"),
+    tail: int = Query(200, ge=10, le=1000),
+    user: dict = Depends(_require_superadmin),
+    db: AsyncSession = Depends(get_db),
+):
+    """Logs of a service container (Docker). Default bot_max (Zapisator)."""
+    svc = SuperadminService(db)
+    return await svc.get_container_logs(service=service, tail=tail)
+
+
 # ── Audit ────────────────────────────────────────────────────
 
 @router.get("/audit-log")

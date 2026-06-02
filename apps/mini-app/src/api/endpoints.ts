@@ -487,6 +487,8 @@ export const superadminApi = {
   verifyMaster: (masterId: number) =>
     api.post(`/superadmin/masters/${masterId}/verify`),
   healthChecks: () => api.get('/superadmin/health'),
+  logs: (service: string, tail = 200) =>
+    api.get('/superadmin/logs', { params: { service, tail: String(tail) } }),
   auditLog: (params?: Record<string, string>) =>
     api.get('/superadmin/audit-log', { params }),
   finance: (periodDays?: number) =>

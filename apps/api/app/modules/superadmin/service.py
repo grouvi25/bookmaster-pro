@@ -661,9 +661,9 @@ class SuperadminService:
             # Проверяем доступность MAX Bot API через me-метод
             async with httpx.AsyncClient(timeout=10) as client:
                 resp = await client.get(
-                    "https://botapi.max.ru/v1/me",
+                    "https://platform-api.max.ru/me",
                     headers={
-                        "Authorization": f"Bearer {settings.MAX_BOT_TOKEN}"
+                        "Authorization": settings.MAX_BOT_TOKEN
                     },
                 )
             elapsed_ms = round((time.perf_counter() - t0) * 1000, 1)
@@ -1325,3 +1325,84 @@ class SuperadminService:
             "top_cities": top_cities,
             "top_specializations": top_specs,
         }
+
+    # ── Логи контейнеров (Docker) ─────────────────────────────
+    async def get_container_logs(
+        self, service: str = "bot_max", tail: int = 200
+    ) -> dict:
+        """Прочитать логи контейнера через Docker Engine API (unix socket).
+
+        Доступно только суперадмину. Маппинг service → имя контейнера
+        фиксирован (whitelist), чтобы нельзя было запросить произвольный
+        контейнер.
+        """
+        import json as _json
+
+        container_map = {
+            "bot_max": "bm_bot_max",
+            "bot_tg": "bm_bot_tg",
+            "api": "bm_api",
+            "scheduler": "bm_scheduler",
+            "mini_app": "bm_mini_app",
+            "marketplace": "bm_marketplace",
+            "db": "bm_db",
+            "redis": "bm_redis",
+        }
+        container = container_map.get(service)
+        if not container:
+            return {"service": service, "error": "unknown service", "lines": []}
+
+        tail = max(1, min(int(tail or 200), 1000))
+
+        try:
+            import httpx
+
+            transport = httpx.AsyncHTTPTransport(uds="/var/run/docker.sock")
+            async with httpx.AsyncClient(transport=transport, timeout=10.0) as client:
+                resp = await client.get(
+                    f"http://localhost/containers/{container}/logs",
+                    params={
+                        "stdout": "true",
+                        "stderr": "true",
+                        "tail": str(tail),
+                        "timestamps": "true",
+                    },
+                )
+                if resp.status_code != 200:
+                    return {
+                        "service": service,
+                        "container": container,
+                        "error": f"docker api HTTP {resp.status_code}",
+                        "lines": [],
+                    }
+                raw = resp.content
+
+            # Docker multiplexed stream: 8-byte header per frame when no TTY.
+            lines: List[str] = []
+            i = 0
+            buf = b""
+            while i < len(raw):
+                if i + 8 > len(raw):
+                    buf += raw[i:]
+                    break
+                header = raw[i : i + 8]
+                length = int.from_bytes(header[4:8], "big")
+                # Если заголовок не похож на docker-фрейм, трактуем как сырой текст.
+                if header[0] not in (0, 1, 2) or i + 8 + length > len(raw):
+                    buf += raw[i:]
+                    break
+                payload = raw[i + 8 : i + 8 + length]
+                buf += payload
+                i += 8 + length
+
+            text = buf.decode("utf-8", errors="replace")
+            lines = [ln for ln in text.splitlines() if ln.strip()]
+            return {
+                "service": service,
+                "container": container,
+                "lines": lines[-tail:],
+                "count": len(lines[-tail:]),
+            }
+        except Exception as e:
+            logger.error(f"get_container_logs({service}) failed: {e}")
+            return {"service": service, "container": container, "error": str(e), "lines": []}

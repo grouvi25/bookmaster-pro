@@ -64,6 +64,8 @@ class Settings(BaseSettings):
     # Разрешить локальные "fake" платежи без обращения к ЮKassa
     # (status сразу = succeeded). Должно быть False в production.
     ALLOW_DEV_PAYMENTS: bool = False
+    # Email для чека ЮKassa, если у плательщика нет контакта
+    RECEIPT_FALLBACK_EMAIL: str = "receipts@dealmaster.ru"
 
     # === Хранилище S3 ===
     S3_ENDPOINT_URL: str = "https://storage.yandexcloud.net"

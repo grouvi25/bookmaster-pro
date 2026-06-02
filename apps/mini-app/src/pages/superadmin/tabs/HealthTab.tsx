@@ -1,4 +1,5 @@
-import { useMutation } from '@tanstack/react-query';
+import { useState } from 'react';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { superadminApi } from '@/api/endpoints';
 import Card from '@/shared/ui/Card';
 import Button from '@/shared/ui/Button';
@@ -25,6 +26,14 @@ interface HealthResponse {
   checked_at?: string;
 }
 
+interface LogsResponse {
+  service: string;
+  container: string;
+  lines: string[];
+  count?: number;
+  error?: string;
+}
+
 const HEALTH_LABELS: Record<string, string> = {
   database: 'PostgreSQL',
   redis: 'Redis',
@@ -38,7 +47,17 @@ const HEALTH_LABELS: Record<string, string> = {
   max_bot: 'MAX Bot',
 };
 
-export default function HealthTab() {
+// Сервисы, для которых можно смотреть логи контейнеров
+const LOG_SERVICES: { key: string; label: string }[] = [
+  { key: 'bot_max', label: 'MAX bot' },
+  { key: 'bot_tg', label: 'Telegram bot' },
+  { key: 'api', label: 'API' },
+  { key: 'scheduler', label: 'Scheduler' },
+  { key: 'mini_app', label: 'Mini-App' },
+  { key: 'marketplace', label: 'Marketplace' },
+];
+
+function HealthView() {
   const mutation = useMutation<HealthResponse>({
     mutationFn: async () => {
       const r = await superadminApi.healthChecks();
@@ -119,6 +138,106 @@ export default function HealthTab() {
           </div>
         </>
       )}
+    </div>
+  );
+}
+
+function LogsView() {
+  const [service, setService] = useState('bot_max');
+  const { data, isFetching, refetch, error } = useQuery<LogsResponse>({
+    queryKey: ['superadmin-logs', service],
+    queryFn: async () => {
+      const r = await superadminApi.logs(service, 200);
+      return r.data as LogsResponse;
+    },
+  });
+
+  return (
+    <div>
+      <div className="flex flex-wrap gap-1.5 mb-3">
+        {LOG_SERVICES.map((s) => (
+          <button
+            key={s.key}
+            onClick={() => setService(s.key)}
+            className={`px-3 py-1.5 rounded-btn text-xs font-medium transition-all ${
+              service === s.key
+                ? 'bg-brand-500 text-white'
+                : 'bg-tg-secondary text-tg-hint'
+            }`}
+          >
+            {s.label}
+          </button>
+        ))}
+      </div>
+
+      <Button
+        onClick={() => refetch()}
+        loading={isFetching}
+        fullWidth
+        size="sm"
+        className="mb-3"
+      >
+        🔄 Обновить логи
+      </Button>
+
+      {error && (
+        <Card className="mb-2">
+          <div className="text-[11px] text-status-danger break-words">
+            Ошибка загрузки логов: {(error as Error).message}
+          </div>
+        </Card>
+      )}
+
+      {data?.error && (
+        <Card className="mb-2">
+          <div className="text-[11px] text-status-danger break-words">{data.error}</div>
+        </Card>
+      )}
+
+      {data && !data.error && (
+        <Card>
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-xs font-semibold">{data.container}</span>
+            <span className="text-[11px] text-tg-hint">
+              {data.count ?? data.lines.length} строк
+            </span>
+          </div>
+          {data.lines.length === 0 ? (
+            <p className="text-[11px] text-tg-hint">Логи пусты</p>
+          ) : (
+            <pre className="text-[10px] leading-relaxed bg-black/90 text-green-300 rounded-lg p-2.5 overflow-x-auto whitespace-pre-wrap break-words max-h-[60vh] overflow-y-auto">
+              {data.lines.join('\n')}
+            </pre>
+          )}
+        </Card>
+      )}
+    </div>
+  );
+}
+
+export default function HealthTab() {
+  const [view, setView] = useState<'health' | 'logs'>('health');
+
+  return (
+    <div>
+      <div className="flex bg-tg-secondary rounded-btn p-1 mb-4">
+        {([
+          { key: 'health', label: 'Здоровье' },
+          { key: 'logs', label: 'Логи' },
+        ] as const).map((t) => (
+          <button
+            key={t.key}
+            onClick={() => setView(t.key)}
+            className={`flex-1 py-2 rounded-xl text-sm font-semibold transition-all ${
+              view === t.key ? 'bg-tg-bg text-tg-text' : 'text-tg-hint'
+            }`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {view === 'health' ? <HealthView /> : <LogsView />}
     </div>
   );
 }

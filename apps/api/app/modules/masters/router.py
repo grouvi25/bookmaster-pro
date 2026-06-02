@@ -231,7 +231,7 @@ async def get_my_stats(
     today = date.today()
 
     today_revenue_result = await db.execute(
-        select(func.coalesce(func.sum(Payment.amount), 0))
+        select(func.coalesce(func.sum(Payment.amount_paid), 0))
         .where(Payment.master_id == master.id)
         .where(func.date(Payment.created_at) == today)
     )

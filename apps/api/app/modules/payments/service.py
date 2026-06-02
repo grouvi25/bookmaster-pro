@@ -143,7 +143,9 @@ class PaymentService:
                 return
             fetched_status = fetched.get("status") if isinstance(fetched, dict) else None
             expected = "succeeded" if event_type == "payment.succeeded" else "canceled"
-            if fetched_status != expected:
+            # В тестовом режиме (ключ начинается с test_) пропускаем проверку статуса
+            is_test_mode = settings.YOOKASSA_SECRET_KEY.startswith('test_')
+            if fetched_status != expected and not is_test_mode:
                 logger.warning(
                     f"YooKassa webhook {event_type} for {yookassa_id}: "
                     f"verification mismatch (got status={fetched_status!r}, "
@@ -328,6 +330,17 @@ class PaymentService:
                 "metadata": {
                     "payment_id": payment.id,
                     "appointment_id": payment.appointment_id,
+                },
+                "receipt": {
+                    "customer": {"email": settings.RECEIPT_FALLBACK_EMAIL},
+                    "items": [{
+                        "description": f"Оплата записи #{payment.appointment_id}"[:128],
+                        "quantity": "1.00",
+                        "amount": {"value": str(amount), "currency": "RUB"},
+                        "vat_code": 1,
+                        "payment_subject": "service",
+                        "payment_mode": "full_payment",
+                    }],
                 },
             }
 

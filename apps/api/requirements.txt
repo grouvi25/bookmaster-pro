@@ -31,7 +31,7 @@ langchain-postgres==0.0.9
 tiktoken==0.7.0
 
 # === PAYMENTS ===
-yookassa==3.4.0
+yookassa==3.10.1
 
 # === STORAGE (S3) ===
 aioboto3==13.1.1

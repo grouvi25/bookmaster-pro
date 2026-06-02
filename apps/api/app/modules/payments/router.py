@@ -1,3 +1,4 @@
+import re
 """
 Payments router — /api/v1/payments
 """
@@ -93,6 +94,11 @@ async def create_subscription(
             Configuration.account_id = app_settings.YOOKASSA_SHOP_ID
             Configuration.secret_key = app_settings.YOOKASSA_SECRET_KEY
 
+            _digits = re.sub(r"\D", "", (getattr(master, "phone", None) or ""))
+            _customer = (
+                {"phone": _digits} if len(_digits) >= 11
+                else {"email": app_settings.RECEIPT_FALLBACK_EMAIL}
+            )
             yk_payment = YKPayment.create({
                 "amount": {"value": str(sub.price), "currency": "RUB"},
                 "confirmation": {
@@ -103,6 +109,17 @@ async def create_subscription(
                 "description": f"Подписка {sub.plan} — {sub.billing_period}",
                 "metadata": {"subscription_id": sub.id, "master_id": master.id},
                 "save_payment_method": True,
+                "receipt": {
+                    "customer": _customer,
+                    "items": [{
+                        "description": f"Подписка {sub.plan} ({sub.billing_period})"[:128],
+                        "quantity": "1.00",
+                        "amount": {"value": str(sub.price), "currency": "RUB"},
+                        "vat_code": 1,
+                        "payment_subject": "service",
+                        "payment_mode": "full_payment",
+                    }],
+                },
             })
 
             sub.yookassa_recurring_id = yk_payment.id
