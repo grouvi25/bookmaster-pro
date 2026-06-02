@@ -76,7 +76,7 @@ export default function NewBookingModal({ isOpen, onClose, initialDate }: Props)
 
   const services = toArray<ServiceItem>(servicesData);
   const clients = toArray<ClientItem>(clientsData);
-  const slots = toArray<Slot>(slotsData).filter((s) => s.available);
+  const slots = ((slotsData as { slots?: Slot[] } | undefined)?.slots ?? []).filter((s) => s.available);
   const selectedService = services.find((s) => s.id === serviceId);
 
   const dateOptions = Array.from({ length: 14 }, (_, i) => addDays(new Date(), i));
