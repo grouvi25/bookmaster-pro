@@ -13,15 +13,12 @@ import { toast } from '@/shared/ui/Toast';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import type { Booking, MasterProfile } from '@/shared/types/api';
-import { Plus } from 'lucide-react';
-import NewBookingModal from '@/components/master/NewBookingModal';
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const today = format(new Date(), 'yyyy-MM-dd');
   const [loadingId, setLoadingId] = useState<number | null>(null);
-  const [newBookingOpen, setNewBookingOpen] = useState(false);
 
   const { data: masterData } = useQuery<MasterProfile>({
     queryKey: ['master-profile'],
@@ -64,7 +61,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="px-screen-x pt-section-y pb-24">
+    <div className="px-screen-x pt-section-y">
       <div className="mb-section-y">
         <p className="text-tg-hint text-aux capitalize">
           {format(new Date(), 'EEEE, d MMMM', { locale: ru })}
@@ -182,20 +179,6 @@ export default function Dashboard() {
           ))}
         </div>
       )}
-
-      {/* Большая кнопка создания записи над таб-баром */}
-      <div className="fixed left-0 right-0 bottom-[84px] px-screen-x z-40 pointer-events-none">
-        <Button
-          fullWidth
-          size="lg"
-          onClick={() => setNewBookingOpen(true)}
-          className="shadow-button pointer-events-auto"
-        >
-          <Plus className="w-5 h-5" /> Новая запись
-        </Button>
-      </div>
-
-      <NewBookingModal isOpen={newBookingOpen} onClose={() => setNewBookingOpen(false)} />
     </div>
   );
 }

@@ -24,27 +24,28 @@ export default function BottomSheet({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50">
+    <div className="fixed inset-0 z-[60]">
       {/* Backdrop: rgba(0,0,0,0.4) + blur 4px per TZ */}
       <div
         className="absolute inset-0 bg-black/40 backdrop-blur-[4px] animate-fade-in"
         onClick={onClose}
       />
-      {/* Sheet: border-radius top 20px per TZ */}
+      {/* Sheet: flex-колонка, шапка фиксирована, контент скроллится */}
       <div
         className={clsx(
           'absolute bottom-0 left-0 right-0 animate-slide-up',
           'rounded-t-sheet bg-surface-primary',
-          fullHeight ? 'top-12' : 'max-h-[85vh]',
+          'flex flex-col',
+          fullHeight ? 'top-12' : 'max-h-[88vh]',
         )}
         style={{ transition: 'transform 300ms cubic-bezier(0.25, 0.46, 0.45, 0.94)' }}
       >
         {/* Drag handle: 4px x 36px per TZ */}
-        <div className="flex justify-center pt-3 pb-1">
+        <div className="flex justify-center pt-3 pb-1 shrink-0">
           <div className="w-9 h-1 rounded-[2px] bg-black/20" />
         </div>
         {title && (
-          <div className="flex items-center justify-between px-screen-x py-2.5">
+          <div className="flex items-center justify-between px-screen-x py-2.5 shrink-0">
             <h3 className="text-h2 font-semibold">{title}</h3>
             <button
               onClick={onClose}
@@ -54,10 +55,7 @@ export default function BottomSheet({
             </button>
           </div>
         )}
-        <div className={clsx(
-          'overflow-y-auto safe-bottom',
-          fullHeight ? 'h-full' : 'max-h-[75vh]',
-        )}>
+        <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain">
           {children}
         </div>
       </div>

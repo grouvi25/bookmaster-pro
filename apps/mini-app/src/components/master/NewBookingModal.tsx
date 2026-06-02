@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import { servicesApi, clientsApi, bookingApi, mastersApi } from '@/api/endpoints';
 import { toArray } from '@/shared/lib/normalize';
 import BottomSheet from '@/shared/ui/BottomSheet';
@@ -37,6 +38,7 @@ interface Slot {
 
 export default function NewBookingModal({ isOpen, onClose, initialDate }: Props) {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const [clientName, setClientName] = useState('');
   const [clientPhone, setClientPhone] = useState('');
@@ -53,7 +55,7 @@ export default function NewBookingModal({ isOpen, onClose, initialDate }: Props)
   });
 
   const { data: servicesData } = useQuery({
-    queryKey: ['services'],
+    queryKey: ['my-services'],
     queryFn: () => servicesApi.list().then((r) => r.data),
     enabled: isOpen,
   });
@@ -93,6 +95,11 @@ export default function NewBookingModal({ isOpen, onClose, initialDate }: Props)
     onClose();
   };
 
+  const goCreateService = () => {
+    handleClose();
+    navigate('/master/services');
+  };
+
   const handleSubmit = async () => {
     if (!clientName.trim()) {
       toast.error('Укажите имя клиента');
@@ -130,9 +137,11 @@ export default function NewBookingModal({ isOpen, onClose, initialDate }: Props)
     }
   };
 
+  const canSubmit = !!clientName.trim() && !!serviceId && !!pickedTime;
+
   return (
     <BottomSheet isOpen={isOpen} onClose={handleClose} title="Новая запись" fullHeight>
-      <div className="px-screen-x pb-6 flex flex-col gap-5">
+      <div className="flex flex-col gap-5 px-screen-x pt-1 pb-4">
         {/* Клиент */}
         <div>
           <div className="text-aux text-tg-hint mb-2">Клиент</div>
@@ -177,9 +186,13 @@ export default function NewBookingModal({ isOpen, onClose, initialDate }: Props)
         <div>
           <div className="text-aux text-tg-hint mb-2">Услуга</div>
           {services.length === 0 ? (
-            <div className="text-sm text-tg-hint py-2">
-              Сначала добавьте услуги в разделе «Инструменты → Услуги»
-            </div>
+            <button
+              onClick={goCreateService}
+              className="w-full text-left px-4 py-3.5 rounded-card bg-tg-secondary text-sm active:scale-[0.98] transition-all"
+            >
+              У вас пока нет услуг.{' '}
+              <span className="text-tg-link font-semibold underline">Создать услугу →</span>
+            </button>
           ) : (
             <div className="flex flex-col gap-1.5">
               {services.map((s) => (
@@ -212,6 +225,12 @@ export default function NewBookingModal({ isOpen, onClose, initialDate }: Props)
                   </span>
                 </button>
               ))}
+              <button
+                onClick={goCreateService}
+                className="text-tg-link text-sm font-medium text-left px-1 pt-1"
+              >
+                + Создать новую услугу
+              </button>
             </div>
           )}
         </div>
@@ -277,19 +296,19 @@ export default function NewBookingModal({ isOpen, onClose, initialDate }: Props)
             )}
           </div>
         )}
+      </div>
 
-        {/* Итог + кнопка */}
-        <div className="pt-1">
-          {selectedService && pickedTime && (
-            <div className="text-sm text-tg-hint mb-3 text-center">
-              {selectedService.name} · {format(new Date(pickedDate), 'd MMMM', { locale: ru })} ·{' '}
-              {pickedTime} · {Number(selectedService.price).toLocaleString('ru')} ₽
-            </div>
-          )}
-          <Button fullWidth size="lg" loading={submitting} onClick={handleSubmit}>
-            Создать запись
-          </Button>
-        </div>
+      {/* Sticky-футер: всегда виден, не перекрывается */}
+      <div className="sticky bottom-0 bg-surface-primary border-t border-tg-secondary px-screen-x pt-3 pb-[max(env(safe-area-inset-bottom),12px)]">
+        {selectedService && pickedTime && (
+          <div className="text-xs text-tg-hint mb-2 text-center">
+            {selectedService.name} · {format(new Date(pickedDate), 'd MMM', { locale: ru })} ·{' '}
+            {pickedTime} · {Number(selectedService.price).toLocaleString('ru')} ₽
+          </div>
+        )}
+        <Button fullWidth size="lg" loading={submitting} disabled={!canSubmit} onClick={handleSubmit}>
+          Создать запись
+        </Button>
       </div>
     </BottomSheet>
   );

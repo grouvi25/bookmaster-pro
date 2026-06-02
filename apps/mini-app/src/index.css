@@ -76,18 +76,18 @@
     height: 50px;
     padding: 0 14px;
     background: var(--tg-theme-secondary-bg-color, #f4f4f5);
-    border: none;
+    border: 1.5px solid var(--tg-theme-section-separator-color, rgba(0, 0, 0, 0.1));
     border-radius: 12px;
     font-size: 15px;
     color: var(--tg-theme-text-color, #000000);
     outline: none;
-    transition: border 200ms ease;
+    transition: border-color 200ms ease;
   }
   .input-field::placeholder {
     color: var(--tg-theme-hint-color, #999999);
   }
   .input-field:focus {
-    border: 2px solid var(--tg-theme-link-color, #2481cc);
+    border-color: var(--tg-theme-link-color, #2481cc);
   }
 
   /* Chip/Tag по ТЗ: 20px pill radius */

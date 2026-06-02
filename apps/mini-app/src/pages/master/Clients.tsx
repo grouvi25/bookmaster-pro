@@ -141,12 +141,12 @@ function ClientsList() {
       )}
 
       {/* Большая кнопка добавления клиента над таб-баром */}
-      <div className="fixed left-0 right-0 bottom-[84px] px-screen-x z-40 pointer-events-none">
+      <div className="fixed left-0 right-0 bottom-[78px] px-screen-x z-40">
         <Button
           fullWidth
           size="lg"
           onClick={() => setAddOpen(true)}
-          className="shadow-button pointer-events-auto"
+          className="shadow-button"
         >
           <Plus className="w-5 h-5" /> Добавить клиента
         </Button>

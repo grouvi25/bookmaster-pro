@@ -278,7 +278,7 @@ export default function Schedule() {
         title="Детали записи"
       >
         {selectedBooking && (
-          <div className="px-screen-x pb-8">
+          <div className="px-screen-x pb-36">
             <div className="flex flex-col gap-3 mb-5">
               <div className="flex justify-between items-center">
                 <span className="text-sm text-tg-hint">Статус</span>
@@ -391,7 +391,7 @@ export default function Schedule() {
         title="Добавить фото работы?"
       >
         {photoPromptBooking && (
-          <div className="px-screen-x pb-8">
+          <div className="px-screen-x pb-36">
             <p className="text-sm text-tg-hint mb-4">
               Добавьте фото результата в портфолио — клиенты смогут увидеть вашу работу
             </p>
@@ -444,13 +444,16 @@ export default function Schedule() {
       </BottomSheet>
 
       {/* Кнопка создания записи — фиксирована над таб-баром */}
-      <button
-        onClick={() => setShowNewBooking(true)}
-        className="fixed left-1/2 -translate-x-1/2 bottom-[88px] z-40 h-[52px] px-6 rounded-full bg-tg-button text-tg-button-text font-semibold text-[16px] shadow-lg flex items-center gap-2 active:scale-[0.97] transition-transform"
-      >
-        <Plus className="w-5 h-5" strokeWidth={2.4} />
-        Новая запись
-      </button>
+      <div className="fixed left-0 right-0 bottom-[78px] px-screen-x z-40">
+        <Button
+          fullWidth
+          size="lg"
+          onClick={() => setShowNewBooking(true)}
+          className="shadow-button"
+        >
+          <Plus className="w-5 h-5" /> Новая запись
+        </Button>
+      </div>
 
       <NewBookingModal
         isOpen={showNewBooking}

@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { mastersApi, analyticsApi, supportApi, servicesApi } from '@/api/endpoints';
+import { mastersApi, analyticsApi, supportApi, servicesApi, uploadsApi } from '@/api/endpoints';
 import { toArray } from '@/shared/lib/normalize';
 import { ListSkeleton, StatGridSkeleton, ServiceCardSkeleton, TicketCardSkeleton } from '@/shared/ui/Skeleton';
 import Button from '@/shared/ui/Button';
@@ -12,7 +12,7 @@ import MenuItem from '@/shared/ui/MenuItem';
 import { toast } from '@/shared/ui/Toast';
 import type { Service, SupportTicket, MasterProfile } from '@/shared/types/api';
 import { useFeatureFlag } from '@/hooks/useFeatureFlag';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Camera } from 'lucide-react';
 
 const TAB_TITLES: Record<SettingsTab, string> = {
   main: 'Настройки',
@@ -300,6 +300,8 @@ function ProfileSection() {
   const [depositAmount, setDepositAmount] = useState('');
   const [prepayPercent, setPrepayPercent] = useState('');
   const [saving, setSaving] = useState(false);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
 
   if (isLoading) return <TicketCardSkeleton count={3} />;
 
@@ -310,6 +312,29 @@ function ProfileSection() {
     setDepositAmount(profile?.noshow_deposit_amount ? String(profile.noshow_deposit_amount) : '');
     setPrepayPercent(profile?.noshow_prepay_percent ? String(profile.noshow_prepay_percent) : '');
     setEditing(true);
+  };
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      toast.error('Выберите изображение');
+      e.target.value = '';
+      return;
+    }
+    setAvatarUploading(true);
+    try {
+      const uploadResp = await uploadsApi.uploadFile(file, 'avatars');
+      const url = uploadResp.data.public_url;
+      await mastersApi.updateProfile({ avatar_url: url });
+      await queryClient.invalidateQueries({ queryKey: ['master-profile'] });
+      toast.success('Фото обновлено');
+    } catch {
+      toast.error('Не удалось загрузить фото');
+    } finally {
+      setAvatarUploading(false);
+      e.target.value = '';
+    }
   };
 
   const handleSave = async () => {
@@ -345,16 +370,42 @@ function ProfileSection() {
 
       <Card>
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-16 h-16 bg-tg-secondary rounded-full flex items-center justify-center overflow-hidden">
+          <button
+            type="button"
+            onClick={() => avatarInputRef.current?.click()}
+            className="relative w-16 h-16 bg-tg-secondary rounded-full flex items-center justify-center overflow-hidden shrink-0 active:scale-95 transition-transform"
+            aria-label="Изменить фото профиля"
+          >
             {profile?.avatar_url ? (
               <img src={profile.avatar_url} alt="" className="w-full h-full rounded-full object-cover" />
             ) : (
               <span className="text-[32px]">{'👤'}</span>
             )}
-          </div>
+            <span className="absolute inset-0 flex items-center justify-center bg-black/30">
+              {avatarUploading ? (
+                <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin-fast" />
+              ) : (
+                <Camera className="w-5 h-5 text-white drop-shadow" />
+              )}
+            </span>
+          </button>
+          <input
+            ref={avatarInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleAvatarUpload}
+          />
           <div>
             <div className="font-bold text-body">{profile?.display_name}</div>
             <div className="text-aux text-tg-hint">{profile?.specialization}</div>
+            <button
+              type="button"
+              onClick={() => avatarInputRef.current?.click()}
+              className="text-tg-link text-aux mt-0.5"
+            >
+              {profile?.avatar_url ? 'Изменить фото' : 'Добавить фото'}
+            </button>
           </div>
         </div>
 
