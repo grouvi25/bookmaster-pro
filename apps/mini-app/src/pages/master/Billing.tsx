@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { HeaderBackButton } from "@/components/common/BackButton";
-import { billingApi } from '@/api/endpoints';
+import { billingApi, mastersApi } from '@/api/endpoints';
 import { ListSkeleton } from '@/shared/ui/Skeleton';
 import Card from '@/shared/ui/Card';
 import Button from '@/shared/ui/Button';
@@ -17,6 +17,7 @@ interface Plan {
   price: number;
   Icon: LucideIcon;
   color: string;
+  commission: number;
   features: string[];
   trial_days?: number;
 }
@@ -28,11 +29,13 @@ const PLANS: Plan[] = [
     price: 590,
     Icon: Zap,
     color: 'text-status-info',
+    commission: 7,
     features: [
       'До 30 записей/мес',
-      'Онлайн-запись',
-      'Уведомления',
-      'Промокоды',
+      'До 3 услуг',
+      'Онлайн-запись клиентов',
+      'Автонапоминания (24ч + 2ч)',
+      'Страница-визитка + QR-код',
     ],
     trial_days: 14,
   },
@@ -42,12 +45,15 @@ const PLANS: Plan[] = [
     price: 990,
     Icon: Crown,
     color: 'text-brand-500',
+    commission: 7,
     features: [
-      'До 100 записей/мес',
-      'CRM-модуль',
-      'Аналитика',
-      'Лояльность',
-      'Рассылки',
+      'До 150 записей/мес',
+      'До 10 услуг',
+      'CRM — карточки клиентов',
+      'Отзывы и рейтинг',
+      'Промо-акции и скидки',
+      'Лист ожидания',
+      'Маркетплейс + виджет',
     ],
   },
   {
@@ -56,13 +62,16 @@ const PLANS: Plan[] = [
     price: 1990,
     Icon: Sparkles,
     color: 'text-purple-500',
+    commission: 6,
     features: [
-      'Без лимита записей',
-      'AI-советник',
-      'Голосовой ввод',
-      'Портфолио',
-      'Абонементы',
-      'Консультации',
+      'Без лимита записей и услуг',
+      'CRM расширенный + сегменты',
+      'Программа лояльности',
+      'Абонементы клиентов',
+      'Аналитика и дашборд',
+      'AI-советник (чат)',
+      'Портфолио и консультации',
+      'До 2 локаций · 200K AI-токенов',
     ],
   },
   {
@@ -71,12 +80,14 @@ const PLANS: Plan[] = [
     price: 2990,
     Icon: Rocket,
     color: 'text-orange-500',
+    commission: 5.5,
     features: [
-      'Все фичи Про',
-      'AI контент-мастер',
-      'AI клиентский бот',
+      'Всё из Про',
+      'AI-клиентский бот',
+      'AI-контент (посты, FAQ, отзывы)',
       'Голосовой дневник',
-      'RAG по базе знаний',
+      'Рассылки по сегментам',
+      'До 3 локаций · 1M AI-токенов',
     ],
   },
   {
@@ -85,15 +96,80 @@ const PLANS: Plan[] = [
     price: 4990,
     Icon: Building2,
     color: 'text-emerald-600',
+    commission: 5,
     features: [
-      'Все фичи Про+AI',
-      'Мульти-локации',
-      'Виджет для сайта',
-      'Приоритетная поддержка',
+      'Всё из Про + AI',
+      'Featured в маркетплейсе',
+      'Безлимит локаций · 3M AI-токенов',
       'Персональный менеджер',
     ],
   },
 ];
+
+function PaymentModeCard({ commission }: { commission: number }) {
+  const queryClient = useQueryClient();
+  const [saving, setSaving] = useState(false);
+  const { data: profile } = useQuery({
+    queryKey: ['master-profile'],
+    queryFn: () => mastersApi.getProfile().then((r) => r.data),
+  });
+
+  const enabled = !!profile?.accept_online_payment;
+
+  const toggle = async () => {
+    setSaving(true);
+    try {
+      await mastersApi.updateProfile({ accept_online_payment: !enabled });
+      await queryClient.invalidateQueries({ queryKey: ['master-profile'] });
+      toast.success(enabled ? 'Онлайн-оплата выключена' : 'Онлайн-оплата включена');
+    } catch {
+      toast.error('Не удалось изменить режим оплаты');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Card className="mb-5">
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <div className="font-semibold">Онлайн-оплата от клиентов</div>
+          <div className="text-xs text-tg-hint mt-0.5">
+            {enabled
+              ? 'Включена — клиенты платят картой при записи'
+              : 'Выключена — клиенты платят вам лично (наличные, перевод, СБП)'}
+          </div>
+          {enabled && (
+            <div className="text-xs text-orange-600 mt-1">
+              Комиссия сервиса: {commission}%
+            </div>
+          )}
+        </div>
+        <button
+          onClick={toggle}
+          disabled={saving}
+          className={clsx(
+            'relative w-12 h-6 rounded-full transition-colors flex-shrink-0',
+            enabled ? 'bg-brand-500' : 'bg-gray-300',
+            saving && 'opacity-60'
+          )}
+          aria-label="Переключить онлайн-оплату"
+        >
+          <div
+            className={clsx(
+              'absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform',
+              enabled ? 'translate-x-6' : 'translate-x-0.5'
+            )}
+          />
+        </button>
+      </div>
+      <div className="text-2xs text-tg-hint mt-2 leading-relaxed">
+        Без онлайн-оплаты комиссия сервиса 0% — платите только абонемент. Для приёма
+        картой нужна регистрация ИП/самозанятости и верификация в ЮKassa.
+      </div>
+    </Card>
+  );
+}
 
 export default function Billing() {
   const queryClient = useQueryClient();
@@ -139,6 +215,7 @@ export default function Billing() {
 
   const currentPlan = subscription?.plan || null;
   const yearlyDiscount = 0.8;
+  const currentCommission = PLANS.find((p) => p.key === currentPlan)?.commission ?? 7;
 
   const handleSubscribe = (planKey: string) => {
     subscribeMutation.mutate({
@@ -196,6 +273,9 @@ export default function Billing() {
         ))}
       </div>
 
+      {/* Режим монетизации: онлайн-оплата (Тариф A) vs абонемент (Тариф B) */}
+      <PaymentModeCard commission={currentCommission} />
+
       {/* Plans */}
       <div className="flex flex-col gap-3">
         {PLANS.map((plan) => {
@@ -235,6 +315,10 @@ export default function Billing() {
                         {f}
                       </div>
                     ))}
+                    <div className="flex items-center gap-1.5 text-xs text-tg-hint">
+                      <Check className="w-3 h-3 text-accent-emerald flex-shrink-0" />
+                      Комиссия онлайн-оплат: {plan.commission}%
+                    </div>
                   </div>
                   {isCurrent && (
                     <div className="mt-2 text-xs text-brand-600 font-medium">Текущий тариф</div>
