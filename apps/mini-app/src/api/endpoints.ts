@@ -253,6 +253,10 @@ export const billingApi = {
   current: () => api.get('/payments/subscription'),
   subscribe: (data: { plan: string; billing_period: string }) =>
     api.post('/payments/subscription', data),
+  cancelAutoRenew: () =>
+    api.post('/payments/subscription/cancel-auto-renew'),
+  resumeAutoRenew: () =>
+    api.post('/payments/subscription/resume-auto-renew'),
 };
 
 // ── Feature Flags ──

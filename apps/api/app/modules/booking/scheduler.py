@@ -449,6 +449,13 @@ async def billing_reminder():
 
         sent = 0
         for sub in subs:
+            # Не напоминаем о списании, если автопродление отключено
+            if not getattr(sub, "auto_renew", True):
+                logger.info(
+                    f"billing_reminder: master {sub.master_id} auto_renew=False, skipping reminder"
+                )
+                continue
+
             text = (
                 f"💳 Напоминание: через 3 дня будет списание "
                 f"за тариф «{sub.plan}».\n"
@@ -492,7 +499,28 @@ async def billing_auto_charge():
 
         charged = 0
         failed = 0
+        skipped_no_renew = 0
         for sub in subs:
+            # Пропускаем подписки с отключённым автопродлением —
+            # мастер отказался от рекуррентных платежей.
+            if not getattr(sub, "auto_renew", True):
+                skipped_no_renew += 1
+                logger.info(
+                    f"billing_auto_charge: master {sub.master_id} "
+                    f"auto_renew=False, expiring subscription {sub.id}"
+                )
+                sub.status = "expired"
+                text = (
+                    f"ℹ️ Подписка «{sub.plan}» завершена — автопродление было отключено.\n"
+                    "Вы можете оформить новую подписку в любое время."
+                )
+                await notify.send_by_master_id(
+                    db, sub.master_id, text,
+                    button_text="Выбрать тариф",
+                    button_url=f"{settings.APP_URL}?startParam=billing",
+                )
+                continue
+
             if not sub.yookassa_recurring_id:
                 logger.info(
                     f"billing_auto_charge: master {sub.master_id} "
@@ -566,7 +594,8 @@ async def billing_auto_charge():
 
         await db.commit()
         logger.info(
-            f"billing_auto_charge: {charged} charged, {failed} failed "
+            f"billing_auto_charge: {charged} charged, {failed} failed, "
+            f"{skipped_no_renew} expired (auto_renew=off) "
             f"out of {len(subs)} due"
         )
 

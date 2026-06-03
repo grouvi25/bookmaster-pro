@@ -6,7 +6,7 @@ import { ListSkeleton } from '@/shared/ui/Skeleton';
 import Card from '@/shared/ui/Card';
 import Button from '@/shared/ui/Button';
 import { toast } from '@/shared/ui/Toast';
-import { Check, Crown, Zap, Sparkles, Rocket, Building2, Clock, CreditCard, ChevronRight } from 'lucide-react';
+import { Check, Crown, Zap, Sparkles, Rocket, Building2, Clock, CreditCard, ChevronRight, RefreshCw, XCircle } from 'lucide-react';
 import PageHeader from '@/shared/ui/PageHeader';
 import type { LucideIcon } from 'lucide-react';
 import clsx from 'clsx';
@@ -128,6 +128,31 @@ export default function Billing() {
         }
         throw err;
       }
+    },
+  });
+
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+
+  const cancelAutoRenewMutation = useMutation({
+    mutationFn: () => billingApi.cancelAutoRenew(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['my-subscription'] });
+      toast.success('Автопродление отключено');
+      setShowCancelConfirm(false);
+    },
+    onError: () => {
+      toast.error('Не удалось отключить автопродление');
+    },
+  });
+
+  const resumeAutoRenewMutation = useMutation({
+    mutationFn: () => billingApi.resumeAutoRenew(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['my-subscription'] });
+      toast.success('Автопродление включено');
+    },
+    onError: () => {
+      toast.error('Не удалось включить автопродление');
     },
   });
 
@@ -343,6 +368,97 @@ export default function Billing() {
           );
         })}
       </div>
+
+      {/* ── Управление подпиской ── */}
+      {currentPlan && subscription && (
+        <div className="mt-6 mb-8">
+          <div className="text-xs text-tg-hint font-medium uppercase tracking-wider mb-3">
+            Управление подпиской
+          </div>
+          <Card>
+            <div className="flex items-center gap-3">
+              <div className={clsx(
+                'w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0',
+                subscription.auto_renew !== false
+                  ? 'bg-accent-emerald/10'
+                  : 'bg-red-500/10'
+              )}>
+                <RefreshCw className={clsx(
+                  'w-5 h-5',
+                  subscription.auto_renew !== false
+                    ? 'text-accent-emerald'
+                    : 'text-red-500'
+                )} strokeWidth={1.8} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="font-semibold">Автопродление</div>
+                <div className="text-xs text-tg-hint mt-0.5">
+                  {subscription.auto_renew !== false
+                    ? `Включено · следующее списание ${new Date(subscription.next_billing).toLocaleDateString('ru-RU')}`
+                    : `Отключено · подписка активна до ${new Date(subscription.next_billing).toLocaleDateString('ru-RU')}`
+                  }
+                </div>
+              </div>
+            </div>
+
+            {subscription.auto_renew !== false ? (
+              <>
+                {!showCancelConfirm ? (
+                  <button
+                    onClick={() => setShowCancelConfirm(true)}
+                    className="mt-3 w-full py-2.5 text-sm text-red-500 hover:text-red-600 font-medium rounded-xl border border-red-200 hover:bg-red-50 transition-all"
+                  >
+                    Отключить автопродление
+                  </button>
+                ) : (
+                  <div className="mt-3 pt-3 border-t border-tg-secondary">
+                    <div className="flex items-start gap-2 mb-3">
+                      <XCircle className="w-4 h-4 text-orange-500 flex-shrink-0 mt-0.5" />
+                      <div className="text-xs text-tg-hint leading-relaxed">
+                        После отключения подписка останется активной до{' '}
+                        <span className="font-medium text-tg-text">
+                          {new Date(subscription.next_billing).toLocaleDateString('ru-RU')}
+                        </span>
+                        . Автоматическое списание больше не будет происходить. Вы сможете
+                        включить автопродление обратно в любой момент.
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={() => cancelAutoRenewMutation.mutate()}
+                        loading={cancelAutoRenewMutation.isPending}
+                        fullWidth
+                        size="sm"
+                        className="!bg-red-500 hover:!bg-red-600"
+                      >
+                        Подтвердить отключение
+                      </Button>
+                      <Button
+                        onClick={() => setShowCancelConfirm(false)}
+                        fullWidth
+                        size="sm"
+                        className="!bg-tg-secondary !text-tg-text"
+                      >
+                        Отмена
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </>
+            ) : (
+              <Button
+                onClick={() => resumeAutoRenewMutation.mutate()}
+                loading={resumeAutoRenewMutation.isPending}
+                fullWidth
+                size="sm"
+                className="mt-3"
+              >
+                Включить автопродление
+              </Button>
+            )}
+          </Card>
+        </div>
+      )}
       </div>
     </div>
   );
