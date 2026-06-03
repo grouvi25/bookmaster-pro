@@ -1,9 +1,10 @@
 """
-Payments — транзакции, подписки мастеров, абонементы клиентов.
+Payments — транзакции, подписки мастеров, абонементы клиентов, выплаты.
 """
 
 from sqlalchemy import (
     Column, Integer, String, Numeric, Date, ForeignKey, Boolean,
+    DateTime, Text,
 )
 
 from app.core.base_model import BaseModel
@@ -62,3 +63,18 @@ class ClientSubscription(BaseModel):
     # active | exhausted | expired | refunded
     expires_at = Column(Date, nullable=True)
     payment_id = Column(Integer, ForeignKey("payments.id"), nullable=True)
+
+
+class MasterPayout(BaseModel):
+    """Выплата мастеру — агентская схема (тариф A)."""
+    __tablename__ = "master_payouts"
+
+    payment_id = Column(Integer, ForeignKey("payments.id"), nullable=False)
+    master_id = Column(Integer, ForeignKey("masters.id"), nullable=False)
+    amount = Column(Numeric(10, 2), nullable=False)
+    status = Column(String(20), default="scheduled")
+    # scheduled | processing | completed | failed
+    scheduled_for = Column(Date, nullable=False)
+    completed_at = Column(DateTime(timezone=True), nullable=True)
+    tbank_payment_id = Column(String(100), nullable=True)
+    error = Column(Text, nullable=True)

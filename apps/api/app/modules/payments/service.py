@@ -11,7 +11,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
-from app.modules.payments.models import Payment, MasterSubscription, ClientSubscription
+from app.modules.payments.models import Payment, MasterSubscription, ClientSubscription, MasterPayout
 from app.modules.booking.models import Appointment, AppointmentStatus
 from app.modules.masters.models import Master
 from app.modules.core.models import FeatureFlags
@@ -316,6 +316,64 @@ class PaymentService:
             Configuration.account_id = settings.YOOKASSA_SHOP_ID
             Configuration.secret_key = settings.YOOKASSA_SECRET_KEY
 
+            # Получаем мастера для проверки агентской схемы
+            result = await self.db.execute(
+                select(Master).where(Master.id == payment.master_id)
+            )
+            master = result.scalar_one_or_none()
+
+            # Формируем позиции чека
+            receipt_items = []
+            is_agent_scheme = (
+                master
+                and master.tariff_type == "A"
+                and master.inn
+                and master.agent_agreement_at
+            )
+
+            if is_agent_scheme:
+                # Агентские реквизиты в чеке (ФЗ-54, тег 1057)
+                # Сумма услуги мастера (за вычетом комиссии)
+                master_amount = payment.amount_master or amount
+                commission_amount = amount - master_amount if master_amount < amount else Decimal("0")
+
+                service_item = {
+                    "description": f"Услуга мастера (запись #{payment.appointment_id})"[:128],
+                    "quantity": "1.00",
+                    "amount": {"value": str(master_amount), "currency": "RUB"},
+                    "vat_code": 1,
+                    "payment_subject": "service",
+                    "payment_mode": "full_payment",
+                    "agent_type": "agent",
+                    "supplier": {
+                        "name": master.display_name or "Мастер",
+                        "phone": master.phone or master.payout_phone or "",
+                        "inn": master.inn,
+                    },
+                }
+                receipt_items.append(service_item)
+
+                # Агентское вознаграждение (комиссия платформы)
+                if commission_amount > 0:
+                    receipt_items.append({
+                        "description": "Агентское вознаграждение"[:128],
+                        "quantity": "1.00",
+                        "amount": {"value": str(commission_amount), "currency": "RUB"},
+                        "vat_code": 1,
+                        "payment_subject": "service",
+                        "payment_mode": "full_payment",
+                    })
+            else:
+                # Обычный чек без агентских реквизитов
+                receipt_items.append({
+                    "description": f"Оплата записи #{payment.appointment_id}"[:128],
+                    "quantity": "1.00",
+                    "amount": {"value": str(amount), "currency": "RUB"},
+                    "vat_code": 1,
+                    "payment_subject": "service",
+                    "payment_mode": "full_payment",
+                })
+
             yk_params = {
                 "amount": {
                     "value": str(amount),
@@ -333,14 +391,7 @@ class PaymentService:
                 },
                 "receipt": {
                     "customer": {"email": settings.RECEIPT_FALLBACK_EMAIL},
-                    "items": [{
-                        "description": f"Оплата записи #{payment.appointment_id}"[:128],
-                        "quantity": "1.00",
-                        "amount": {"value": str(amount), "currency": "RUB"},
-                        "vat_code": 1,
-                        "payment_subject": "service",
-                        "payment_mode": "full_payment",
-                    }],
+                    "items": receipt_items,
                 },
             }
 
@@ -349,10 +400,7 @@ class PaymentService:
             # а нашу комиссию забираем через platform_fee_amount.
             # ВАЖНО: сумма transfers должна равняться ПОЛНОЙ сумме платежа,
             # комиссия указывается отдельно в platform_fee_amount.
-            result = await self.db.execute(
-                select(Master).where(Master.id == payment.master_id)
-            )
-            master = result.scalar_one_or_none()
+            # master уже получен выше для проверки агентской схемы
             use_split = bool(
                 master and master.tariff_type == "A" and master.yookassa_account_id
             )
@@ -535,7 +583,9 @@ class PaymentService:
         await self.db.flush()
 
     async def _notify_payment_succeeded(self, payment: Payment) -> None:
-        """Уведомить клиента и мастера об успешной оплате."""
+        """Уведомить клиента и мастера об успешной оплате.
+        Для мастеров тарифа A — планируем выплату через T-Bank (T+1).
+        """
         try:
             from app.modules.notifications.service import NotificationService
 
@@ -571,6 +621,68 @@ class PaymentService:
         except Exception as e:
             logger.error(
                 f"Failed to send payment notification for payment {payment.id}: {e}"
+            )
+
+        # --- Агентская схема: планируем выплату мастеру (тариф A) ---
+        await self._schedule_master_payout(payment)
+
+    async def _schedule_master_payout(self, payment: Payment) -> None:
+        """Запланировать выплату мастеру для тарифа A (агентская схема).
+        Выплата планируется на T+1 (следующий рабочий день), т.к. YooKassa
+        перечисляет деньги на расчётный счёт ИП с задержкой T+1.
+        """
+        if not payment.master_id or not payment.amount_master:
+            return
+
+        try:
+            result = await self.db.execute(
+                select(Master).where(Master.id == payment.master_id)
+            )
+            master = result.scalar_one_or_none()
+            if not master:
+                return
+
+            # Только для тарифа A с подписанным агентским договором
+            if master.tariff_type != "A" or not master.agent_agreement_at:
+                return
+
+            # Нужен хотя бы один способ выплаты
+            if not master.payout_phone and not master.payout_card:
+                logger.warning(
+                    f"Master {master.id} is tariff A but has no payout "
+                    f"phone/card — skipping payout for payment {payment.id}"
+                )
+                return
+
+            # Проверяем дубликат (идемпотентность)
+            existing = await self.db.execute(
+                select(MasterPayout).where(
+                    MasterPayout.payment_id == payment.id,
+                    MasterPayout.master_id == master.id,
+                )
+            )
+            if existing.scalar_one_or_none():
+                logger.info(f"Payout already scheduled for payment {payment.id}")
+                return
+
+            payout = MasterPayout(
+                payment_id=payment.id,
+                master_id=master.id,
+                amount=payment.amount_master,
+                status="scheduled",
+                scheduled_for=date.today() + timedelta(days=1),  # T+1
+            )
+            self.db.add(payout)
+            await self.db.flush()
+
+            logger.info(
+                f"Scheduled payout for master {master.id}: "
+                f"{payment.amount_master}₽ on {payout.scheduled_for} "
+                f"(payment #{payment.id})"
+            )
+        except Exception as e:
+            logger.error(
+                f"Failed to schedule master payout for payment {payment.id}: {e}"
             )
 
     async def get_active_subscription(self, master_id: int) -> Optional[MasterSubscription]:

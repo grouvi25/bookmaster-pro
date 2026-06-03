@@ -61,6 +61,10 @@ class Settings(BaseSettings):
     # CSV-список подсетей/IP, с которых принимаются webhook-уведомления.
     # Пусто = использовать дефолт-список ЮKassa (см. yookassa.security).
     YOOKASSA_WEBHOOK_TRUSTED_IPS: str = ""
+    # T-Bank Payouts API (агентская схема — выплаты мастерам)
+    T_BANK_API_KEY: str = ""
+    T_BANK_API_URL: str = "https://business.tbank.ru/openapi/api/v1/payment"
+
     # Разрешить локальные "fake" платежи без обращения к ЮKassa
     # (status сразу = succeeded). Должно быть False в production.
     ALLOW_DEV_PAYMENTS: bool = False

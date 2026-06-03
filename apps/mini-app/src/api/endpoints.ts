@@ -19,6 +19,9 @@ interface MasterProfilePayload {
   link_page_links?: { url: string; label?: string }[];
   noshow_deposit_amount?: number;
   noshow_prepay_percent?: number;
+  payout_phone?: string;
+  payout_card?: string;
+  inn?: string;
 }
 
 interface ScheduleTemplatePayload {
@@ -420,6 +423,12 @@ export const broadcastApi = {
   previewSegment: (data: BroadcastPreviewPayload) =>
     api.post('/broadcast/preview-segment', data),
   send: (id: number) => api.post(`/broadcast/${id}/send`),
+};
+
+// ── Agent Payouts ──
+export const payoutsApi = {
+  acceptAgreement: () => api.post('/payments/agent-agreement/accept'),
+  history: () => api.get('/payments/payouts'),
 };
 
 // ── NPS ──

@@ -2,6 +2,7 @@
 Masters schemas.
 """
 
+from datetime import datetime
 from typing import Optional
 
 from pydantic import BaseModel, field_validator
@@ -38,6 +39,12 @@ class MasterProfileOut(BaseModel):
     notify_reminder: bool = True
     notify_review: bool = True
     notify_no_show: bool = True
+
+    # Агентская схема (тариф A)
+    payout_phone: Optional[str] = None
+    payout_card: Optional[str] = None
+    inn: Optional[str] = None
+    agent_agreement_at: Optional[datetime] = None
 
     @field_validator(
         "accept_online_payment", "link_page_enabled", "is_verified",
@@ -97,6 +104,11 @@ class MasterProfileUpdate(BaseModel):
     notify_reminder: Optional[bool] = None
     notify_review: Optional[bool] = None
     notify_no_show: Optional[bool] = None
+
+    # Агентская схема (тариф A)
+    payout_phone: Optional[str] = None
+    payout_card: Optional[str] = None
+    inn: Optional[str] = None
 
 
 class NotificationSettingsOut(BaseModel):

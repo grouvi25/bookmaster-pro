@@ -34,6 +34,7 @@ from app.modules.booking.scheduler import (
     loyalty_expire,
     loyalty_expiry_warn,
     waitlist_notify,
+    execute_master_payouts,
 )
 
 logging.basicConfig(
@@ -129,6 +130,12 @@ def create_scheduler() -> AsyncIOScheduler:
     scheduler.add_job(
         loyalty_expiry_warn, "cron", hour=10, minute=30,
         id="loyalty_expiry_warn", replace_existing=True,
+    )
+
+    # Агентская схема: выплаты мастерам через T-Bank (T+1)
+    scheduler.add_job(
+        execute_master_payouts, "cron", hour=11, minute=0,
+        id="execute_master_payouts", replace_existing=True,
     )
 
     # Фаза 5: waitlist

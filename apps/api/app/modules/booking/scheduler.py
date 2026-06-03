@@ -774,3 +774,109 @@ async def waitlist_notify():
         logger.info(
             f"waitlist_notify: expired={expired}, notified={notified_count}"
         )
+
+
+async def execute_master_payouts():
+    """Ежедневно в 11:00 — перечисляем мастерам деньги за вчерашние оплаченные записи.
+
+    YooKassa расчёт T+1 (деньги приходят на следующий рабочий день),
+    поэтому выплаты планируются с задержкой и обрабатываются утром.
+    """
+    from app.modules.payments.models import MasterPayout
+    from app.modules.masters.models import Master
+    from app.modules.payments.tbank_payout import (
+        payout_via_sbp,
+        payout_via_card,
+        TBankPayoutError,
+    )
+
+    async with async_session_factory() as db:
+        today = datetime.now(timezone.utc).date()
+
+        # Берём все запланированные выплаты на сегодня и раньше (пропущенные)
+        result = await db.execute(
+            select(MasterPayout).where(
+                MasterPayout.status == "scheduled",
+                MasterPayout.scheduled_for <= today,
+            )
+        )
+        payouts = result.scalars().all()
+
+        if not payouts:
+            logger.info("execute_master_payouts: no pending payouts")
+            return
+
+        processed = 0
+        failed = 0
+
+        for payout in payouts:
+            master = await db.get(Master, payout.master_id)
+            if not master:
+                payout.status = "failed"
+                payout.error = "Master not found"
+                failed += 1
+                continue
+
+            if not master.payout_phone and not master.payout_card:
+                payout.status = "failed"
+                payout.error = "No payout phone or card configured"
+                failed += 1
+                continue
+
+            payout.status = "processing"
+            await db.flush()
+
+            try:
+                if master.payout_phone:
+                    resp = await payout_via_sbp(
+                        phone=master.payout_phone,
+                        amount=payout.amount,
+                        payment_id=payout.payment_id,
+                    )
+                else:
+                    resp = await payout_via_card(
+                        card_number=master.payout_card,
+                        amount=payout.amount,
+                        payment_id=payout.payment_id,
+                    )
+
+                payout.status = "completed"
+                payout.completed_at = datetime.now(timezone.utc)
+                payout.tbank_payment_id = str(resp.get("paymentId", ""))
+                processed += 1
+
+                # Уведомляем мастера
+                try:
+                    amount_str = f"{payout.amount}₽"
+                    await notify.send_by_master_id(
+                        db,
+                        master.id,
+                        f"💸 Выплата {amount_str} отправлена на ваш счёт!",
+                        button_text="Открыть расписание",
+                        button_url=f"{settings.APP_URL}?startParam=dashboard",
+                    )
+                except Exception:
+                    pass  # не критично если уведомление не ушло
+
+            except TBankPayoutError as e:
+                payout.status = "failed"
+                payout.error = str(e)[:500]
+                failed += 1
+                logger.error(
+                    f"Payout failed for master {master.id}, "
+                    f"payment #{payout.payment_id}: {e}"
+                )
+            except Exception as e:
+                payout.status = "failed"
+                payout.error = str(e)[:500]
+                failed += 1
+                logger.error(
+                    f"Unexpected payout error for master {master.id}, "
+                    f"payment #{payout.payment_id}: {e}"
+                )
+
+        await db.commit()
+        logger.info(
+            f"execute_master_payouts: processed={processed}, failed={failed}, "
+            f"total={len(payouts)}"
+        )

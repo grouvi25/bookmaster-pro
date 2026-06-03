@@ -26,6 +26,12 @@ export interface MasterProfile {
   is_portfolio: boolean;
   tariff_type?: string;
   yookassa_account_id?: string | null;
+
+  // Агентская схема (тариф A)
+  payout_phone?: string | null;
+  payout_card?: string | null;
+  inn?: string | null;
+  agent_agreement_at?: string | null;
 }
 
 /** Тип тарификации мастера. */

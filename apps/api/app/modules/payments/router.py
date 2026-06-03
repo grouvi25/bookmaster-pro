@@ -391,5 +391,70 @@ async def delete_subscription_package(
     return {"status": "ok"}
 
 
+@router.post("/agent-agreement/accept")
+async def accept_agent_agreement(
+    user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Принять агентский договор-оферту.
+    Фиксирует timestamp принятия — обязательно для агентской схемы (тариф A).
+    """
+    from datetime import datetime, timezone
+
+    master = await MasterService(db).get_by_identity(int(user["sub"]))
+    if not master:
+        raise HTTPException(status_code=403, detail="Not a master")
+
+    if master.agent_agreement_at:
+        return {
+            "status": "already_accepted",
+            "accepted_at": master.agent_agreement_at.isoformat(),
+        }
+
+    master.agent_agreement_at = datetime.now(timezone.utc)
+    await db.commit()
+
+    logger.info(f"Agent agreement accepted by master {master.id}")
+    return {
+        "status": "ok",
+        "accepted_at": master.agent_agreement_at.isoformat(),
+    }
+
+
+@router.get("/payouts")
+async def get_my_payouts(
+    user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Получить историю выплат мастера."""
+    from app.modules.payments.models import MasterPayout
+
+    master = await MasterService(db).get_by_identity(int(user["sub"]))
+    if not master:
+        raise HTTPException(status_code=403, detail="Not a master")
+
+    result = await db.execute(
+        select(MasterPayout)
+        .where(MasterPayout.master_id == master.id)
+        .order_by(MasterPayout.id.desc())
+        .limit(50)
+    )
+    payouts = result.scalars().all()
+
+    return [
+        {
+            "id": p.id,
+            "payment_id": p.payment_id,
+            "amount": str(p.amount),
+            "status": p.status,
+            "scheduled_for": str(p.scheduled_for),
+            "completed_at": p.completed_at.isoformat() if p.completed_at else None,
+            "error": p.error,
+            "created_at": p.created_at.isoformat() if p.created_at else None,
+        }
+        for p in payouts
+    ]
+
+
 # Backward-compatible re-export: webhook логика перенесена в app.modules.webhooks.router
 from app.modules.webhooks.router import router as router_webhook  # noqa: F401, E402

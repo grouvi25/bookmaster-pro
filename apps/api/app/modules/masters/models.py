@@ -4,7 +4,7 @@ Master — профиль мастера.
 
 from sqlalchemy import (
     Column, Integer, String, Boolean, Text, Float,
-    ForeignKey, JSON,
+    ForeignKey, JSON, DateTime,
 )
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.orm import relationship
@@ -72,6 +72,12 @@ class Master(BaseModel):
     current_plan = Column(String(20), default="start")
     is_verified = Column(Boolean, default=False)
     is_active = Column(Boolean, default=True)
+
+    # Агентская схема — выплаты мастерам (тариф A)
+    payout_phone = Column(String(20), nullable=True)       # телефон для СБП-выплат
+    payout_card = Column(String(20), nullable=True)        # номер карты (альтернатива)
+    inn = Column(String(12), nullable=True)                # ИНН мастера (для чека ФЗ-54)
+    agent_agreement_at = Column(DateTime(timezone=True), nullable=True)  # принятие оферты
 
     # Рейтинг (кэшированный)
     rating_avg = Column(Float, default=0.0)

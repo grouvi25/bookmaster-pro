@@ -544,12 +544,22 @@ function PaymentsSection() {
   const [saving, setSaving] = useState(false);
   const [toggling, setToggling] = useState(false);
 
+  // Payout settings (агентская схема)
+  const [editingPayout, setEditingPayout] = useState(false);
+  const [payoutPhone, setPayoutPhone] = useState('');
+  const [payoutCard, setPayoutCard] = useState('');
+  const [inn, setInn] = useState('');
+  const [savingPayout, setSavingPayout] = useState(false);
+  const [acceptingAgreement, setAcceptingAgreement] = useState(false);
+
   if (isLoading) return <TicketCardSkeleton count={2} />;
 
   const hasSubAccount = !!profile?.yookassa_account_id;
   const isCommission = profile?.tariff_type === 'A';
   const onlineEnabled = !!profile?.accept_online_payment;
   const commission = PLAN_COMMISSION[profile?.current_plan || 'start'] ?? 7;
+  const hasAgreement = !!profile?.agent_agreement_at;
+  const hasPayoutMethod = !!(profile?.payout_phone || profile?.payout_card);
 
   const toggleOnline = async () => {
     setToggling(true);
@@ -585,9 +595,61 @@ function PaymentsSection() {
     }
   };
 
+  const startEditPayout = () => {
+    setPayoutPhone(profile?.payout_phone || '');
+    setPayoutCard(profile?.payout_card || '');
+    setInn(profile?.inn || '');
+    setEditingPayout(true);
+  };
+
+  const handleSavePayout = async () => {
+    const trimmedPhone = payoutPhone.trim();
+    const trimmedCard = payoutCard.trim();
+    const trimmedInn = inn.trim();
+
+    if (!trimmedPhone && !trimmedCard) {
+      toast.error('Укажите телефон для СБП или номер карты');
+      return;
+    }
+    if (!trimmedInn || (trimmedInn.length !== 10 && trimmedInn.length !== 12)) {
+      toast.error('ИНН должен быть 10 или 12 цифр');
+      return;
+    }
+
+    setSavingPayout(true);
+    try {
+      await mastersApi.updateProfile({
+        payout_phone: trimmedPhone || undefined,
+        payout_card: trimmedCard || undefined,
+        inn: trimmedInn,
+      });
+      await queryClient.invalidateQueries({ queryKey: ['master-profile'] });
+      toast.success('Реквизиты для выплат сохранены');
+      setEditingPayout(false);
+    } catch {
+      toast.error('Ошибка сохранения реквизитов');
+    } finally {
+      setSavingPayout(false);
+    }
+  };
+
+  const handleAcceptAgreement = async () => {
+    setAcceptingAgreement(true);
+    try {
+      const { payoutsApi } = await import('@/api/endpoints');
+      await payoutsApi.acceptAgreement();
+      await queryClient.invalidateQueries({ queryKey: ['master-profile'] });
+      toast.success('Агентский договор принят');
+    } catch {
+      toast.error('Ошибка при принятии договора');
+    } finally {
+      setAcceptingAgreement(false);
+    }
+  };
+
   return (
     <div className="py-section-y flex flex-col gap-4 animate-fade-in">
-      {/* Как принимать оплату от клиентов (перенесено из «Тарифы») */}
+      {/* Как принимать оплату от клиентов */}
       <Card>
         <div className="flex items-center justify-between gap-3">
           <div className="min-w-0">
@@ -681,13 +743,152 @@ function PaymentsSection() {
         )}
       </Card>
 
-      {/* Подсказка про сплиты */}
+      {/* Выплаты мастерам — агентская схема (тариф A) */}
       <Card>
-        <h3 className="font-bold text-sm mb-1 flex items-center gap-1.5">💸 Раздельные платежи</h3>
+        <h3 className="font-bold text-base mb-1 flex items-center gap-1.5">
+          💸 Реквизиты для выплат
+        </h3>
+        <p className="text-aux text-tg-hint mb-3">
+          Укажите данные для получения выплат. Деньги от клиентов перечисляются
+          на следующий рабочий день через СБП или на карту.
+        </p>
+
+        {!editingPayout ? (
+          <div className="flex flex-col gap-2 text-body">
+            {profile?.payout_phone && (
+              <div className="flex justify-between items-center">
+                <span className="text-tg-hint">СБП (телефон)</span>
+                <span className="font-mono text-aux">{profile.payout_phone}</span>
+              </div>
+            )}
+            {profile?.payout_card && (
+              <div className="flex justify-between items-center">
+                <span className="text-tg-hint">Карта</span>
+                <span className="font-mono text-aux">
+                  •••• {profile.payout_card.slice(-4)}
+                </span>
+              </div>
+            )}
+            {profile?.inn && (
+              <div className="flex justify-between items-center">
+                <span className="text-tg-hint">ИНН</span>
+                <span className="font-mono text-aux">{profile.inn}</span>
+              </div>
+            )}
+            {!hasPayoutMethod && (
+              <p className="text-xs text-orange-600">
+                Реквизиты не указаны — выплаты невозможны
+              </p>
+            )}
+            <Button onClick={startEditPayout} variant="secondary" fullWidth className="mt-2">
+              {hasPayoutMethod ? 'Изменить реквизиты' : 'Указать реквизиты'}
+            </Button>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-3">
+            <div>
+              <label className="text-micro font-medium text-tg-text mb-1 block">
+                Телефон для СБП
+              </label>
+              <input
+                value={payoutPhone}
+                onChange={(e) => setPayoutPhone(e.target.value)}
+                placeholder="+7 900 123-45-67"
+                inputMode="tel"
+                className="input-field"
+              />
+              <p className="text-micro text-tg-hint mt-1">
+                Предпочтительный способ — мгновенное зачисление через СБП.
+              </p>
+            </div>
+            <div>
+              <label className="text-micro font-medium text-tg-text mb-1 block">
+                Номер карты (альтернатива)
+              </label>
+              <input
+                value={payoutCard}
+                onChange={(e) => setPayoutCard(e.target.value)}
+                placeholder="0000 0000 0000 0000"
+                inputMode="numeric"
+                className="input-field"
+              />
+            </div>
+            <div>
+              <label className="text-micro font-medium text-tg-text mb-1 block">
+                ИНН
+              </label>
+              <input
+                value={inn}
+                onChange={(e) => setInn(e.target.value.replace(/\D/g, '').slice(0, 12))}
+                placeholder="1234567890"
+                inputMode="numeric"
+                className="input-field"
+              />
+              <p className="text-micro text-tg-hint mt-1">
+                Обязательно для формирования чеков (ФЗ-54). 10 цифр для ИП, 12 для физлица.
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <Button onClick={handleSavePayout} loading={savingPayout} fullWidth>
+                Сохранить
+              </Button>
+              <Button onClick={() => setEditingPayout(false)} variant="secondary" fullWidth>
+                Отмена
+              </Button>
+            </div>
+          </div>
+        )}
+      </Card>
+
+      {/* Агентский договор-оферта */}
+      <Card>
+        <h3 className="font-bold text-sm mb-1 flex items-center gap-1.5">
+          📋 Агентский договор
+        </h3>
+        {hasAgreement ? (
+          <div className="flex flex-col gap-1">
+            <p className="text-aux text-status-success font-medium">
+              ✅ Договор принят
+            </p>
+            <p className="text-micro text-tg-hint">
+              Дата принятия: {new Date(profile!.agent_agreement_at!).toLocaleDateString('ru-RU')}
+            </p>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-2">
+            <p className="text-aux text-tg-hint">
+              Для получения выплат необходимо принять условия агентского
+              договора-оферты. Платформа выступает агентом (комиссионером),
+              вы — принципалом. Комиссия удерживается автоматически.
+            </p>
+            <p className="text-micro text-tg-hint">
+              Нажимая «Принять», вы соглашаетесь с условиями агентского договора
+              в соответствии со ст. 1005 ГК РФ.
+            </p>
+            <Button
+              onClick={handleAcceptAgreement}
+              loading={acceptingAgreement}
+              fullWidth
+              disabled={!hasPayoutMethod || !profile?.inn}
+            >
+              Принять агентский договор
+            </Button>
+            {(!hasPayoutMethod || !profile?.inn) && (
+              <p className="text-micro text-orange-600">
+                Сначала укажите реквизиты для выплат и ИНН
+              </p>
+            )}
+          </div>
+        )}
+      </Card>
+
+      {/* Подсказка */}
+      <Card>
+        <h3 className="font-bold text-sm mb-1 flex items-center gap-1.5">ℹ️ Как работают выплаты</h3>
         <p className="text-aux text-tg-hint">
-          Чтобы подключить свой магазин ЮKassa: зарегистрируйтесь на yookassa.ru,
-          получите ID магазина и вставьте его выше. После проверки оплата начнёт
-          поступать напрямую на ваш счёт. Нужна помощь — напишите в поддержку.
+          Клиент оплачивает запись → деньги поступают на счёт сервиса → на следующий
+          рабочий день ваша доля автоматически перечисляется на указанный телефон (СБП)
+          или карту. Комиссия сервиса ({commission}%) удерживается автоматически.
         </p>
       </Card>
     </div>
