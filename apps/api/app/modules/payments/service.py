@@ -395,47 +395,13 @@ class PaymentService:
                 },
             }
 
-            # Splits (раздельные платежи): если у мастера подключён
-            # суб-магазин YooKassa — перечисляем деньги напрямую ему,
-            # а нашу комиссию забираем через platform_fee_amount.
-            # ВАЖНО: сумма transfers должна равняться ПОЛНОЙ сумме платежа,
-            # комиссия указывается отдельно в platform_fee_amount.
-            # master уже получен выше для проверки агентской схемы
-            use_split = bool(
-                master and master.tariff_type == "A" and master.yookassa_account_id
-            )
-            if use_split:
-                transfer = {
-                    "account_id": master.yookassa_account_id,
-                    "amount": {
-                        "value": str(amount),
-                        "currency": "RUB",
-                    },
-                }
-                # Комиссия платформы (если есть) удерживается из перевода мастеру
-                if payment.amount_service and Decimal(str(payment.amount_service)) > 0:
-                    transfer["platform_fee_amount"] = {
-                        "value": str(payment.amount_service),
-                        "currency": "RUB",
-                    }
-                yk_params["transfers"] = [transfer]
-
+            # Выплаты мастерам идут через Т-Банк Payouts API (агентская схема),
+            # а не через YooKassa Marketplace splits. Деньги поступают на р/с ИП
+            # через YooKassa → T+1 → Т-Банк перечисляет мастеру.
             try:
                 yk_payment = YKPayment.create(yk_params)
-            except Exception as split_err:
-                # Если сплит не прошёл (суб-счёт мастера не подключён/невалиден
-                # или маркетплейс недоступен) — не блокируем клиента: делаем
-                # обычный платёж на основной магазин, деньги распределим позже.
-                if use_split and "transfers" in yk_params:
-                    logger.warning(
-                        "YooKassa split failed for master %s (%s); "
-                        "retrying as plain payment without transfers: %s",
-                        payment.master_id, master.yookassa_account_id, split_err,
-                    )
-                    yk_params.pop("transfers", None)
-                    yk_payment = YKPayment.create(yk_params)
-                else:
-                    raise
+            except Exception:
+                raise
 
             payment.yookassa_payment_id = yk_payment.id
             return yk_payment.confirmation.confirmation_url

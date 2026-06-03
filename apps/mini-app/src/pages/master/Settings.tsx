@@ -532,6 +532,51 @@ const PLAN_COMMISSION: Record<string, number> = {
   business: 5,
 };
 
+// ── Helpers: форматирование и валидация ────────────────────────────────
+/** +7 (900) 123-45-67 */
+function formatPhone(raw: string): string {
+  const d = raw.replace(/\D/g, '').slice(0, 11);
+  if (d.length === 0) return '';
+  let out = '+7';
+  const body = d.startsWith('7') || d.startsWith('8') ? d.slice(1) : d;
+  if (body.length > 0) out += ' (' + body.slice(0, 3);
+  if (body.length >= 3) out += ') ' + body.slice(3, 6);
+  if (body.length >= 6) out += '-' + body.slice(6, 8);
+  if (body.length >= 8) out += '-' + body.slice(8, 10);
+  return out;
+}
+/** 0000 0000 0000 0000 */
+function formatCard(raw: string): string {
+  const d = raw.replace(/\D/g, '').slice(0, 16);
+  return d.replace(/(.{4})/g, '$1 ').trim();
+}
+/** 10 или 12 цифр, без пробелов */
+function formatInn(raw: string): string {
+  return raw.replace(/\D/g, '').slice(0, 12);
+}
+/** Только цифры из отформатированного телефона (79XXXXXXXXX) */
+function cleanPhone(formatted: string): string {
+  const d = formatted.replace(/\D/g, '');
+  if (d.startsWith('8') && d.length === 11) return '7' + d.slice(1);
+  if (!d.startsWith('7') && d.length === 10) return '7' + d;
+  return d;
+}
+function cleanCard(formatted: string): string {
+  return formatted.replace(/\D/g, '');
+}
+function isValidPhone(formatted: string): boolean {
+  return cleanPhone(formatted).length === 11;
+}
+function isValidCard(formatted: string): boolean {
+  const d = cleanCard(formatted);
+  return d.length >= 16 && d.length <= 19;
+}
+function isValidInn(v: string): boolean {
+  const d = v.replace(/\D/g, '');
+  return d.length === 10 || d.length === 12;
+}
+// ───────────────────────────────────────────────────────────────────────
+
 function PaymentsSection() {
   const queryClient = useQueryClient();
   const { data: profile, isLoading } = useQuery<MasterProfile>({
@@ -539,12 +584,9 @@ function PaymentsSection() {
     queryFn: () => mastersApi.getProfile().then((r) => r.data),
   });
 
-  const [editing, setEditing] = useState(false);
-  const [accountId, setAccountId] = useState('');
-  const [saving, setSaving] = useState(false);
   const [toggling, setToggling] = useState(false);
 
-  // Payout settings (агентская схема)
+  // Payout settings (агентская схема — выплаты через Т-Банк)
   const [editingPayout, setEditingPayout] = useState(false);
   const [payoutPhone, setPayoutPhone] = useState('');
   const [payoutCard, setPayoutCard] = useState('');
@@ -554,8 +596,6 @@ function PaymentsSection() {
 
   if (isLoading) return <TicketCardSkeleton count={2} />;
 
-  const hasSubAccount = !!profile?.yookassa_account_id;
-  const isCommission = profile?.tariff_type === 'A';
   const onlineEnabled = !!profile?.accept_online_payment;
   const commission = PLAN_COMMISSION[profile?.current_plan || 'start'] ?? 7;
   const hasAgreement = !!profile?.agent_agreement_at;
@@ -574,44 +614,31 @@ function PaymentsSection() {
     }
   };
 
-  const startEdit = () => {
-    setAccountId(profile?.yookassa_account_id || '');
-    setEditing(true);
-  };
-
-  const handleSave = async () => {
-    setSaving(true);
-    try {
-      await mastersApi.updateProfile({
-        yookassa_account_id: accountId.trim(),
-      });
-      await queryClient.invalidateQueries({ queryKey: ['master-profile'] });
-      toast.success('Настройки оплаты сохранены');
-      setEditing(false);
-    } catch {
-      toast.error('Ошибка сохранения');
-    } finally {
-      setSaving(false);
-    }
-  };
-
   const startEditPayout = () => {
-    setPayoutPhone(profile?.payout_phone || '');
-    setPayoutCard(profile?.payout_card || '');
+    setPayoutPhone(profile?.payout_phone ? formatPhone(profile.payout_phone) : '');
+    setPayoutCard(profile?.payout_card ? formatCard(profile.payout_card) : '');
     setInn(profile?.inn || '');
     setEditingPayout(true);
   };
 
   const handleSavePayout = async () => {
-    const trimmedPhone = payoutPhone.trim();
-    const trimmedCard = payoutCard.trim();
-    const trimmedInn = inn.trim();
+    const phone = cleanPhone(payoutPhone);
+    const card = cleanCard(payoutCard);
+    const trimmedInn = formatInn(inn);
 
-    if (!trimmedPhone && !trimmedCard) {
+    if (!phone && !card) {
       toast.error('Укажите телефон для СБП или номер карты');
       return;
     }
-    if (!trimmedInn || (trimmedInn.length !== 10 && trimmedInn.length !== 12)) {
+    if (phone && !isValidPhone(payoutPhone)) {
+      toast.error('Введите корректный номер телефона');
+      return;
+    }
+    if (card && !isValidCard(payoutCard)) {
+      toast.error('Введите корректный номер карты (16 цифр)');
+      return;
+    }
+    if (!isValidInn(trimmedInn)) {
       toast.error('ИНН должен быть 10 или 12 цифр');
       return;
     }
@@ -619,8 +646,8 @@ function PaymentsSection() {
     setSavingPayout(true);
     try {
       await mastersApi.updateProfile({
-        payout_phone: trimmedPhone || undefined,
-        payout_card: trimmedCard || undefined,
+        payout_phone: phone || undefined,
+        payout_card: card || undefined,
         inn: trimmedInn,
       });
       await queryClient.invalidateQueries({ queryKey: ['master-profile'] });
@@ -646,6 +673,10 @@ function PaymentsSection() {
       setAcceptingAgreement(false);
     }
   };
+
+  /** Отформатированный телефон для отображения */
+  const displayPhone = profile?.payout_phone ? formatPhone(profile.payout_phone) : '';
+  const displayCard = profile?.payout_card ? formatCard(profile.payout_card) : '';
 
   return (
     <div className="py-section-y flex flex-col gap-4 animate-fade-in">
@@ -689,68 +720,14 @@ function PaymentsSection() {
         </div>
       </Card>
 
-      {/* Куда поступают деньги — раздельные платежи (сплиты) */}
-      <Card>
-        <h3 className="font-bold text-base mb-1">Куда поступают деньги</h3>
-        <p className="text-aux text-tg-hint mb-3">
-          По умолчанию онлайн-оплата проходит через сервис, и мы переводим вам выручку
-          отдельно. Можно подключить свой магазин ЮKassa — тогда деньги клиентов будут
-          поступать напрямую вам, а сервис автоматически удержит только комиссию.
-        </p>
-
-        {!editing ? (
-          <div className="flex flex-col gap-2 text-body">
-            <div className="flex justify-between items-center">
-              <span className="text-tg-hint">Способ зачисления</span>
-              <span className="font-medium">
-                {isCommission && hasSubAccount ? 'Напрямую вам (сплит)' : 'Через сервис'}
-              </span>
-            </div>
-            {hasSubAccount && (
-              <div className="flex justify-between items-center">
-                <span className="text-tg-hint">Магазин ЮKassa</span>
-                <span className="font-mono text-aux">{profile?.yookassa_account_id}</span>
-              </div>
-            )}
-            <Button onClick={startEdit} variant="secondary" fullWidth className="mt-2">
-              {hasSubAccount ? 'Изменить' : 'Подключить свой магазин'}
-            </Button>
-          </div>
-        ) : (
-          <div className="flex flex-col gap-3">
-            <div>
-              <label className="text-micro font-medium text-tg-text mb-1 block">
-                ID магазина ЮKassa
-              </label>
-              <input
-                value={accountId}
-                onChange={(e) => setAccountId(e.target.value)}
-                placeholder="Например, 123456"
-                inputMode="numeric"
-                className="input-field"
-              />
-              <p className="text-micro text-tg-hint mt-1">
-                Укажите ID вашего магазина ЮKassa, чтобы получать оплату напрямую
-                (раздельные платежи). Оставьте пустым — оплата пойдёт через сервис.
-              </p>
-            </div>
-
-            <div className="flex gap-2">
-              <Button onClick={handleSave} loading={saving} fullWidth>Сохранить</Button>
-              <Button onClick={() => setEditing(false)} variant="secondary" fullWidth>Отмена</Button>
-            </div>
-          </div>
-        )}
-      </Card>
-
-      {/* Выплаты мастерам — агентская схема (тариф A) */}
+      {/* Реквизиты для выплат — Т-Банк (агентская схема) */}
       <Card>
         <h3 className="font-bold text-base mb-1 flex items-center gap-1.5">
           💸 Реквизиты для выплат
         </h3>
         <p className="text-aux text-tg-hint mb-3">
           Укажите данные для получения выплат. Деньги от клиентов перечисляются
-          на следующий рабочий день через СБП или на карту.
+          на следующий рабочий день через СБП или на карту (Т-Банк).
         </p>
 
         {!editingPayout ? (
@@ -758,7 +735,7 @@ function PaymentsSection() {
             {profile?.payout_phone && (
               <div className="flex justify-between items-center">
                 <span className="text-tg-hint">СБП (телефон)</span>
-                <span className="font-mono text-aux">{profile.payout_phone}</span>
+                <span className="font-mono text-aux">{displayPhone}</span>
               </div>
             )}
             {profile?.payout_card && (
@@ -792,11 +769,15 @@ function PaymentsSection() {
               </label>
               <input
                 value={payoutPhone}
-                onChange={(e) => setPayoutPhone(e.target.value)}
-                placeholder="+7 900 123-45-67"
+                onChange={(e) => setPayoutPhone(formatPhone(e.target.value))}
+                placeholder="+7 (900) 123-45-67"
                 inputMode="tel"
                 className="input-field"
+                maxLength={18}
               />
+              {payoutPhone && !isValidPhone(payoutPhone) && (
+                <p className="text-micro text-orange-600 mt-1">Введите 10 цифр после +7</p>
+              )}
               <p className="text-micro text-tg-hint mt-1">
                 Предпочтительный способ — мгновенное зачисление через СБП.
               </p>
@@ -807,11 +788,15 @@ function PaymentsSection() {
               </label>
               <input
                 value={payoutCard}
-                onChange={(e) => setPayoutCard(e.target.value)}
+                onChange={(e) => setPayoutCard(formatCard(e.target.value))}
                 placeholder="0000 0000 0000 0000"
                 inputMode="numeric"
                 className="input-field"
+                maxLength={19}
               />
+              {payoutCard && !isValidCard(payoutCard) && (
+                <p className="text-micro text-orange-600 mt-1">Введите 16 цифр номера карты</p>
+              )}
             </div>
             <div>
               <label className="text-micro font-medium text-tg-text mb-1 block">
@@ -819,13 +804,19 @@ function PaymentsSection() {
               </label>
               <input
                 value={inn}
-                onChange={(e) => setInn(e.target.value.replace(/\D/g, '').slice(0, 12))}
+                onChange={(e) => setInn(formatInn(e.target.value))}
                 placeholder="1234567890"
                 inputMode="numeric"
                 className="input-field"
+                maxLength={12}
               />
+              {inn && !isValidInn(inn) && (
+                <p className="text-micro text-orange-600 mt-1">
+                  ИНН: 10 цифр (ИП/ЮЛ) или 12 цифр (физлицо)
+                </p>
+              )}
               <p className="text-micro text-tg-hint mt-1">
-                Обязательно для формирования чеков (ФЗ-54). 10 цифр для ИП, 12 для физлица.
+                Обязательно для формирования чеков (ФЗ-54).
               </p>
             </div>
             <div className="flex gap-2">
@@ -886,8 +877,8 @@ function PaymentsSection() {
       <Card>
         <h3 className="font-bold text-sm mb-1 flex items-center gap-1.5">ℹ️ Как работают выплаты</h3>
         <p className="text-aux text-tg-hint">
-          Клиент оплачивает запись → деньги поступают на счёт сервиса → на следующий
-          рабочий день ваша доля автоматически перечисляется на указанный телефон (СБП)
+          Клиент оплачивает запись → деньги поступают на расчётный счёт ИП → на следующий
+          рабочий день Т-Банк автоматически перечисляет вашу долю на указанный телефон (СБП)
           или карту. Комиссия сервиса ({commission}%) удерживается автоматически.
         </p>
       </Card>

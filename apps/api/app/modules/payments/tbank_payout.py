@@ -127,8 +127,23 @@ async def payout_via_card(
     return await _execute_payout(payload, payment_id)
 
 
+def _build_ssl_context():
+    """Собрать SSL-контекст для mTLS (клиентский сертификат + ключ)."""
+    import ssl
+
+    cert_path = settings.T_BANK_CERT_PATH
+    key_path = settings.T_BANK_KEY_PATH
+
+    if not cert_path or not key_path:
+        return None  # fallback — без mTLS (только Bearer token)
+
+    ctx = ssl.create_default_context()
+    ctx.load_cert_chain(certfile=cert_path, keyfile=key_path)
+    return ctx
+
+
 async def _execute_payout(payload: dict, payment_id: int) -> dict:
-    """Выполнить запрос к T-Bank Payouts API."""
+    """Выполнить запрос к T-Bank Payouts API (mTLS + Bearer token)."""
     if not settings.T_BANK_API_KEY:
         raise TBankPayoutError(
             "T_BANK_API_KEY not configured — cannot process payouts"
@@ -140,7 +155,13 @@ async def _execute_payout(payload: dict, payment_id: int) -> dict:
         "Content-Type": "application/json",
     }
 
-    async with httpx.AsyncClient(timeout=30.0) as client:
+    # mTLS: клиентский сертификат для авторизации в Т-Банк
+    ssl_ctx = _build_ssl_context()
+    client_kwargs: dict = {"timeout": 30.0}
+    if ssl_ctx:
+        client_kwargs["verify"] = ssl_ctx
+
+    async with httpx.AsyncClient(**client_kwargs) as client:
         try:
             resp = await client.post(api_url, json=payload, headers=headers)
 
