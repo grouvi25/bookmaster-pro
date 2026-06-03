@@ -22,6 +22,7 @@ export default function MastersTab() {
   const [grantPlan, setGrantPlan] = useState('pro');
   const [grantDays, setGrantDays] = useState('30');
   const [grantNote, setGrantNote] = useState('');
+  const [deleteConfirm, setDeleteConfirm] = useState<AdminMaster | null>(null);
   const queryClient = useQueryClient();
 
   const { data, isLoading } = useQuery({
@@ -53,6 +54,7 @@ export default function MastersTab() {
       toast.success('Доступ выдан');
       setGrantMasterId(null);
       setGrantNote('');
+      queryClient.invalidateQueries({ queryKey: ['superadmin-masters'] });
     },
     onError: () => toast.error('Ошибка выдачи доступа'),
   });
@@ -72,6 +74,16 @@ export default function MastersTab() {
       toast.success('Статус обновлён');
       queryClient.invalidateQueries({ queryKey: ['superadmin-masters'] });
     },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (masterId: number) => superadminApi.deleteMaster(masterId),
+    onSuccess: () => {
+      toast.success('Мастер удалён');
+      setDeleteConfirm(null);
+      queryClient.invalidateQueries({ queryKey: ['superadmin-masters'] });
+    },
+    onError: () => toast.error('Ошибка удаления'),
   });
 
   if (isLoading) return <ClientCardSkeleton count={5} />;
@@ -141,6 +153,12 @@ export default function MastersTab() {
               >
                 {m.is_active ? 'Блокировать' : 'Разблокировать'}
               </button>
+              <button
+                onClick={() => setDeleteConfirm(m)}
+                className="text-xs bg-status-danger/10 text-status-danger px-2.5 py-1.5 rounded-lg"
+              >
+                Удалить
+              </button>
             </div>
 
             {grantMasterId === m.id && (
@@ -192,6 +210,48 @@ export default function MastersTab() {
           </Card>
         ))}
       </div>
+
+      {/* Модалка подтверждения удаления */}
+      {deleteConfirm && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
+          onClick={() => setDeleteConfirm(null)}
+        >
+          <div
+            className="bg-tg-bg rounded-2xl p-5 w-full max-w-sm shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="text-center mb-4">
+              <div className="text-3xl mb-2">⚠️</div>
+              <h3 className="text-h3 font-bold">Удалить мастера?</h3>
+              <p className="text-sm text-tg-hint mt-2">
+                <span className="font-medium text-tg-text">{deleteConfirm.display_name}</span>
+                {' '}будет удалён из базы данных вместе со всеми записями, платежами
+                и историей. Это действие *необратимо*.
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                onClick={() => setDeleteConfirm(null)}
+                fullWidth
+                size="sm"
+                variant="secondary"
+              >
+                Отмена
+              </Button>
+              <Button
+                onClick={() => deleteMutation.mutate(deleteConfirm.id)}
+                loading={deleteMutation.isPending}
+                fullWidth
+                size="sm"
+                variant="danger"
+              >
+                Удалить
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

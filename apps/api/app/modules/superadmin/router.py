@@ -581,6 +581,57 @@ async def get_master_access_grants(
     ]
 
 
+# ── Удаление мастера ─────────────────────────────────────────
+
+@router.delete("/masters/{master_id}")
+async def delete_master(
+    master_id: int,
+    user: dict = Depends(_require_superadmin),
+    db: AsyncSession = Depends(get_db),
+):
+    """Полное удаление мастера и всех связанных данных из БД."""
+    from sqlalchemy import select, delete as sa_delete, text
+    from app.modules.masters.models import Master
+
+    master = (await db.execute(
+        select(Master).where(Master.id == master_id)
+    )).scalar_one_or_none()
+    if not master:
+        raise HTTPException(status_code=404, detail="Master not found")
+
+    master_name = master.display_name or f"id={master_id}"
+    admin_id = str(user.get("platform_id") or user.get("identity_id", "system"))
+
+    # Удаляем записи из таблиц с NO ACTION FK (CASCADE-таблицы удалятся автоматически)
+    no_action_tables = [
+        "loyalty_transactions",
+        "loyalty_accounts",
+        "master_subscriptions",
+        "client_reviews",
+        "payments",
+        "referrals",
+        "client_subscriptions",
+        "master_payouts",
+    ]
+    for table in no_action_tables:
+        await db.execute(text(f"DELETE FROM {table} WHERE master_id = :mid"), {"mid": master_id})
+
+    # Логируем до удаления самого мастера
+    svc = SuperadminService(db)
+    await svc.log_action(
+        admin_id=admin_id,
+        action="delete_master",
+        entity_type="master",
+        entity_id=master_id,
+        payload={"display_name": master_name},
+    )
+
+    await db.delete(master)
+    await db.commit()
+
+    return {"deleted": True, "master_id": master_id, "display_name": master_name}
+
+
 # ── Broadcast от платформы (ТЗ 8.5) ──────────────────────────
 
 @router.post("/broadcast/preview")
