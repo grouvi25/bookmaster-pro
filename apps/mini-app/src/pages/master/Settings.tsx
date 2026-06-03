@@ -19,11 +19,12 @@ const TAB_TITLES: Record<SettingsTab, string> = {
   analytics: 'Аналитика',
   services: 'Мои услуги',
   profile: 'Профиль',
+  payments: 'Приём оплаты',
   notifications: 'Уведомления',
   support: 'Поддержка',
 };
 
-type SettingsTab = 'main' | 'analytics' | 'services' | 'profile' | 'notifications' | 'support';
+type SettingsTab = 'main' | 'analytics' | 'services' | 'profile' | 'payments' | 'notifications' | 'support';
 
 export default function Settings() {
   const [tab, setTab] = useState<SettingsTab>('main');
@@ -50,6 +51,8 @@ export default function Settings() {
         <ServicesSection />
       ) : tab === 'profile' ? (
         <ProfileSection />
+      ) : tab === 'payments' ? (
+        <PaymentsSection />
       ) : tab === 'notifications' ? (
         <NotificationsSection />
       ) : (
@@ -95,6 +98,12 @@ function SettingsMain({ onNavigate }: { onNavigate: (tab: SettingsTab) => void }
         label="Профиль"
         description="Настройки профиля"
         onClick={() => onNavigate('profile')}
+      />
+      <MenuItem
+        emoji={'💳'}
+        label="Приём оплаты"
+        description="Онлайн-оплата и вывод денег"
+        onClick={() => onNavigate('payments')}
       />
       <MenuItem
         emoji={'🔔'}
@@ -505,6 +514,132 @@ function ProfileSection() {
             ) : null}
           </div>
         )}
+      </Card>
+    </div>
+  );
+}
+
+function PaymentsSection() {
+  const queryClient = useQueryClient();
+  const { data: profile, isLoading } = useQuery<MasterProfile>({
+    queryKey: ['master-profile'],
+    queryFn: () => mastersApi.getProfile().then((r) => r.data),
+  });
+
+  const [editing, setEditing] = useState(false);
+  const [acceptOnline, setAcceptOnline] = useState(false);
+  const [accountId, setAccountId] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  if (isLoading) return <TicketCardSkeleton count={2} />;
+
+  const hasSubAccount = !!profile?.yookassa_account_id;
+  const isCommission = profile?.tariff_type === 'A';
+
+  const startEdit = () => {
+    setAcceptOnline(!!profile?.accept_online_payment);
+    setAccountId(profile?.yookassa_account_id || '');
+    setEditing(true);
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await mastersApi.updateProfile({
+        accept_online_payment: acceptOnline,
+        yookassa_account_id: accountId.trim(),
+      });
+      await queryClient.invalidateQueries({ queryKey: ['master-profile'] });
+      toast.success('Настройки оплаты сохранены');
+      setEditing(false);
+    } catch {
+      toast.error('Ошибка сохранения');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="py-section-y flex flex-col gap-4 animate-fade-in">
+      {/* Как принимать оплату */}
+      <Card>
+        <h3 className="font-bold text-base mb-1">Как вы принимаете оплату</h3>
+        <p className="text-aux text-tg-hint mb-3">
+          Вы можете принимать оплату любым удобным способом — наличными, переводом
+          или своими реквизитами. А можете подключить онлайн-оплату прямо в приложении.
+        </p>
+
+        {!editing ? (
+          <div className="flex flex-col gap-2 text-body">
+            <div className="flex justify-between items-center">
+              <span className="text-tg-hint">Онлайн-оплата</span>
+              <span className={profile?.accept_online_payment ? 'text-status-success font-medium' : 'text-tg-hint'}>
+                {profile?.accept_online_payment ? 'Включена' : 'Выключена'}
+              </span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-tg-hint">Способ зачисления</span>
+              <span className="font-medium">
+                {isCommission && hasSubAccount ? 'На ваш счёт (комиссия)' : 'Через сервис'}
+              </span>
+            </div>
+            {hasSubAccount && (
+              <div className="flex justify-between items-center">
+                <span className="text-tg-hint">Магазин ЮKassa</span>
+                <span className="font-mono text-aux">{profile?.yookassa_account_id}</span>
+              </div>
+            )}
+            <Button onClick={startEdit} variant="secondary" fullWidth className="mt-2">
+              Настроить
+            </Button>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-3">
+            <label className="flex items-center justify-between gap-3 cursor-pointer">
+              <span className="text-body">Принимать онлайн-оплату в приложении</span>
+              <input
+                type="checkbox"
+                checked={acceptOnline}
+                onChange={(e) => setAcceptOnline(e.target.checked)}
+                className="w-5 h-5 accent-brand-500"
+              />
+            </label>
+
+            <div className="pt-2 border-t border-tg-secondary">
+              <label className="text-micro font-medium text-tg-text mb-1 block">
+                ID магазина ЮKassa (необязательно)
+              </label>
+              <input
+                value={accountId}
+                onChange={(e) => setAccountId(e.target.value)}
+                placeholder="Например, 123456"
+                inputMode="numeric"
+                className="input-field"
+              />
+              <p className="text-micro text-tg-hint mt-1">
+                Если укажете свой магазин ЮKassa, деньги клиентов будут поступать
+                напрямую вам, а сервис автоматически удержит только свою комиссию
+                (раздельные платежи). Оставьте пустым — оплата пойдёт через сервис,
+                и мы переведём вам выручку отдельно.
+              </p>
+            </div>
+
+            <div className="flex gap-2">
+              <Button onClick={handleSave} loading={saving} fullWidth>Сохранить</Button>
+              <Button onClick={() => setEditing(false)} variant="secondary" fullWidth>Отмена</Button>
+            </div>
+          </div>
+        )}
+      </Card>
+
+      {/* Подсказка про сплиты */}
+      <Card>
+        <h3 className="font-bold text-sm mb-1 flex items-center gap-1.5">💸 Раздельные платежи</h3>
+        <p className="text-aux text-tg-hint">
+          Чтобы подключить свой магазин ЮKassa: зарегистрируйтесь на yookassa.ru,
+          получите ID магазина и вставьте его выше. После проверки оплата начнёт
+          поступать напрямую на ваш счёт. Нужна помощь — напишите в поддержку.
+        </p>
       </Card>
     </div>
   );

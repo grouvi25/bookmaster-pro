@@ -24,6 +24,8 @@ export interface MasterProfile {
   noshow_deposit_amount: number;
   noshow_prepay_percent: number;
   is_portfolio: boolean;
+  tariff_type?: string;
+  yookassa_account_id?: string | null;
 }
 
 /** Тип тарификации мастера. */

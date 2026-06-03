@@ -22,6 +22,8 @@ class MasterProfileOut(BaseModel):
     longitude: Optional[float] = None
     accept_online_payment: bool = False
     buffer_minutes: int = 30
+    tariff_type: str = "B"
+    yookassa_account_id: Optional[str] = None
     link_page_enabled: bool = True
     link_page_theme: str = "default"
     link_page_links: list = []
@@ -84,6 +86,7 @@ class MasterProfileUpdate(BaseModel):
     longitude: Optional[float] = None
     accept_online_payment: Optional[bool] = None
     buffer_minutes: Optional[int] = None
+    yookassa_account_id: Optional[str] = None
     noshow_deposit_amount: Optional[int] = None
     noshow_prepay_percent: Optional[int] = None
     link_page_enabled: Optional[bool] = None

@@ -13,6 +13,7 @@ interface MasterProfilePayload {
   address?: string;
   accept_online_payment?: boolean;
   buffer_minutes?: number;
+  yookassa_account_id?: string | null;
   link_page_enabled?: boolean;
   link_page_theme?: string;
   link_page_links?: { url: string; label?: string }[];

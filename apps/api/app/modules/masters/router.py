@@ -52,7 +52,16 @@ async def update_my_profile(
     master = await service.get_by_identity(int(user["sub"]))
     if not master:
         raise HTTPException(status_code=404, detail="Master profile not found")
-    updated = await service.update_profile(master, body.model_dump(exclude_unset=True))
+    data = body.model_dump(exclude_unset=True)
+    # Тариф A (раздельные платежи / сплиты) включается автоматически,
+    # когда мастер привязал свой суб-счёт YooKassa. Сбросил счёт —
+    # вернулись на тариф B (обычная подписка, без сплитов).
+    # Применяем напрямую, т.к. update_profile игнорирует None (нужно для сброса).
+    if "yookassa_account_id" in data:
+        acct = (data.pop("yookassa_account_id") or "").strip() or None
+        master.yookassa_account_id = acct
+        master.tariff_type = "A" if acct else "B"
+    updated = await service.update_profile(master, data)
     return updated
 
 
