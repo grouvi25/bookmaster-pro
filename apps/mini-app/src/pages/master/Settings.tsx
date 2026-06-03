@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { mastersApi, analyticsApi, supportApi, servicesApi, uploadsApi } from '@/api/endpoints';
 import { toArray } from '@/shared/lib/normalize';
 import { ListSkeleton, StatGridSkeleton, ServiceCardSkeleton, TicketCardSkeleton } from '@/shared/ui/Skeleton';
@@ -13,6 +13,7 @@ import { toast } from '@/shared/ui/Toast';
 import type { Service, SupportTicket, MasterProfile } from '@/shared/types/api';
 import { useFeatureFlag } from '@/hooks/useFeatureFlag';
 import { ArrowLeft, Camera } from 'lucide-react';
+import { clsx } from 'clsx';
 
 const TAB_TITLES: Record<SettingsTab, string> = {
   main: 'Настройки',
@@ -27,7 +28,11 @@ const TAB_TITLES: Record<SettingsTab, string> = {
 type SettingsTab = 'main' | 'analytics' | 'services' | 'profile' | 'payments' | 'notifications' | 'support';
 
 export default function Settings() {
-  const [tab, setTab] = useState<SettingsTab>('main');
+  const [searchParams] = useSearchParams();
+  const initialTab = (searchParams.get('tab') as SettingsTab | null);
+  const [tab, setTab] = useState<SettingsTab>(
+    initialTab && initialTab in TAB_TITLES ? initialTab : 'main',
+  );
 
   return (
     <div >
@@ -519,6 +524,14 @@ function ProfileSection() {
   );
 }
 
+const PLAN_COMMISSION: Record<string, number> = {
+  start: 7,
+  basic: 7,
+  pro: 6,
+  pro_ai: 5.5,
+  business: 5,
+};
+
 function PaymentsSection() {
   const queryClient = useQueryClient();
   const { data: profile, isLoading } = useQuery<MasterProfile>({
@@ -527,17 +540,31 @@ function PaymentsSection() {
   });
 
   const [editing, setEditing] = useState(false);
-  const [acceptOnline, setAcceptOnline] = useState(false);
   const [accountId, setAccountId] = useState('');
   const [saving, setSaving] = useState(false);
+  const [toggling, setToggling] = useState(false);
 
   if (isLoading) return <TicketCardSkeleton count={2} />;
 
   const hasSubAccount = !!profile?.yookassa_account_id;
   const isCommission = profile?.tariff_type === 'A';
+  const onlineEnabled = !!profile?.accept_online_payment;
+  const commission = PLAN_COMMISSION[profile?.current_plan || 'start'] ?? 7;
+
+  const toggleOnline = async () => {
+    setToggling(true);
+    try {
+      await mastersApi.updateProfile({ accept_online_payment: !onlineEnabled });
+      await queryClient.invalidateQueries({ queryKey: ['master-profile'] });
+      toast.success(onlineEnabled ? 'Онлайн-оплата выключена' : 'Онлайн-оплата включена');
+    } catch {
+      toast.error('Не удалось изменить режим оплаты');
+    } finally {
+      setToggling(false);
+    }
+  };
 
   const startEdit = () => {
-    setAcceptOnline(!!profile?.accept_online_payment);
     setAccountId(profile?.yookassa_account_id || '');
     setEditing(true);
   };
@@ -546,7 +573,6 @@ function PaymentsSection() {
     setSaving(true);
     try {
       await mastersApi.updateProfile({
-        accept_online_payment: acceptOnline,
         yookassa_account_id: accountId.trim(),
       });
       await queryClient.invalidateQueries({ queryKey: ['master-profile'] });
@@ -561,26 +587,61 @@ function PaymentsSection() {
 
   return (
     <div className="py-section-y flex flex-col gap-4 animate-fade-in">
-      {/* Как принимать оплату */}
+      {/* Как принимать оплату от клиентов (перенесено из «Тарифы») */}
       <Card>
-        <h3 className="font-bold text-base mb-1">Как вы принимаете оплату</h3>
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <div className="font-semibold">Онлайн-оплата от клиентов</div>
+            <div className="text-xs text-tg-hint mt-0.5">
+              {onlineEnabled
+                ? 'Включена — клиенты платят картой при записи'
+                : 'Выключена — клиенты платят вам лично (наличные, перевод, СБП)'}
+            </div>
+            {onlineEnabled && (
+              <div className="text-xs text-orange-600 mt-1">
+                Комиссия сервиса: {commission}%
+              </div>
+            )}
+          </div>
+          <button
+            onClick={toggleOnline}
+            disabled={toggling}
+            className={clsx(
+              'relative w-12 h-6 rounded-full transition-colors flex-shrink-0',
+              onlineEnabled ? 'bg-brand-500' : 'bg-gray-300',
+              toggling && 'opacity-60'
+            )}
+            aria-label="Переключить онлайн-оплату"
+          >
+            <div
+              className={clsx(
+                'absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform',
+                onlineEnabled ? 'translate-x-6' : 'translate-x-0.5'
+              )}
+            />
+          </button>
+        </div>
+        <div className="text-2xs text-tg-hint mt-2 leading-relaxed">
+          Без онлайн-оплаты комиссия сервиса 0% — платите только абонемент. Для приёма
+          картой нужна регистрация ИП/самозанятости и верификация в ЮKassa.
+        </div>
+      </Card>
+
+      {/* Куда поступают деньги — раздельные платежи (сплиты) */}
+      <Card>
+        <h3 className="font-bold text-base mb-1">Куда поступают деньги</h3>
         <p className="text-aux text-tg-hint mb-3">
-          Вы можете принимать оплату любым удобным способом — наличными, переводом
-          или своими реквизитами. А можете подключить онлайн-оплату прямо в приложении.
+          По умолчанию онлайн-оплата проходит через сервис, и мы переводим вам выручку
+          отдельно. Можно подключить свой магазин ЮKassa — тогда деньги клиентов будут
+          поступать напрямую вам, а сервис автоматически удержит только комиссию.
         </p>
 
         {!editing ? (
           <div className="flex flex-col gap-2 text-body">
             <div className="flex justify-between items-center">
-              <span className="text-tg-hint">Онлайн-оплата</span>
-              <span className={profile?.accept_online_payment ? 'text-status-success font-medium' : 'text-tg-hint'}>
-                {profile?.accept_online_payment ? 'Включена' : 'Выключена'}
-              </span>
-            </div>
-            <div className="flex justify-between items-center">
               <span className="text-tg-hint">Способ зачисления</span>
               <span className="font-medium">
-                {isCommission && hasSubAccount ? 'На ваш счёт (комиссия)' : 'Через сервис'}
+                {isCommission && hasSubAccount ? 'Напрямую вам (сплит)' : 'Через сервис'}
               </span>
             </div>
             {hasSubAccount && (
@@ -590,24 +651,14 @@ function PaymentsSection() {
               </div>
             )}
             <Button onClick={startEdit} variant="secondary" fullWidth className="mt-2">
-              Настроить
+              {hasSubAccount ? 'Изменить' : 'Подключить свой магазин'}
             </Button>
           </div>
         ) : (
           <div className="flex flex-col gap-3">
-            <label className="flex items-center justify-between gap-3 cursor-pointer">
-              <span className="text-body">Принимать онлайн-оплату в приложении</span>
-              <input
-                type="checkbox"
-                checked={acceptOnline}
-                onChange={(e) => setAcceptOnline(e.target.checked)}
-                className="w-5 h-5 accent-brand-500"
-              />
-            </label>
-
-            <div className="pt-2 border-t border-tg-secondary">
+            <div>
               <label className="text-micro font-medium text-tg-text mb-1 block">
-                ID магазина ЮKassa (необязательно)
+                ID магазина ЮKassa
               </label>
               <input
                 value={accountId}
@@ -617,10 +668,8 @@ function PaymentsSection() {
                 className="input-field"
               />
               <p className="text-micro text-tg-hint mt-1">
-                Если укажете свой магазин ЮKassa, деньги клиентов будут поступать
-                напрямую вам, а сервис автоматически удержит только свою комиссию
-                (раздельные платежи). Оставьте пустым — оплата пойдёт через сервис,
-                и мы переведём вам выручку отдельно.
+                Укажите ID вашего магазина ЮKassa, чтобы получать оплату напрямую
+                (раздельные платежи). Оставьте пустым — оплата пойдёт через сервис.
               </p>
             </div>
 

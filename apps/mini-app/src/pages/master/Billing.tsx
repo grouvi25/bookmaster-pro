@@ -1,16 +1,17 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { HeaderBackButton } from "@/components/common/BackButton";
-import { billingApi, mastersApi } from '@/api/endpoints';
+import { billingApi } from '@/api/endpoints';
 import { ListSkeleton } from '@/shared/ui/Skeleton';
 import Card from '@/shared/ui/Card';
 import Button from '@/shared/ui/Button';
 import { toast } from '@/shared/ui/Toast';
-import { Check, Crown, Zap, Sparkles, Rocket, Building2, Clock } from 'lucide-react';
+import { Check, Crown, Zap, Sparkles, Rocket, Building2, Clock, CreditCard, ChevronRight } from 'lucide-react';
 import PageHeader from '@/shared/ui/PageHeader';
 import type { LucideIcon } from 'lucide-react';
 import clsx from 'clsx';
 import { useFeatureFlags } from '@/hooks/useFeatureFlag';
+import { useNavigate } from 'react-router-dom';
 
 interface Plan {
   key: string;
@@ -107,76 +108,12 @@ const PLANS: Plan[] = [
   },
 ];
 
-function PaymentModeCard({ commission }: { commission: number }) {
-  const queryClient = useQueryClient();
-  const [saving, setSaving] = useState(false);
-  const { data: profile } = useQuery({
-    queryKey: ['master-profile'],
-    queryFn: () => mastersApi.getProfile().then((r) => r.data),
-  });
-
-  const enabled = !!profile?.accept_online_payment;
-
-  const toggle = async () => {
-    setSaving(true);
-    try {
-      await mastersApi.updateProfile({ accept_online_payment: !enabled });
-      await queryClient.invalidateQueries({ queryKey: ['master-profile'] });
-      toast.success(enabled ? 'Онлайн-оплата выключена' : 'Онлайн-оплата включена');
-    } catch {
-      toast.error('Не удалось изменить режим оплаты');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  return (
-    <Card className="mb-5">
-      <div className="flex items-center justify-between gap-3">
-        <div className="min-w-0">
-          <div className="font-semibold">Онлайн-оплата от клиентов</div>
-          <div className="text-xs text-tg-hint mt-0.5">
-            {enabled
-              ? 'Включена — клиенты платят картой при записи'
-              : 'Выключена — клиенты платят вам лично (наличные, перевод, СБП)'}
-          </div>
-          {enabled && (
-            <div className="text-xs text-orange-600 mt-1">
-              Комиссия сервиса: {commission}%
-            </div>
-          )}
-        </div>
-        <button
-          onClick={toggle}
-          disabled={saving}
-          className={clsx(
-            'relative w-12 h-6 rounded-full transition-colors flex-shrink-0',
-            enabled ? 'bg-brand-500' : 'bg-gray-300',
-            saving && 'opacity-60'
-          )}
-          aria-label="Переключить онлайн-оплату"
-        >
-          <div
-            className={clsx(
-              'absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform',
-              enabled ? 'translate-x-6' : 'translate-x-0.5'
-            )}
-          />
-        </button>
-      </div>
-      <div className="text-2xs text-tg-hint mt-2 leading-relaxed">
-        Без онлайн-оплаты комиссия сервиса 0% — платите только абонемент. Для приёма
-        картой нужна регистрация ИП/самозанятости и верификация в ЮKassa.
-      </div>
-    </Card>
-  );
-}
-
 export default function Billing() {
   const queryClient = useQueryClient();
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('monthly');
   const { flags } = useFeatureFlags();
+  const navigate = useNavigate();
 
   const { data: subscription, isLoading } = useQuery({
     queryKey: ['my-subscription'],
@@ -321,8 +258,24 @@ export default function Billing() {
         ))}
       </div>
 
-      {/* Режим монетизации: онлайн-оплата (Тариф A) vs абонемент (Тариф B) */}
-      <PaymentModeCard commission={currentCommission} />
+      {/* Приём оплаты — настраивается на отдельном экране */}
+      <Card
+        onClick={() => navigate('/master/settings?tab=payments')}
+        className="mb-5 cursor-pointer active:scale-[0.99] transition-transform"
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-brand-500/10 flex items-center justify-center flex-shrink-0">
+            <CreditCard className="w-5 h-5 text-brand-500" strokeWidth={1.8} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="font-semibold">Приём оплаты от клиентов</div>
+            <div className="text-xs text-tg-hint mt-0.5">
+              Онлайн-оплата, свой счёт ЮKassa · комиссия {currentCommission}%
+            </div>
+          </div>
+          <ChevronRight className="w-5 h-5 text-tg-hint flex-shrink-0" />
+        </div>
+      </Card>
 
       {/* Plans */}
       <div className="flex flex-col gap-3">
