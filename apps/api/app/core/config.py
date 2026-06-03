@@ -64,8 +64,8 @@ class Settings(BaseSettings):
     # T-Bank Payouts API (агентская схема — выплаты мастерам)
     T_BANK_API_KEY: str = ""
     T_BANK_API_URL: str = "https://business.tbank.ru/openapi/api/v1/payment"
-    T_BANK_CERT_PATH: str = ""  # путь к PEM-сертификату для mTLS
-    T_BANK_KEY_PATH: str = ""   # путь к приватному ключу для mTLS
+    T_BANK_CERT_PATH: str = "/etc/tbank/cert.pem"  # путь к PEM-сертификату для mTLS (внутри контейнера)
+    T_BANK_KEY_PATH: str = "/etc/tbank/key.pem"   # путь к приватному ключу для mTLS (внутри контейнера)
 
     # Разрешить локальные "fake" платежи без обращения к ЮKassa
     # (status сразу = succeeded). Должно быть False в production.

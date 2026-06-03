@@ -129,6 +129,7 @@ async def payout_via_card(
 
 def _build_ssl_context():
     """Собрать SSL-контекст для mTLS (клиентский сертификат + ключ)."""
+    import os
     import ssl
 
     cert_path = settings.T_BANK_CERT_PATH
@@ -136,6 +137,13 @@ def _build_ssl_context():
 
     if not cert_path or not key_path:
         return None  # fallback — без mTLS (только Bearer token)
+
+    if not os.path.isfile(cert_path) or not os.path.isfile(key_path):
+        logger.warning(
+            "T-Bank mTLS cert/key not found (%s, %s) — payout will use Bearer only",
+            cert_path, key_path,
+        )
+        return None
 
     ctx = ssl.create_default_context()
     ctx.load_cert_chain(certfile=cert_path, keyfile=key_path)

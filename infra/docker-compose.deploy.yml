@@ -67,6 +67,8 @@ services:
       - "127.0.0.1:8010:8000"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ${T_BANK_CERT_PATH:-/dev/null}:/etc/tbank/cert.pem:ro
+      - ${T_BANK_KEY_PATH:-/dev/null}:/etc/tbank/key.pem:ro
     networks: [bookmaster]
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
@@ -121,6 +123,9 @@ services:
     depends_on:
       db: { condition: service_healthy }
       redis: { condition: service_healthy }
+    volumes:
+      - ${T_BANK_CERT_PATH:-/dev/null}:/etc/tbank/cert.pem:ro
+      - ${T_BANK_KEY_PATH:-/dev/null}:/etc/tbank/key.pem:ro
     networks: [bookmaster]
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8090/health"]
