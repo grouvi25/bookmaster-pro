@@ -676,7 +676,6 @@ function PaymentsSection() {
 
   /** Отформатированный телефон для отображения */
   const displayPhone = profile?.payout_phone ? formatPhone(profile.payout_phone) : '';
-  const displayCard = profile?.payout_card ? formatCard(profile.payout_card) : '';
 
   return (
     <div className="py-section-y flex flex-col gap-4 animate-fade-in">
