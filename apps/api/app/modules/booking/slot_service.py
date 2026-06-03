@@ -174,10 +174,10 @@ class SlotService:
                     appt_end = appt_end.replace(tzinfo=None)
                 if not appt_start or not appt_end:
                     continue
-                # Буфер: защищаем окно после И перед записью
-                appt_start_with_buffer = appt_start - timedelta(minutes=buffer)
+                # Буфер только ПОСЛЕ записи (время на уборку/подготовку).
+                # До записи буфер не применяем — иначе блокируется лишний слот.
                 appt_end_with_buffer = appt_end + timedelta(minutes=buffer)
-                if current_time < appt_end_with_buffer and slot_end > appt_start_with_buffer:
+                if current_time < appt_end_with_buffer and slot_end > appt_start:
                     is_available = False
                     break
 

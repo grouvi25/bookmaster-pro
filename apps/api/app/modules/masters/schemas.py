@@ -21,7 +21,7 @@ class MasterProfileOut(BaseModel):
     latitude: Optional[float] = None
     longitude: Optional[float] = None
     accept_online_payment: bool = False
-    buffer_minutes: int = 0
+    buffer_minutes: int = 30
     link_page_enabled: bool = True
     link_page_theme: str = "default"
     link_page_links: list = []

@@ -299,6 +299,7 @@ function ProfileSection() {
   const [city, setCity] = useState('');
   const [depositAmount, setDepositAmount] = useState('');
   const [prepayPercent, setPrepayPercent] = useState('');
+  const [bufferMinutes, setBufferMinutes] = useState('');
   const [saving, setSaving] = useState(false);
   const [avatarUploading, setAvatarUploading] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
@@ -311,6 +312,7 @@ function ProfileSection() {
     setCity(profile?.city || '');
     setDepositAmount(profile?.noshow_deposit_amount ? String(profile.noshow_deposit_amount) : '');
     setPrepayPercent(profile?.noshow_prepay_percent ? String(profile.noshow_prepay_percent) : '');
+    setBufferMinutes(profile?.buffer_minutes != null ? String(profile.buffer_minutes) : '30');
     setEditing(true);
   };
 
@@ -346,6 +348,7 @@ function ProfileSection() {
         city,
         noshow_deposit_amount: depositAmount ? Number(depositAmount) : 0,
         noshow_prepay_percent: prepayPercent ? Number(prepayPercent) : 0,
+        buffer_minutes: bufferMinutes !== '' ? Number(bufferMinutes) : 30,
       });
       await queryClient.invalidateQueries({ queryKey: ['master-profile'] });
       toast.success('Профиль обновлён');
@@ -423,6 +426,28 @@ function ProfileSection() {
             <div>
               <label className="text-micro text-tg-hint mb-1 block">Город</label>
               <input value={city} onChange={e => setCity(e.target.value)} className="input-field" />
+            </div>
+
+            <div className="pt-2 border-t border-tg-secondary">
+              <label className="text-micro font-medium text-tg-text mb-2 block">
+                ⏱️ Перерыв между записями
+              </label>
+              <div className="flex gap-2 items-center">
+                <input
+                  value={bufferMinutes}
+                  onChange={e => setBufferMinutes(e.target.value)}
+                  type="number"
+                  min="0"
+                  max="120"
+                  step="5"
+                  placeholder="30"
+                  className="input-field w-24"
+                />
+                <span className="text-sm text-tg-hint">минут</span>
+              </div>
+              <p className="text-micro text-tg-hint mt-1">
+                Время после визита на уборку и подготовку. По умолчанию — 30 минут.
+              </p>
             </div>
 
             <div className="pt-2 border-t border-tg-secondary">

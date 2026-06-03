@@ -45,7 +45,7 @@ class Master(BaseModel):
     noshow_prepay_percent = Column(Integer, default=0)
     noshow_ai_threshold = Column(Integer, default=70)
     noshow_blacklist_count = Column(Integer, default=2)
-    buffer_minutes = Column(Integer, default=0)
+    buffer_minutes = Column(Integer, default=30)
 
     # Уведомления — настройки
     notify_new_booking = Column(Boolean, default=True)
