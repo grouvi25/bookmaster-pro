@@ -6,7 +6,7 @@ import { ListSkeleton } from '@/shared/ui/Skeleton';
 import Card from '@/shared/ui/Card';
 import Button from '@/shared/ui/Button';
 import { toast } from '@/shared/ui/Toast';
-import { Check, Crown, Zap, Sparkles, Rocket, Building2, Clock, CreditCard, ChevronRight, RefreshCw, XCircle } from 'lucide-react';
+import { Check, Crown, Zap, Sparkles, Rocket, Building2, Clock, CreditCard, ChevronRight, RefreshCw, XCircle, ArrowLeft, ShieldCheck } from 'lucide-react';
 import PageHeader from '@/shared/ui/PageHeader';
 import type { LucideIcon } from 'lucide-react';
 import clsx from 'clsx';
@@ -111,6 +111,7 @@ const PLANS: Plan[] = [
 export default function Billing() {
   const queryClient = useQueryClient();
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
+  const [confirmPlan, setConfirmPlan] = useState<string | null>(null);
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('monthly');
   const { flags } = useFeatureFlags();
   const navigate = useNavigate();
@@ -176,6 +177,7 @@ export default function Billing() {
       queryClient.invalidateQueries({ queryKey: ['feature-flags'], refetchType: 'all' });
       toast.success('Подписка оформлена!');
       setSelectedPlan(null);
+      setConfirmPlan(null);
     },
     onError: () => {
       toast.error('Ошибка оформления подписки');
@@ -362,8 +364,7 @@ export default function Billing() {
               {selectedPlan === plan.key && !isCurrent && (
                 <div className="mt-3 pt-3 border-t border-tg-secondary">
                   <Button
-                    onClick={() => handleSubscribe(plan.key)}
-                    loading={subscribeMutation.isPending}
+                    onClick={() => setConfirmPlan(plan.key)}
                     fullWidth
                     size="sm"
                   >
@@ -467,6 +468,133 @@ export default function Billing() {
         </div>
       )}
       </div>
+
+      {/* ── Экран подтверждения покупки ── */}
+      {confirmPlan && (() => {
+        const plan = PLANS.find((p) => p.key === confirmPlan);
+        if (!plan) return null;
+        const price = billingPeriod === 'yearly'
+          ? Math.round(plan.price * yearlyDiscount)
+          : plan.price;
+        const totalYearly = billingPeriod === 'yearly' ? price * 12 : null;
+        const isUpgrade = !!currentPlan;
+        const currentPlanObj = PLANS.find((p) => p.key === currentPlan);
+
+        return (
+          <div className="fixed inset-0 z-50 bg-tg-bg flex flex-col">
+            {/* Header */}
+            <div className="flex items-center gap-3 px-screen-x py-3 border-b border-tg-secondary">
+              <button
+                onClick={() => setConfirmPlan(null)}
+                className="w-10 h-10 rounded-xl flex items-center justify-center bg-tg-secondary active:scale-95 transition-transform"
+              >
+                <ArrowLeft className="w-5 h-5 text-tg-text" />
+              </button>
+              <div className="font-bold text-lg">Подтверждение</div>
+            </div>
+
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto px-screen-x py-5">
+              {/* Plan hero card */}
+              <div className="text-center mb-5">
+                <div className={clsx(
+                  'w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-3',
+                  `${plan.color.replace('text-', 'bg-')}/10`
+                )}>
+                  <plan.Icon className={clsx('w-8 h-8', plan.color)} strokeWidth={1.5} />
+                </div>
+                <div className="font-bold text-xl">{plan.name}</div>
+                <div className="text-tg-hint text-sm mt-1">
+                  {isUpgrade
+                    ? `Смена тарифа${currentPlanObj ? ` с «${currentPlanObj.name}»` : ''}`
+                    : 'Подключение тарифа'}
+                </div>
+              </div>
+
+              {/* Price breakdown */}
+              <Card className="mb-4">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="text-sm text-tg-hint">Тариф</div>
+                  <div className="font-bold">{plan.name}</div>
+                </div>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="text-sm text-tg-hint">Период</div>
+                  <div className="font-semibold">
+                    {billingPeriod === 'yearly' ? 'Годовой (−20%)' : 'Ежемесячный'}
+                  </div>
+                </div>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="text-sm text-tg-hint">Стоимость</div>
+                  <div className="font-bold text-lg">
+                    {price.toLocaleString('ru')} ₽ / мес
+                  </div>
+                </div>
+                {totalYearly && (
+                  <div className="flex items-center justify-between pt-3 border-t border-tg-secondary/50">
+                    <div className="text-sm text-tg-hint">Итого за год</div>
+                    <div className="font-bold text-lg">
+                      {totalYearly.toLocaleString('ru')} ₽
+                    </div>
+                  </div>
+                )}
+              </Card>
+
+              {/* What's included */}
+              <div className="text-xs text-tg-hint font-medium uppercase tracking-wider mb-3">
+                Что входит в тариф
+              </div>
+              <Card className="mb-4">
+                <div className="flex flex-col gap-2.5">
+                  {plan.features.map((f) => (
+                    <div key={f} className="flex items-center gap-2.5">
+                      <div className="w-5 h-5 rounded-full bg-accent-emerald/10 flex items-center justify-center flex-shrink-0">
+                        <Check className="w-3 h-3 text-accent-emerald" strokeWidth={2.5} />
+                      </div>
+                      <span className="text-sm">{f}</span>
+                    </div>
+                  ))}
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-5 h-5 rounded-full bg-accent-emerald/10 flex items-center justify-center flex-shrink-0">
+                      <Check className="w-3 h-3 text-accent-emerald" strokeWidth={2.5} />
+                    </div>
+                    <span className="text-sm">Комиссия онлайн-оплат: {plan.commission}%</span>
+                  </div>
+                </div>
+              </Card>
+
+              {/* Security note */}
+              <div className="flex items-start gap-2.5 px-1 mb-6">
+                <ShieldCheck className="w-4 h-4 text-accent-emerald flex-shrink-0 mt-0.5" />
+                <div className="text-xs text-tg-hint leading-relaxed">
+                  Безопасная оплата через ЮKassa. Вы будете перенаправлены на страницу платёжной системы.
+                  Подписка продлевается автоматически, отменить можно в любой момент.
+                </div>
+              </div>
+            </div>
+
+            {/* Footer buttons */}
+            <div className="px-screen-x pb-6 pt-3 border-t border-tg-secondary flex flex-col gap-2.5">
+              <Button
+                onClick={() => {
+                  handleSubscribe(confirmPlan);
+                }}
+                loading={subscribeMutation.isPending}
+                fullWidth
+                size="lg"
+              >
+                Перейти к оплате · {price.toLocaleString('ru')} ₽
+              </Button>
+              <Button
+                onClick={() => setConfirmPlan(null)}
+                variant="ghost"
+                fullWidth
+              >
+                Назад к тарифам
+              </Button>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }
