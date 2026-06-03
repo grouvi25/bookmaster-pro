@@ -3,7 +3,7 @@ NPS router — /api/v1/nps
 Ежеквартальный NPS-опрос мастеров.
 """
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -59,13 +59,21 @@ async def get_current_survey(
         await db.flush()
         await db.commit()
 
+    # Не показываем NPS новым мастерам — только после 21 дня с регистрации
+    min_age = timedelta(days=21)
+    now = datetime.now(timezone.utc)
+    account_age_ok = (
+        master.created_at is not None
+        and (now - master.created_at.replace(tzinfo=timezone.utc)) >= min_age
+    )
+
     return {
         "id": survey.id,
         "quarter": survey.quarter,
         "score": survey.score,
         "comment": survey.comment,
         "status": survey.status,
-        "should_show": survey.status == "pending",
+        "should_show": survey.status == "pending" and account_age_ok,
     }
 
 
