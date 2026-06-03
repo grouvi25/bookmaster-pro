@@ -511,6 +511,9 @@ async def grant_access_to_master(
     )
     db.add(grant)
 
+    # Синхронизируем current_plan мастера с выданным грантом
+    master.current_plan = req.plan
+
     svc = SuperadminService(db)
     await svc.log_action(
         admin_id=admin_id,
