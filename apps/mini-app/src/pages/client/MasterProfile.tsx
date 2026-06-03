@@ -71,7 +71,12 @@ export default function MasterProfile({ slug }: MasterProfileProps) {
         price: pkg.price,
       });
       if (resp.data?.confirmation_url) {
-        window.location.href = resp.data.confirmation_url;
+        const w = window as unknown as Record<string, unknown>;
+        if (w.WebApp && !(w as { Telegram?: unknown }).Telegram) {
+          window.open(resp.data.confirmation_url, '_blank');
+        } else {
+          window.location.href = resp.data.confirmation_url;
+        }
       } else {
         toast.success('Абонемент оформлен');
       }

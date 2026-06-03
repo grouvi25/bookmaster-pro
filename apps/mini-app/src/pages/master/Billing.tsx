@@ -162,7 +162,14 @@ export default function Billing() {
     onSuccess: (resp) => {
       const data = resp.data;
       if (data.confirmation_url) {
-        window.location.href = data.confirmation_url;
+        // MAX desktop webview: YooMoney блокирует загрузку внутри webview (X-Frame-Options)
+        // Открываем в новой вкладке/системном браузере
+        const w = window as unknown as Record<string, unknown>;
+        if (w.WebApp && !(w as { Telegram?: unknown }).Telegram) {
+          window.open(data.confirmation_url, '_blank');
+        } else {
+          window.location.href = data.confirmation_url;
+        }
         return;
       }
       queryClient.invalidateQueries({ queryKey: ['my-subscription'] });

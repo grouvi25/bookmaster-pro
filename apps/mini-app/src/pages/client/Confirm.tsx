@@ -84,7 +84,12 @@ export default function Confirm() {
           type: paymentType === 'points' ? 'full' : paymentType.startsWith('prepay') ? 'prepay' : paymentType,
         });
         if (paymentResp.data.payment_url) {
-          window.location.href = paymentResp.data.payment_url;
+          const w = window as unknown as Record<string, unknown>;
+          if (w.WebApp && !(w as { Telegram?: unknown }).Telegram) {
+            window.open(paymentResp.data.payment_url, '_blank');
+          } else {
+            window.location.href = paymentResp.data.payment_url;
+          }
           return;
         }
       }
