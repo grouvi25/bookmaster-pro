@@ -50,6 +50,7 @@ class SubscriptionOut(BaseModel):
     status: str
     started_at: date
     next_billing: date
+    auto_renew: bool = True
 
     model_config = {"from_attributes": True}
 

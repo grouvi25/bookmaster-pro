@@ -167,6 +167,71 @@ async def create_subscription(
     return result
 
 
+@router.post("/subscription/cancel-auto-renew")
+async def cancel_auto_renew(
+    user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Отключить автопродление подписки.
+    Подписка останется активной до конца оплаченного периода,
+    но автоматическое списание больше не будет происходить.
+    """
+    master = await MasterService(db).get_by_identity(int(user["sub"]))
+    if not master:
+        raise HTTPException(status_code=403, detail="Not a master")
+
+    service = PaymentService(db)
+    sub = await service.get_active_subscription(master.id)
+    if not sub:
+        raise HTTPException(status_code=404, detail="No active subscription")
+
+    sub.auto_renew = False
+    await db.commit()
+
+    logger.info(
+        f"Auto-renew disabled for subscription {sub.id} "
+        f"(master={master.id}, plan={sub.plan})"
+    )
+
+    return {
+        "status": "ok",
+        "message": "Автопродление отключено. Подписка активна до конца оплаченного периода.",
+        "auto_renew": False,
+        "next_billing": str(sub.next_billing),
+    }
+
+
+@router.post("/subscription/resume-auto-renew")
+async def resume_auto_renew(
+    user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Включить автопродление подписки обратно."""
+    master = await MasterService(db).get_by_identity(int(user["sub"]))
+    if not master:
+        raise HTTPException(status_code=403, detail="Not a master")
+
+    service = PaymentService(db)
+    sub = await service.get_active_subscription(master.id)
+    if not sub:
+        raise HTTPException(status_code=404, detail="No active subscription")
+
+    sub.auto_renew = True
+    await db.commit()
+
+    logger.info(
+        f"Auto-renew resumed for subscription {sub.id} "
+        f"(master={master.id}, plan={sub.plan})"
+    )
+
+    return {
+        "status": "ok",
+        "message": "Автопродление включено.",
+        "auto_renew": True,
+        "next_billing": str(sub.next_billing),
+    }
+
+
 @router.post("/client-subscription", response_model=ClientSubscriptionOut)
 async def create_client_subscription(
     body: ClientSubscriptionCreate,

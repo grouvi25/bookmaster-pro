@@ -3,7 +3,7 @@ Payments — транзакции, подписки мастеров, абоне
 """
 
 from sqlalchemy import (
-    Column, Integer, String, Numeric, Date, ForeignKey,
+    Column, Integer, String, Numeric, Date, ForeignKey, Boolean,
 )
 
 from app.core.base_model import BaseModel
@@ -44,6 +44,7 @@ class MasterSubscription(BaseModel):
     started_at = Column(Date, nullable=False)
     next_billing = Column(Date, nullable=False)
     yookassa_recurring_id = Column(String(100), nullable=True)
+    auto_renew = Column(Boolean, default=True, server_default="true", nullable=False)
 
 
 class ClientSubscription(BaseModel):
