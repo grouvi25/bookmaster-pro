@@ -146,16 +146,16 @@ async def create_booking(
     _rl=rate_limit("booking_create", max_requests=10, window_seconds=60),
 ):
     """Создать запись (от клиента или мастера вручную)."""
-    # Определяем client_id
+    # Определяем client_id — ищем Client-запись по identity_id для любой роли,
+    # чтобы запись привязалась и отображалась в «Мои записи» у клиента.
     client_id = None
-    if user.get("role") == "client":
-        from sqlalchemy import select
-        result = await db.execute(
-            select(Client).where(Client.identity_id == int(user["sub"]))
-        )
-        client = result.scalar_one_or_none()
-        if client:
-            client_id = client.id
+    from sqlalchemy import select as sa_sel
+    result = await db.execute(
+        sa_sel(Client).where(Client.identity_id == int(user["sub"]))
+    )
+    client = result.scalar_one_or_none()
+    if client:
+        client_id = client.id
 
     booking_service = BookingService(db)
     try:

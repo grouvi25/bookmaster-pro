@@ -264,11 +264,15 @@ async def run_webhook():
     HTTPS обязателен — настраивается через nginx.
     """
     logger.info(f"Starting bot in webhook mode: {settings.TG_WEBHOOK_URL}")
-    await bot.set_webhook(
-        url=settings.TG_WEBHOOK_URL,
-        secret_token=settings.TG_WEBHOOK_SECRET,
-        drop_pending_updates=True,
-    )
+    try:
+        await bot.set_webhook(
+            url=settings.TG_WEBHOOK_URL,
+            secret_token=settings.TG_WEBHOOK_SECRET,
+            drop_pending_updates=True,
+        )
+        logger.info("Webhook set successfully")
+    except Exception as e:
+        logger.warning(f"set_webhook failed ({e}), webhook may already be configured — continuing")
 
     app = web.Application()
     handler = SimpleRequestHandler(

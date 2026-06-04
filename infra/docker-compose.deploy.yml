@@ -86,6 +86,8 @@ services:
       api: { condition: service_healthy }
     ports:
       - "127.0.0.1:8081:8081"
+    extra_hosts:
+      - "api.telegram.org:149.154.167.220"
     networks: [bookmaster]
 
   mini-app:
