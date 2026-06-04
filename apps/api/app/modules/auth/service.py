@@ -142,7 +142,30 @@ class AuthService:
         # Проверяем что identity не существует
         existing = await self._get_identity(platform, platform_id)
         if existing:
-            raise ValueError("User already registered")
+            # Если Identity осталась после удаления мастера (orphan) —
+            # удаляем её и разрешаем повторную регистрацию.
+            is_orphan = False
+            if existing.role == "master":
+                m = (await self.db.execute(
+                    select(Master).where(Master.identity_id == existing.id)
+                )).scalar_one_or_none()
+                if not m:
+                    is_orphan = True
+            elif existing.role == "client":
+                c = (await self.db.execute(
+                    select(Client).where(Client.identity_id == existing.id)
+                )).scalar_one_or_none()
+                if not c:
+                    is_orphan = True
+            elif existing.role not in _VALID_USER_ROLES:
+                # Невалидная роль — тоже orphan
+                is_orphan = True
+
+            if is_orphan:
+                await self.db.delete(existing)
+                await self.db.flush()
+            else:
+                raise ValueError("User already registered")
 
         # Создаём identity
         identity = Identity(
