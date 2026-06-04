@@ -13,7 +13,7 @@ from app.core.config import settings
 logger = logging.getLogger(__name__)
 
 TG_API = f"https://api.telegram.org/bot{settings.TG_BOT_TOKEN}"
-MAX_API = "https://botapi.max.ru/v1"
+MAX_API = "https://botapi.max.ru"
 
 
 class NotificationService:
@@ -181,24 +181,25 @@ class NotificationService:
         if not settings.MAX_BOT_TOKEN:
             logger.debug("MAX_BOT_TOKEN not set, skipping")
             return False
-        payload: dict = {
-            "user_id": int(user_id),
-            "text": text[:4096],
-        }
+        # MAX Bot API: POST /messages?user_id=<id>,
+        # auth — токен БЕЗ «Bearer», кнопки — attachment inline_keyboard.
+        payload: dict = {"text": text[:4000]}
         if button_text:
             url = button_url or settings.APP_URL
-            payload["keyboard"] = {
-                "buttons": [[{
-                    "type": "open_link",
+            payload["attachments"] = [{
+                "type": "inline_keyboard",
+                "payload": {"buttons": [[{
+                    "type": "link",
                     "text": button_text,
                     "url": url,
-                }]]
-            }
+                }]]},
+            }]
         async with httpx.AsyncClient(timeout=10.0) as client:
             resp = await client.post(
-                f"{MAX_API}/messages/send",
+                f"{MAX_API}/messages",
+                params={"user_id": int(user_id)},
                 headers={
-                    "Authorization": f"Bearer {settings.MAX_BOT_TOKEN}",
+                    "Authorization": settings.MAX_BOT_TOKEN,
                     "Content-Type": "application/json",
                 },
                 json=payload,
