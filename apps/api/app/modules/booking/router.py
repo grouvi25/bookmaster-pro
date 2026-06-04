@@ -30,6 +30,30 @@ from app.modules.booking.models import Appointment
 
 router = APIRouter()
 
+import logging as _logging
+
+_logger = _logging.getLogger(__name__)
+
+
+async def _invalidate_slots_cache(master_id: int) -> None:
+    """Сбросить Redis-кеш avail_dates для мастера при любом изменении записей.
+    Использует SCAN, чтобы найти все ключи avail_dates:<master_id>:*."""
+    try:
+        from app.core.redis import get_redis
+        redis = await get_redis()
+        cursor, keys = 0, []
+        pattern = f"avail_dates:{master_id}:*"
+        while True:
+            cursor, batch = await redis.scan(cursor, match=pattern, count=100)
+            keys.extend(batch)
+            if cursor == 0:
+                break
+        if keys:
+            await redis.delete(*keys)
+            _logger.debug("Invalidated %d slots cache keys for master %d", len(keys), master_id)
+    except Exception as exc:
+        _logger.warning("slots cache invalidation failed: %s", exc)
+
 
 def _enrich_booking(appt: Appointment) -> dict:
     """Add service_name, duration_min, time, master_name from relationships."""
@@ -174,6 +198,9 @@ async def create_booking(
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+    # Слот занят — сбрасываем кэш доступных дат
+    await _invalidate_slots_cache(body.master_id)
+
     return appointment
 
 
@@ -265,6 +292,10 @@ async def update_booking_status(
         master_comment=body.master_comment,
         price_final=body.price_final,
     )
+
+    # При отмене/завершении слот может освободиться — сбрасываем кэш
+    await _invalidate_slots_cache(appointment.master_id)
+
     return updated
 
 
@@ -282,6 +313,9 @@ async def create_blocked_slot(
         raise HTTPException(status_code=403, detail="Not a master")
     service = BookingService(db)
     blocked = await service.create_blocked_slot(master.id, body.model_dump())
+
+    await _invalidate_slots_cache(master.id)
+
     return BlockedSlotOut(
         id=blocked.id,
         date_from=blocked.date_from,
@@ -349,3 +383,5 @@ async def delete_blocked_slot(
     deleted = await service.delete_blocked_slot(blocked_id, master.id)
     if not deleted:
         raise HTTPException(status_code=404, detail="Blocked slot not found")
+
+    await _invalidate_slots_cache(master.id)
