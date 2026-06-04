@@ -115,6 +115,10 @@ class AuthService:
             master = result.scalar_one_or_none()
             if master:
                 master_id = master.id
+            else:
+                # Master-запись удалена (через суперадмин-панель) — пользователь
+                # должен пройти онбординг заново как новый.
+                return {"role": "new", "token": None, "user_id": identity.id, "display_name": None, "master_id": None}
 
         return {
             "role": identity.role,

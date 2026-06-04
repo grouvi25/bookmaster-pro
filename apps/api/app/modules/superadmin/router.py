@@ -626,7 +626,19 @@ async def delete_master(
         payload={"display_name": master_name},
     )
 
+    # Удаляем identity мастера, чтобы при следующем входе он прошёл
+    # онбординг как новый пользователь (а не попал в пустой дашборд).
+    from app.modules.auth.models import Identity
+    identity_id = master.identity_id
     await db.delete(master)
+
+    if identity_id:
+        identity = (await db.execute(
+            select(Identity).where(Identity.id == identity_id)
+        )).scalar_one_or_none()
+        if identity:
+            await db.delete(identity)
+
     await db.commit()
 
     return {"deleted": True, "master_id": master_id, "display_name": master_name}
