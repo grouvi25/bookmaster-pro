@@ -15,6 +15,7 @@ class BotSettings(BaseSettings):
     API_URL: str = "http://localhost:8000"
     BOT_PORT: int = 8081
     ENVIRONMENT: str = "development"
+    BOT_MODE: str = ""  # "polling" / "webhook"; пустая строка = авто (webhook в prod, polling в dev)
     SUPERADMIN_IDS: str = ""
 
     @property

@@ -297,7 +297,12 @@ async def run_webhook():
 
 # ─── Точка входа ─────────────────────────────────────────────────────
 async def main():
-    if settings.ENVIRONMENT == "production":
+    mode = settings.BOT_MODE.lower() if settings.BOT_MODE else ""
+    if mode == "polling":
+        await run_polling()
+    elif mode == "webhook":
+        await run_webhook()
+    elif settings.ENVIRONMENT == "production":
         await run_webhook()
     else:
         await run_polling()
