@@ -168,7 +168,7 @@ export default function Dashboard() {
                   </Button>
                 )}
                 <Button
-                  onClick={() => navigate('/master/schedule')}
+                  onClick={() => navigate('/master/schedule', { state: { openBookingId: appt.id } })}
                   variant="secondary"
                   size="sm"
                 >

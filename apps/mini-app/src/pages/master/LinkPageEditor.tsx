@@ -168,7 +168,7 @@ export default function LinkPageEditor() {
           <Button
             variant="secondary"
             size="sm"
-            onClick={() => navigate(previewPath)}
+            onClick={() => navigate(`${previewPath}?preview=1`)}
             className="flex-1"
           >
             <Eye className="w-3.5 h-3.5" /> Предпросмотр

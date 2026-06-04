@@ -10,9 +10,9 @@
  * gradient header, стеклянные карточки, плавные анимации.
  */
 import { useQuery } from '@tanstack/react-query';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { mastersApi, servicesApi, reviewsApi, portfolioApi } from '@/api/endpoints';
-import { User, Star, ExternalLink, MapPin, Clock, Download } from 'lucide-react';
+import { User, Star, ExternalLink, MapPin, Clock, Download, ArrowLeft } from 'lucide-react';
 import type { Service, PortfolioItem } from '@/shared/types/api';
 import { pageUrl, botLink } from '@/shared/config';
 
@@ -25,6 +25,9 @@ interface Review {
 
 export default function LinkPage() {
   const { slug } = useParams<{ slug: string }>();
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const isPreview = searchParams.get('preview') === '1';
 
   const { data: master, isLoading } = useQuery({
     queryKey: ['link-page-master', slug],
@@ -63,6 +66,16 @@ export default function LinkPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white font-sans">
+      {/* Preview back button */}
+      {isPreview && (
+        <button
+          onClick={() => navigate(-1)}
+          className="fixed top-4 left-4 z-50 flex items-center gap-1.5 px-3 py-2 bg-black/50 backdrop-blur-sm text-white rounded-full text-sm font-medium shadow-lg hover:bg-black/70 active:scale-95 transition-all"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Назад
+        </button>
+      )}
       {/* Hero Section */}
       <div className="relative overflow-hidden">
         {/* Gradient background */}

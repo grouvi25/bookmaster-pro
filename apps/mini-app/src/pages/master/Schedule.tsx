@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { bookingApi, portfolioApi, uploadsApi } from '@/api/endpoints';
 import { toArray } from '@/shared/lib/normalize';
 import { fmtRub } from '@/shared/lib/format';
@@ -28,6 +28,7 @@ import NewBookingModal from '@/components/master/NewBookingModal';
 
 export default function Schedule() {
   const navigate = useNavigate();
+  const location = useLocation();
   const queryClient = useQueryClient();
   const [viewMode, setViewMode] = useState<'week' | 'month'>('week');
   const [weekStart, setWeekStart] = useState(startOfWeek(new Date(), { weekStartsOn: 1 }));
@@ -39,12 +40,29 @@ export default function Schedule() {
   const [photoPromptBooking, setPhotoPromptBooking] = useState<Booking | null>(null);
   const [photoUploading, setPhotoUploading] = useState(false);
   const [showNewBooking, setShowNewBooking] = useState(false);
+  const pendingOpenRef = useRef<number | null>(
+    (location.state as { openBookingId?: number } | null)?.openBookingId ?? null
+  );
 
   const { data, isLoading } = useQuery({
     queryKey: ['master-schedule', selectedDate],
     queryFn: () =>
       bookingApi.masterBookings({ date_from: selectedDate, date_to: selectedDate }).then((r) => r.data),
   });
+
+  // Auto-open booking when navigated from Dashboard "Подробнее"
+  useEffect(() => {
+    if (pendingOpenRef.current && data) {
+      const bookings = toArray<Booking>(data);
+      const target = bookings.find((b) => b.id === pendingOpenRef.current);
+      if (target) {
+        setSelectedBooking(target);
+      }
+      pendingOpenRef.current = null;
+      // Clear navigation state so back button doesn't re-trigger
+      window.history.replaceState({}, '');
+    }
+  }, [data]);
 
   if (isLoading) return <div className="px-screen-x py-section-y"><BookingCardSkeleton count={5} /></div>;
 
