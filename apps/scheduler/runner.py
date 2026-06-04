@@ -20,13 +20,27 @@ from apscheduler.jobstores.redis import RedisJobStore
 
 from app.core.config import settings
 
-# Загружаем все ORM-модели до первого запроса, чтобы SQLAlchemy
+# Загружаем ВСЕ ORM-модели до первого запроса, чтобы SQLAlchemy
 # смог разрешить строковые relationship-ссылки между модулями.
+import app.modules.auth.models  # noqa: F401
 import app.modules.masters.models  # noqa: F401
 import app.modules.clients.models  # noqa: F401
-import app.modules.payments.models  # noqa: F401
-import app.modules.auth.models  # noqa: F401
+import app.modules.services.models  # noqa: F401
 import app.modules.booking.models  # noqa: F401
+import app.modules.payments.models  # noqa: F401
+import app.modules.reviews.models  # noqa: F401
+import app.modules.loyalty.models  # noqa: F401
+import app.modules.promo.models  # noqa: F401
+import app.modules.waitlist.models  # noqa: F401
+import app.modules.consultations.models  # noqa: F401
+import app.modules.broadcast.models  # noqa: F401
+import app.modules.support.models  # noqa: F401
+import app.modules.core.models  # noqa: F401
+import app.modules.portfolio.models  # noqa: F401
+import app.modules.nps.models  # noqa: F401
+import app.modules.ai.models  # noqa: F401
+import app.modules.marketplace.models  # noqa: F401
+import app.modules.superadmin.models  # noqa: F401
 
 from app.modules.booking.scheduler import (
     remind_24h,
