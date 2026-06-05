@@ -19,11 +19,13 @@ import SettingsTab from './tabs/SettingsTab';
 import PromoCodesTab from './tabs/PromoCodesTab';
 import GrowthTab from './tabs/GrowthTab';
 import TeamTab from './tabs/TeamTab';
+import ErrorsTab from './tabs/ErrorsTab';
+import BackupsTab from './tabs/BackupsTab';
 
 export type SuperadminTab =
   | 'dashboard' | 'masters'  | 'finance'  | 'tickets'
   | 'sla'       | 'broadcast'| 'growth'   | 'promo'
-  | 'settings'  | 'health'   | 'audit'    | 'team';
+  | 'settings'  | 'health'   | 'audit'    | 'team'    | 'errors'   | 'backups';
 
 const TABS: { key: SuperadminTab; label: string; emoji: string }[] = [
   { key: 'dashboard', label: 'Обзор',     emoji: '📊' },
@@ -36,6 +38,8 @@ const TABS: { key: SuperadminTab; label: string; emoji: string }[] = [
   { key: 'promo',     label: 'Промо',     emoji: '🎁' },
   { key: 'team',      label: 'Команда',   emoji: '👮' },
   { key: 'settings',  label: 'Настройки', emoji: '⚙️' },
+  { key: 'errors',    label: 'Ошибки',    emoji: '🐛' },
+  { key: 'backups',   label: 'Бэкапы',    emoji: '💾' },
   { key: 'health',    label: 'Здоровье',  emoji: '🩺' },
   { key: 'audit',     label: 'Аудит',     emoji: '📜' },
 ];
@@ -51,6 +55,8 @@ const TAB_COMPONENTS: Record<SuperadminTab, React.FC> = {
   promo:     PromoCodesTab,
   team:      TeamTab,
   settings:  SettingsTab,
+  errors:    ErrorsTab,
+  backups:   BackupsTab,
   health:    HealthTab,
   audit:     AuditTab,
 };

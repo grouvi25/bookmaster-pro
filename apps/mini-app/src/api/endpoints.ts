@@ -563,3 +563,18 @@ export const superadminApi = {
   removeModerator: (identityId: number) =>
     api.delete(`/superadmin/moderators/${identityId}`),
 };
+
+
+// ── Monitoring (Superadmin) ──
+export const monitoringApi = {
+  listErrors: (params?: { status?: string; severity?: string; limit?: number; offset?: number }) =>
+    api.get('/monitoring/errors', { params }),
+  updateErrorStatus: (id: number, data: { status: string }) =>
+    api.patch(`/monitoring/errors/${id}`, data),
+  getSolutions: (fingerprint: string) =>
+    api.get(`/monitoring/solutions/${fingerprint}`),
+  createSolution: (data: { fingerprint: string; solution: string }) =>
+    api.post('/monitoring/solutions', data),
+  listBackups: (limit?: number) =>
+    api.get('/monitoring/backups', { params: { limit: limit ?? 30 } }),
+};
