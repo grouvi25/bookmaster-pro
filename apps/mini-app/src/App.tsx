@@ -225,7 +225,7 @@ function AppRouter() {
               <Navigate to="/master" replace />
             ) : role === 'client' ? (
               <Navigate to="/client" replace />
-            ) : isNewUser || (hasTelegramContext && !role) ? (
+            ) : isNewUser || (hasTelegramContext && (!role || role === ('new' as any))) ? (
               <Navigate to="/register" replace />
             ) : (
               <HomePage />

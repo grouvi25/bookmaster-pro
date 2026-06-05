@@ -101,6 +101,10 @@ class AuthService:
         # Жёсткая привязка привилегий к конфигу: если в БД осталась роль
         # 'superadmin' (или любая другая вне whitelist), но platform_id уже
         # не в SUPERADMIN_IDS — НЕ доверяем БД. Пользователь проходит онбординг.
+        # Если роль "new" — пользователь не зарегистрирован, не выдаём токен.
+        if primary.role == "new":
+            return {"role": "new", "token": None, "user_id": found.id, "display_name": None, "master_id": None}
+
         if primary.role not in _VALID_USER_ROLES:
             return {"role": "new", "token": None, "user_id": found.id, "display_name": None, "master_id": None}
 

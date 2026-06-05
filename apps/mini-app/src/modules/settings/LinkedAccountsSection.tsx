@@ -66,6 +66,8 @@ export default function LinkedAccountsSection() {
   const unlinkMutation = useMutation({
     mutationFn: (identityId: number) => authApi.unlinkAccount(identityId),
     onSuccess: () => {
+      // После отвязки нужно пересоздать сессию: старый JWT привязан к primary
+      window.location.reload();
       toast.success('Аккаунт отвязан');
       refetch();
     },
