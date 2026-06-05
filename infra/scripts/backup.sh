@@ -17,6 +17,11 @@ if [ -f /opt/bookmaster/.env ]; then
     source /opt/bookmaster/.env
     set +a
 fi
+if [ -f /opt/bookmaster/infra/.env ]; then
+    set -a
+    source /opt/bookmaster/infra/.env
+    set +a
+fi
 
 # Функция логирования
 log() { echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" | tee -a "${LOG_FILE}"; }
