@@ -32,23 +32,26 @@ export default function Register() {
 
   const linkMutation = useMutation({
     mutationFn: async (code: string) => {
-      const resp = await authApi.applyLinkCode(code);
-      return resp;
+      const initData = PlatformAdapter.getInitData();
+      if (!initData) throw new Error('Нет данных платформы');
+      const data = await authApi.linkByInitData({
+        init_data: initData,
+        code,
+        platform: PlatformAdapter.platform,
+      });
+      return data;
     },
-    onSuccess: async () => {
-      toast.success('Аккаунт привязан! Входим…');
-      try {
-        const initData = PlatformAdapter.getInitData();
-        if (initData) {
-          const resp = await authApi.identify(initData);
-          const data = resp.data;
-          if (data.access_token) {
-            setAuth(data.access_token, data.role, data.master_id);
-            navigate(data.role === 'master' ? '/master' : '/', { replace: true });
-          }
-        }
-      } catch {
-        toast.error('Войдите заново');
+    onSuccess: (data: any) => {
+      if (data.access_token) {
+        setAuth(data.access_token, data.role, data.master_id);
+        toast.success(data.message || 'Аккаунт привязан!');
+        const target = data.role === 'superadmin' ? '/superadmin'
+          : data.role === 'master' ? '/master'
+          : data.role === 'client' ? '/client'
+          : '/';
+        navigate(target, { replace: true });
+      } else {
+        toast.error('Не удалось войти после привязки');
       }
     },
     onError: (err: any) => {

@@ -348,6 +348,74 @@ async def unlink_account(
     return {"status": "unlinked"}
 
 
+
+
+class LinkByInitDataRequest(PydanticBaseModel):
+    """Привязка аккаунта по initData (без JWT). Для экрана регистрации."""
+    init_data: str
+    code: str = PydField(..., min_length=6, max_length=6, pattern=r"^\d{6}$")
+    platform: str | None = None
+    platform_id: str | None = None
+
+
+@router.post("/link-by-init-data")
+async def link_by_init_data(
+    body: LinkByInitDataRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Привязка аккаунта по initData + код (без JWT).
+    Используется на экране регистрации, когда JWT ещё нет.
+
+    1. Валидирует initData → platform + platform_id
+    2. Создаёт identity с role='new' если не существует
+    3. Применяет код привязки
+    4. Переидентифицирует → возвращает JWT
+    """
+    platform, platform_id, _ = _resolve_platform(body)
+
+    service = AuthService(db)
+    svc = AccountLinkService(db)
+
+    # Получаем или создаём identity
+    identity = await service._get_identity(platform, platform_id)
+    if not identity:
+        identity = Identity(
+            platform=platform,
+            platform_id=platform_id,
+            role="new",
+        )
+        db.add(identity)
+        await db.flush()
+
+    # Если identity уже привязана — ошибка
+    if identity.linked_identity_id:
+        raise HTTPException(400, "Аккаунт уже привязан. Сначала отвяжите.")
+
+    try:
+        result = await svc.apply_link_code(
+            code=body.code,
+            current_identity_id=identity.id,
+        )
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+
+    await db.commit()
+
+    # Переидентифицируем — теперь identity привязана к primary
+    identify_result = await service.identify(platform, platform_id)
+
+    return {
+        "status": result.get("status", "linked"),
+        "message": result.get("message", "Аккаунт привязан"),
+        "access_token": identify_result.get("token"),
+        "role": identify_result.get("role"),
+        "user_id": identify_result.get("user_id"),
+        "display_name": identify_result.get("display_name"),
+        "master_id": identify_result.get("master_id"),
+    }
+
+
 @router.get("/linked-platforms")
 async def get_linked_platforms(
     user: dict = Depends(get_current_user),

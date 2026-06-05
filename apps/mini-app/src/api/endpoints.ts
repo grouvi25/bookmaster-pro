@@ -194,6 +194,8 @@ export const authApi = {
     api.delete('/auth/link-account', { params: identityId ? { identity_id: identityId } : undefined }).then(r => r.data),
   getLinkedPlatforms: () =>
     api.get('/auth/linked-platforms').then(r => r.data),
+  linkByInitData: (data: { init_data: string; code: string; platform?: string }) =>
+    api.post('/auth/link-by-init-data', data).then(r => r.data),
 };
 
 // ── Masters ──
