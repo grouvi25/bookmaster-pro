@@ -55,6 +55,12 @@ services:
   api:
     <<: [*restart, *env]
     container_name: bm_api
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "5"
+        tag: "bookmaster/api"
     build:
       context: ..
       dockerfile: apps/api/Dockerfile
@@ -119,6 +125,12 @@ services:
   scheduler:
     <<: [*restart, *env]
     container_name: bm_scheduler
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "3"
+        tag: "bookmaster/scheduler"
     build:
       context: ..
       dockerfile: apps/scheduler/Dockerfile

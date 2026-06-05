@@ -41,7 +41,9 @@ import app.modules.nps.models  # noqa: F401
 import app.modules.ai.models  # noqa: F401
 import app.modules.marketplace.models  # noqa: F401
 import app.modules.superadmin.models  # noqa: F401
+import app.modules.monitoring.models  # noqa: F401
 
+from app.modules.monitoring.alerts import check_error_alerts
 from app.modules.booking.scheduler import (
     remind_24h,
     remind_2h,
@@ -60,10 +62,8 @@ from app.modules.booking.scheduler import (
     execute_master_payouts,
 )
 
-logging.basicConfig(
-    level=logging.DEBUG if settings.DEBUG else logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
-)
+from app.core.logging_setup import setup_logging
+setup_logging(debug=settings.DEBUG, service_name="bookmaster-scheduler")
 logger = logging.getLogger("scheduler")
 
 

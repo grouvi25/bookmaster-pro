@@ -32,6 +32,7 @@ class BookingCreate(BaseModel):
     promo_code: Optional[str] = None
     use_loyalty_points: bool = False
     subscription_id: Optional[int] = None
+    event_type: Optional[str] = "service"
 
 
 class BookingOut(BaseModel):
@@ -48,12 +49,16 @@ class BookingOut(BaseModel):
     client_comment: Optional[str] = None
     master_comment: Optional[str] = None
     price_final: Optional[int] = None
+    event_type: Optional[str] = None
     discount_amount: int = 0
     source: str = "mini_app"
     service_name: Optional[str] = None
     duration_min: Optional[int] = None
     time: Optional[str] = None
     master_name: Optional[str] = None
+    event_type: str = "service"
+    client_platform: Optional[str] = None
+    client_platform_id: Optional[str] = None
 
     model_config = {"from_attributes": True}
 
@@ -68,6 +73,7 @@ class BookingStatusUpdate(BaseModel):
     cancel_reason: Optional[str] = None
     master_comment: Optional[str] = None
     price_final: Optional[int] = None
+    event_type: Optional[str] = None
 
 
 class AvailableDatesOut(BaseModel):

@@ -23,6 +23,15 @@ class AppointmentStatus(str, enum.Enum):
     NO_SHOW = "no_show"
 
 
+class EventType(str, enum.Enum):
+    SERVICE = "service"
+    MEETING = "meeting"
+    CONSULTATION = "consultation"
+    SHOOTING = "shooting"
+    EDUCATION = "education"
+    OTHER = "other"
+
+
 class ScheduleTemplate(BaseModel):
     """Шаблон расписания — день недели + время."""
     __tablename__ = "schedule_templates"
@@ -86,6 +95,9 @@ class Appointment(BaseModel):
 
     source = Column(String(30), default="mini_app")
     # 'mini_app' | 'bot' | 'marketplace' | 'widget' | 'manual'
+
+    event_type = Column(String(30), default=EventType.SERVICE.value, nullable=False)
+    # 'service' | 'meeting' | 'consultation' | 'shooting' | 'education' | 'other'
 
     cancelled_at = Column(DateTime(timezone=True), nullable=True)
     cancel_reason = Column(String(300), nullable=True)

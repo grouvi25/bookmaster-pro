@@ -34,6 +34,7 @@ from app.modules.ai.models import (  # noqa
 from app.modules.portfolio.models import WorkPhoto  # noqa
 from app.modules.support.models import SupportTicket, TicketMessage  # noqa
 from app.modules.marketplace.models import MarketplaceListing  # noqa
+from app.modules.monitoring.models import ErrorEvent, ErrorSolution  # noqa
 from app.modules.superadmin.models import AdminAuditLog  # noqa
 
 config = context.config

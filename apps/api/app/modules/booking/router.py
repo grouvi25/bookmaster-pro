@@ -26,6 +26,7 @@ from app.modules.booking.service import BookingService
 from app.modules.booking.slot_service import SlotService
 from app.modules.masters.service import MasterService
 from app.modules.clients.models import Client
+from app.modules.auth.models import Identity
 from app.modules.booking.models import Appointment
 
 router = APIRouter()
@@ -74,12 +75,17 @@ def _enrich_booking(appt: Appointment) -> dict:
         "discount_amount": appt.discount_amount or 0,
         "source": appt.source or "mini_app",
         "time": appt.time_start.strftime("%H:%M") if appt.time_start else None,
+        "event_type": getattr(appt, "event_type", "service") or "service",
     }
     if appt.service:
         data["service_name"] = appt.service.name
         data["duration_min"] = appt.service.duration_min
     if appt.master:
         data["master_name"] = appt.master.display_name
+    # Client platform info (for contact buttons)
+    if appt.client and hasattr(appt.client, "identity") and appt.client.identity:
+        data["client_platform"] = appt.client.identity.platform
+        data["client_platform_id"] = appt.client.identity.platform_id
     return data
 
 
@@ -221,7 +227,11 @@ async def get_master_bookings(
 
     query = (
         select(Appointment)
-        .options(selectinload(Appointment.service), selectinload(Appointment.master))
+        .options(
+            selectinload(Appointment.service),
+            selectinload(Appointment.master),
+            selectinload(Appointment.client).selectinload(Client.identity),
+        )
         .where(Appointment.master_id == master.id)
     )
     if date_from:

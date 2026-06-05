@@ -113,6 +113,25 @@ APP_INFO.info({
 })
 
 
+
+
+# Monitoring / Backup metrics
+LAST_BACKUP_TIMESTAMP = Gauge(
+    "bookmaster_last_backup_timestamp",
+    "Unix timestamp of last successful backup",
+)
+
+DB_SIZE_BYTES = Gauge(
+    "bookmaster_db_size_bytes",
+    "PostgreSQL database size in bytes",
+)
+
+ERROR_EVENTS_TOTAL = Counter(
+    "bookmaster_error_events_total",
+    "Total tracked error events",
+    ["severity"],
+)
+
 # ── Хелперы для бизнес-метрик ─────────────────────────────────────────
 
 def track_booking_created(status: str = "pending"):

@@ -23,10 +23,9 @@ if settings.SENTRY_DSN:
         traces_sample_rate=0.1,
     )
 
-logging.basicConfig(
-    level=logging.DEBUG if settings.DEBUG else logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
-)
+# Структурное JSON-логирование (вместо basicConfig)
+from app.core.logging_setup import setup_logging
+setup_logging(debug=settings.DEBUG)
 logger = logging.getLogger(__name__)
 
 app = FastAPI(
@@ -160,6 +159,10 @@ app.include_router(feature_flags_router, prefix="/api/v1/feature-flags", tags=["
 from app.modules.uploads.router import router as uploads_router
 app.include_router(uploads_router, prefix="/api/v1/uploads", tags=["uploads"])
 
+
+
+from app.modules.monitoring.router import router as monitoring_router
+app.include_router(monitoring_router, prefix="/api/v1/monitoring", tags=["monitoring"])
 
 # ── APScheduler вынесен в отдельный воркер apps/scheduler/runner.py ──
 # Все фоновые задачи теперь запускаются через контейнер bm_scheduler
