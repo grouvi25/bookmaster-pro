@@ -287,7 +287,7 @@ export default function MastersTab() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="text-center mb-4">
-              <div className="text-3xl mb-2">\ud83d\udd17</div>
+              <div className="text-3xl mb-2">🔗</div>
               <h3 className="text-h3 font-bold">Слияние аккаунтов</h3>
               <p className="text-sm text-tg-hint mt-2">
                 Первичный (данные сохранятся):{' '}

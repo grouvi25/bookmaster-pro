@@ -36,7 +36,7 @@ export default function Register() {
       return resp;
     },
     onSuccess: async () => {
-      toast.success('Аккаунт привязан! Входим\u2026');
+      toast.success('Аккаунт привязан! Входим…');
       try {
         const initData = PlatformAdapter.getInitData();
         if (initData) {
@@ -130,7 +130,7 @@ export default function Register() {
     return (
       <div className="flex flex-col min-h-screen px-screen-x pt-16 pb-8 gap-6 animate-fade-in">
         <div className="text-center">
-          <div className="text-5xl mb-4">\ud83d\udd17</div>
+          <div className="text-5xl mb-4">🔗</div>
           <h1 className="text-xl font-bold mb-2">
             Уже пользуетесь BookMaster Pro?
           </h1>
@@ -191,7 +191,7 @@ export default function Register() {
         </button>
 
         <div className="text-center">
-          <div className="text-4xl mb-3">\ud83d\udd11</div>
+          <div className="text-4xl mb-3">🔑</div>
           <h2 className="text-xl font-bold mb-2">Введите код привязки</h2>
           <p className="text-tg-hint text-sm">
             Откройте BookMaster в другом мессенджере →{' '}
