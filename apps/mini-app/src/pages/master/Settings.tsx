@@ -14,6 +14,7 @@ import type { Service, SupportTicket, MasterProfile } from '@/shared/types/api';
 import { useFeatureFlag } from '@/hooks/useFeatureFlag';
 import { ArrowLeft, Camera } from 'lucide-react';
 import { clsx } from 'clsx';
+import LinkedAccountsSection from '@/modules/settings/LinkedAccountsSection';
 
 const TAB_TITLES: Record<SettingsTab, string> = {
   main: 'Настройки',
@@ -520,6 +521,9 @@ function ProfileSection() {
           </div>
         )}
       </Card>
+
+      {/* Кросс-платформенная привязка */}
+      <LinkedAccountsSection />
     </div>
   );
 }

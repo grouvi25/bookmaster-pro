@@ -185,6 +185,15 @@ export const authApi = {
     }),
   switchRole: (targetRole: string) =>
     api.post('/auth/switch-role', { target_role: targetRole }),
+  // Cross-platform linking
+  generateLinkCode: () =>
+    api.get('/auth/link-code').then(r => r.data),
+  applyLinkCode: (code: string) =>
+    api.post('/auth/link-account', { code }).then(r => r.data),
+  unlinkAccount: () =>
+    api.delete('/auth/link-account').then(r => r.data),
+  getLinkedPlatforms: () =>
+    api.get('/auth/linked-platforms').then(r => r.data),
 };
 
 // ── Masters ──

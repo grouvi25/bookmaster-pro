@@ -3,6 +3,7 @@ Auth router — /api/v1/auth
 """
 
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth import validate_telegram_init_data, validate_max_init_data, get_current_user
@@ -234,3 +235,112 @@ async def apply_promo_code(
         "valid_until": str(grant.valid_until),
         "duration_days": promo_code.duration_days,
     }
+
+
+# ── Кросс-платформенная привязка аккаунтов ────────────────────────
+
+from pydantic import BaseModel as PydanticBaseModel, Field as PydField
+
+from app.modules.auth.link_service import AccountLinkService
+from app.modules.auth.models import Identity
+
+
+class ApplyLinkCodeRequest(PydanticBaseModel):
+    code: str = PydField(..., min_length=6, max_length=6, pattern=r"^\d{6}$")
+
+
+class UnlinkRequest(PydanticBaseModel):
+    identity_id: int | None = None  # если None — отвязываем текущий
+
+
+@router.get("/link-code")
+async def generate_link_code(
+    user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Сгенерировать код для привязки другого аккаунта.
+    Возвращает 6-значный код + время жизни.
+    """
+    identity_id = int(user["sub"])
+
+    # Проверяем что это не вторичный аккаунт
+    result = await db.execute(
+        select(Identity).where(Identity.id == identity_id)
+    )
+    identity = result.scalar_one_or_none()
+    if identity and identity.linked_identity_id:
+        raise HTTPException(
+            400, "Вы используете вторичный аккаунт. Генерируйте код с основного."
+        )
+
+    svc = AccountLinkService(db)
+    code = await svc.generate_link_code(identity_id)
+    await db.commit()
+
+    return {
+        "code": code,
+        "expires_in": 15 * 60,  # секунды
+        "hint": "Введите этот код в настройках другого мессенджера",
+    }
+
+
+@router.post("/link-account")
+async def apply_link_code(
+    body: ApplyLinkCodeRequest,
+    user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Ввести код привязки с другой платформы.
+    После этого текущий аккаунт видит данные основного.
+    """
+    svc = AccountLinkService(db)
+    try:
+        result = await svc.apply_link_code(
+            code=body.code,
+            current_identity_id=int(user["sub"]),
+        )
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+
+    await db.commit()
+    return result
+
+
+@router.delete("/link-account")
+async def unlink_account(
+    user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Отвязать текущий аккаунт от первичного."""
+    svc = AccountLinkService(db)
+    try:
+        await svc.unlink_account(int(user["sub"]))
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+
+    await db.commit()
+    return {"status": "unlinked"}
+
+
+@router.get("/linked-platforms")
+async def get_linked_platforms(
+    user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Список всех платформ привязанных к этому аккаунту."""
+    identity_id = int(user["sub"])
+
+    result = await db.execute(
+        select(Identity).where(Identity.id == identity_id)
+    )
+    identity = result.scalar_one_or_none()
+    if not identity:
+        return {"platforms": []}
+
+    primary_id = identity.linked_identity_id or identity.id
+
+    svc = AccountLinkService(db)
+    platforms = await svc.get_linked_platforms(primary_id)
+    return {"platforms": platforms}

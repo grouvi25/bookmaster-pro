@@ -170,9 +170,35 @@ def create_scheduler() -> AsyncIOScheduler:
     return scheduler
 
 
+
+async def cleanup_expired_link_codes():
+    """Удаляем истёкшие коды привязки аккаунтов (ежедневно)."""
+    from datetime import datetime, timezone
+    from sqlalchemy import delete
+    from app.modules.auth.models import IdentityLinkCode
+    from app.core.database import async_session_factory
+    try:
+        async with async_session_factory() as db:
+            result = await db.execute(
+                delete(IdentityLinkCode).where(
+                    IdentityLinkCode.expires_at < datetime.now(timezone.utc)
+                )
+            )
+            await db.commit()
+            if result.rowcount:
+                logger.info(f"Cleaned up {result.rowcount} expired link codes")
+    except Exception as e:
+        logger.error(f"Error cleaning up link codes: {e}")
+
 async def main():
     logger.info("Starting BookMaster Pro Scheduler worker...")
     scheduler = create_scheduler()
+    # Кросс-платформа: чистка истёкших кодов привязки
+    scheduler.add_job(
+        cleanup_expired_link_codes, "cron", hour=4, minute=0,
+        id="cleanup_link_codes", replace_existing=True,
+    )
+
     scheduler.start()
 
     jobs = scheduler.get_jobs()

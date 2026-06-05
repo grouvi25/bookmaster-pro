@@ -88,29 +88,30 @@ class AuthService:
                 "master_id": None,
             }
 
-        # Ищем существующего пользователя
-        identity = await self._get_identity(platform, platform_id)
-        if not identity:
+        # Ищем существующего пользователя (с кросс-платформенной привязкой)
+        found, primary = await self._get_primary_identity(platform, platform_id)
+        if not found:
             return {"role": "new", "token": None, "user_id": None, "display_name": None, "master_id": None}
 
         # Забаненный пользователь — без токена.
-        if identity.is_banned:
-            return {"role": "banned", "token": None, "user_id": identity.id, "display_name": None, "master_id": None}
+        # Проверяем оба: и найденный и первичный
+        if found.is_banned or primary.is_banned:
+            return {"role": "banned", "token": None, "user_id": found.id, "display_name": None, "master_id": None}
 
         # Жёсткая привязка привилегий к конфигу: если в БД осталась роль
         # 'superadmin' (или любая другая вне whitelist), но platform_id уже
         # не в SUPERADMIN_IDS — НЕ доверяем БД. Пользователь проходит онбординг.
-        if identity.role not in _VALID_USER_ROLES:
-            return {"role": "new", "token": None, "user_id": identity.id, "display_name": None, "master_id": None}
+        if primary.role not in _VALID_USER_ROLES:
+            return {"role": "new", "token": None, "user_id": found.id, "display_name": None, "master_id": None}
 
-        # Получаем display_name
-        display_name = await self._get_display_name(identity)
-        token = self._create_token(identity, identity.role)
+        # Получаем display_name и токен от ПЕРВИЧНОЙ идентичности
+        display_name = await self._get_display_name(primary)
+        token = self._create_token(primary, primary.role)
 
         master_id = None
-        if identity.role == "master":
+        if primary.role == "master":
             result = await self.db.execute(
-                select(Master).where(Master.identity_id == identity.id)
+                select(Master).where(Master.identity_id == primary.id)
             )
             master = result.scalar_one_or_none()
             if master:
@@ -118,14 +119,15 @@ class AuthService:
             else:
                 # Master-запись удалена (через суперадмин-панель) — пользователь
                 # должен пройти онбординг заново как новый.
-                return {"role": "new", "token": None, "user_id": identity.id, "display_name": None, "master_id": None}
+                return {"role": "new", "token": None, "user_id": found.id, "display_name": None, "master_id": None}
 
         return {
-            "role": identity.role,
+            "role": primary.role,
             "token": token,
-            "user_id": identity.id,
+            "user_id": primary.id,
             "display_name": display_name,
             "master_id": master_id,
+            "is_secondary": found.id != primary.id,
         }
 
     async def register(
@@ -266,6 +268,35 @@ class AuthService:
             )
         )
         return result.scalar_one_or_none()
+
+
+    async def _get_primary_identity(
+        self, platform: str, platform_id: str
+    ) -> tuple:
+        """
+        Кросс-платформенная идентификация.
+        Возвращает (found_identity, primary_identity).
+        Если не привязан: оба = одна identity.
+        Если вторичный: found=вторичная, primary=первичная.
+        """
+        identity = await self._get_identity(platform, platform_id)
+        if not identity:
+            return None, None
+
+        if identity.linked_identity_id:
+            # Вторичная — загружаем первичную
+            result = await self.db.execute(
+                select(Identity).where(Identity.id == identity.linked_identity_id)
+            )
+            primary = result.scalar_one_or_none()
+            if not primary:
+                # Первичная удалена — сбрасываем ссылку
+                identity.linked_identity_id = None
+                await self.db.flush()
+                return identity, identity
+            return identity, primary
+
+        return identity, identity  # первичная = она сама
 
     async def _get_display_name(self, identity: Identity) -> str:
         if identity.role == "master":
