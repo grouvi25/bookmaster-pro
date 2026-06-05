@@ -2,7 +2,8 @@
 Auth router — /api/v1/auth
 """
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
+from typing import Optional
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -310,15 +311,38 @@ async def apply_link_code(
 
 @router.delete("/link-account")
 async def unlink_account(
+    identity_id: Optional[int] = Query(None, description="ID вторичной identity для отвязки"),
     user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """Отвязать текущий аккаунт от первичного."""
+    """Отвязать вторичный аккаунт от первичного.
+
+    JWT sub всегда = primary, поэтому принимаем identity_id вторичной
+    identity, которую нужно отвязать. Проверяем что она действительно
+    привязана к текущему primary.
+    """
+    from sqlalchemy import select as sa_select
+    from app.modules.auth.models import Identity
+
+    primary_id = int(user["sub"])
     svc = AccountLinkService(db)
-    try:
-        await svc.unlink_account(int(user["sub"]))
-    except ValueError as e:
-        raise HTTPException(400, str(e))
+
+    if identity_id:
+        # Проверяем что эта identity привязана к нашему primary
+        target = await db.get(Identity, identity_id)
+        if not target or target.linked_identity_id != primary_id:
+            raise HTTPException(400, "Эта identity не привязана к вашему аккаунту")
+        await svc.unlink_account(identity_id)
+    else:
+        # Обратная совместимость: если identity_id не передан,
+        # ищем все вторичные текущего primary и отвязываем первую найденную
+        result = await db.execute(
+            sa_select(Identity.id).where(Identity.linked_identity_id == primary_id)
+        )
+        secondary_ids = result.scalars().all()
+        if not secondary_ids:
+            raise HTTPException(400, "Нет привязанных аккаунтов для отвязки")
+        await svc.unlink_account(secondary_ids[0])
 
     await db.commit()
     return {"status": "unlinked"}

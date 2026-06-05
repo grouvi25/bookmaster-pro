@@ -190,8 +190,8 @@ export const authApi = {
     api.get('/auth/link-code').then(r => r.data),
   applyLinkCode: (code: string) =>
     api.post('/auth/link-account', { code }).then(r => r.data),
-  unlinkAccount: () =>
-    api.delete('/auth/link-account').then(r => r.data),
+  unlinkAccount: (identityId?: number) =>
+    api.delete('/auth/link-account', { params: identityId ? { identity_id: identityId } : undefined }).then(r => r.data),
   getLinkedPlatforms: () =>
     api.get('/auth/linked-platforms').then(r => r.data),
 };

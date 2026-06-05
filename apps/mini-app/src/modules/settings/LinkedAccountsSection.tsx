@@ -64,7 +64,7 @@ export default function LinkedAccountsSection() {
 
   // Отвязка
   const unlinkMutation = useMutation({
-    mutationFn: () => authApi.unlinkAccount(),
+    mutationFn: (identityId: number) => authApi.unlinkAccount(identityId),
     onSuccess: () => {
       toast.success('Аккаунт отвязан');
       refetch();
@@ -118,7 +118,7 @@ export default function LinkedAccountsSection() {
                   </span>
                   {!p.is_primary && (
                     <button
-                      onClick={() => unlinkMutation.mutate()}
+                      onClick={() => unlinkMutation.mutate(p.identity_id)}
                       disabled={unlinkMutation.isPending}
                       className="p-1 rounded-lg text-red-400 active:bg-red-50"
                     >
