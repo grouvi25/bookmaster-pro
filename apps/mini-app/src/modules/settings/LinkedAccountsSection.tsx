@@ -1,3 +1,4 @@
+import { useAuthStore } from '@/stores/auth';
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { authApi } from '@/api/endpoints';
@@ -66,10 +67,11 @@ export default function LinkedAccountsSection() {
   const unlinkMutation = useMutation({
     mutationFn: (identityId: number) => authApi.unlinkAccount(identityId),
     onSuccess: () => {
-      // После отвязки нужно пересоздать сессию: старый JWT привязан к primary
-      window.location.reload();
+      // Полностью очищаем сессию перед перезагрузкой: иначе stale JWT
+      // из localStorage даст доступ к защищённым экранам при reload.
+      useAuthStore.getState().logout();
       toast.success('Аккаунт отвязан');
-      refetch();
+      window.location.reload();
     },
     onError: (err: any) => {
       toast.error(err.response?.data?.detail || 'Ошибка отвязки');

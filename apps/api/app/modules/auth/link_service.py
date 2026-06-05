@@ -135,10 +135,23 @@ class AccountLinkService:
     # ── Отвязка ───────────────────────────────────────────────────
 
     async def unlink_account(self, secondary_identity_id: int) -> None:
-        """Отвязать вторичную платформу от первичной."""
+        """Отвязать вторичную платформу от первичной.
+        Сбрасывает роль на 'new' и удаляет stale master/client записи,
+        чтобы при следующем identify() юзер попал на Register.
+        """
         identity = await self.db.get(Identity, secondary_identity_id)
         if not identity or not identity.linked_identity_id:
             raise ValueError("Этот аккаунт не является вторичным")
+
+        # Удаляем master/client записи вторичной identity (если есть).
+        # Реальные данные всегда на primary, здесь только дубли.
+        from sqlalchemy import delete as sa_delete
+        await self.db.execute(
+            sa_delete(Master).where(Master.identity_id == secondary_identity_id)
+        )
+        await self.db.execute(
+            sa_delete(Client).where(Client.identity_id == secondary_identity_id)
+        )
 
         identity.linked_identity_id = None
         identity.role = "new"  # после отвязки — новый пользователь
