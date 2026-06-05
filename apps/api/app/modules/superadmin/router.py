@@ -836,3 +836,70 @@ async def remove_moderator(
 
     await db.commit()
     return {"id": identity_id, "role": "client", "removed": True}
+
+
+@router.post("/merge-identities")
+async def merge_identities(
+    body: dict,
+    user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Ручное слияние двух identity (суперадмин).
+    Body: { primary_identity_id: int, secondary_identity_id: int }
+    Привязывает secondary к primary, переносит master/client.
+    """
+    from app.modules.auth.models import Identity
+    from app.modules.masters.models import Master
+    from app.modules.clients.models import Client
+
+    primary_id = body.get("primary_identity_id")
+    secondary_id = body.get("secondary_identity_id")
+
+    if not primary_id or not secondary_id:
+        raise HTTPException(400, "Нужны primary_identity_id и secondary_identity_id")
+    if primary_id == secondary_id:
+        raise HTTPException(400, "Нельзя слить аккаунт с самим собой")
+
+    primary = await db.get(Identity, primary_id)
+    secondary = await db.get(Identity, secondary_id)
+
+    if not primary or not secondary:
+        raise HTTPException(404, "Одна из идентичностей не найдена")
+
+    if secondary.linked_identity_id:
+        raise HTTPException(400, f"Вторичная identity {secondary_id} уже привязана к {secondary.linked_identity_id}")
+
+    # Переносим master записи от secondary к primary (если у primary нет master)
+    from sqlalchemy import select
+    sec_master = (await db.execute(select(Master).where(Master.identity_id == secondary_id))).scalar_one_or_none()
+    pri_master = (await db.execute(select(Master).where(Master.identity_id == primary_id))).scalar_one_or_none()
+
+    transfer_info = []
+    if sec_master and not pri_master:
+        sec_master.identity_id = primary_id
+        transfer_info.append(f"Master #{sec_master.id} перенесён на primary")
+    elif sec_master and pri_master:
+        transfer_info.append(f"Конфликт мастеров: primary={pri_master.id}, secondary={sec_master.id} — ручная проверка")
+
+    # Аналогично для клиентов
+    sec_client = (await db.execute(select(Client).where(Client.identity_id == secondary_id))).scalar_one_or_none()
+    pri_client = (await db.execute(select(Client).where(Client.identity_id == primary_id))).scalar_one_or_none()
+
+    if sec_client and not pri_client:
+        sec_client.identity_id = primary_id
+        transfer_info.append(f"Client #{sec_client.id} перенесён на primary")
+    elif sec_client and pri_client:
+        transfer_info.append(f"Конфликт клиентов: primary={pri_client.id}, secondary={sec_client.id}")
+
+    # Привязываем
+    secondary.linked_identity_id = primary_id
+    secondary.role = primary.role
+    await db.commit()
+
+    return {
+        "status": "merged",
+        "primary_identity_id": primary_id,
+        "secondary_identity_id": secondary_id,
+        "transfer_info": transfer_info,
+    }

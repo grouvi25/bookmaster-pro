@@ -553,6 +553,8 @@ export const superadminApi = {
   }) => api.post(`/superadmin/masters/${masterId}/grant-access`, data),
   deleteMaster: (masterId: number) =>
     api.delete(`/superadmin/masters/${masterId}`),
+  mergeIdentities: (primaryId: number, secondaryId: number) =>
+    api.post('/superadmin/merge-identities', { primary_identity_id: primaryId, secondary_identity_id: secondaryId }),
   masterAccessGrants: (masterId: number) =>
     api.get(`/superadmin/masters/${masterId}/access-grants`),
   broadcastPreview: (data: { plan_filter?: string | null; only_active?: boolean }) =>

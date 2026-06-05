@@ -7,6 +7,7 @@ import { ClientCardSkeleton } from '@/shared/ui/Skeleton';
 import StatusBadge from '@/shared/ui/StatusBadge';
 import EmptyState from '@/shared/ui/EmptyState';
 import Card from '@/shared/ui/Card';
+import { Link2 } from 'lucide-react';
 import Button from '@/shared/ui/Button';
 import SearchInput from '@/shared/ui/SearchInput';
 import type { MasterProfile } from '@/shared/types/api';
@@ -23,6 +24,8 @@ export default function MastersTab() {
   const [grantDays, setGrantDays] = useState('30');
   const [grantNote, setGrantNote] = useState('');
   const [deleteConfirm, setDeleteConfirm] = useState<AdminMaster | null>(null);
+  const [mergeTarget, setMergeTarget] = useState<AdminMaster | null>(null);
+  const [mergeSecondaryId, setMergeSecondaryId] = useState('');
   const queryClient = useQueryClient();
 
   const { data, isLoading } = useQuery({
@@ -73,6 +76,20 @@ export default function MastersTab() {
     onSuccess: () => {
       toast.success('Статус обновлён');
       queryClient.invalidateQueries({ queryKey: ['superadmin-masters'] });
+    },
+  });
+
+  const mergeMutation = useMutation({
+    mutationFn: ({ primaryId, secondaryId }: { primaryId: number; secondaryId: number }) =>
+      superadminApi.mergeIdentities(primaryId, secondaryId).then((r) => r.data),
+    onSuccess: () => {
+      toast.success('Аккаунты объединены');
+      setMergeTarget(null);
+      setMergeSecondaryId('');
+      queryClient.invalidateQueries({ queryKey: ['superadmin-masters'] });
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.detail || 'Ошибка слияния');
     },
   });
 
@@ -152,6 +169,12 @@ export default function MastersTab() {
                 }`}
               >
                 {m.is_active ? 'Блокировать' : 'Разблокировать'}
+              </button>
+              <button
+                onClick={() => setMergeTarget(m)}
+                className="text-xs bg-brand-500/10 text-brand-500 px-2.5 py-1.5 rounded-lg"
+              >
+                <Link2 className="w-3.5 h-3.5 inline" /> Слить
               </button>
               <button
                 onClick={() => setDeleteConfirm(m)}
@@ -247,6 +270,67 @@ export default function MastersTab() {
                 variant="danger"
               >
                 Удалить
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Модалка слияния аккаунтов */}
+      {mergeTarget && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-5"
+          onClick={() => setMergeTarget(null)}
+        >
+          <div
+            className="bg-tg-bg rounded-2xl p-5 w-full max-w-sm shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="text-center mb-4">
+              <div className="text-3xl mb-2">\ud83d\udd17</div>
+              <h3 className="text-h3 font-bold">Слияние аккаунтов</h3>
+              <p className="text-sm text-tg-hint mt-2">
+                Первичный (данные сохранятся):{' '}
+                <span className="font-medium text-tg-text">
+                  {mergeTarget.display_name} (identity#{(mergeTarget as any).identity_id || '?'})
+                </span>
+              </p>
+            </div>
+            <div className="mb-4">
+              <label className="text-sm text-tg-hint mb-1 block">
+                ID вторичной identity (будет привязана):
+              </label>
+              <input
+                value={mergeSecondaryId}
+                onChange={(e) => setMergeSecondaryId(e.target.value.replace(/\D/g, ''))}
+                placeholder="Напр. 15"
+                inputMode="numeric"
+                className="w-full p-3 rounded-xl bg-surface-secondary outline-none text-center font-mono"
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button
+                onClick={() => setMergeTarget(null)}
+                fullWidth
+                size="sm"
+                variant="secondary"
+              >
+                Отмена
+              </Button>
+              <Button
+                onClick={() =>
+                  mergeMutation.mutate({
+                    primaryId: (mergeTarget as any).identity_id || mergeTarget.id,
+                    secondaryId: Number(mergeSecondaryId),
+                  })
+                }
+                loading={mergeMutation.isPending}
+                disabled={!mergeSecondaryId}
+                fullWidth
+                size="sm"
+                variant="primary"
+              >
+                Объединить
               </Button>
             </div>
           </div>
