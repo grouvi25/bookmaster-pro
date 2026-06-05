@@ -44,7 +44,7 @@ def generate_slug(display_name: str, identity_id: int) -> str:
 
 # Роли, которым identify() доверяет из БД напрямую. Любая другая роль
 # (включая залежавшийся 'superadmin') НЕ выдаётся без проверки SUPERADMIN_IDS.
-_VALID_USER_ROLES = {"master", "client", "moderator"}
+_VALID_USER_ROLES = {"master", "client", "moderator", "superadmin", "new"}
 
 
 class AuthService:
