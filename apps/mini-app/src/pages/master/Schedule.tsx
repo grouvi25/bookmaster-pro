@@ -16,6 +16,10 @@ import BottomSheet from '@/shared/ui/BottomSheet';
 import Button from '@/shared/ui/Button';
 import EmptyState from '@/shared/ui/EmptyState';
 import { toast } from '@/shared/ui/Toast';
+import EventTypeChip from '@/components/master/EventTypeChip';
+import EventTypePicker from '@/components/master/EventTypePicker';
+import StatusBar from '@/components/master/StatusBar';
+import ContactButtons from '@/components/master/ContactButtons';
 import {
   format, addDays, startOfWeek, startOfMonth, endOfMonth,
   eachDayOfInterval, getDay, addMonths, subMonths,
@@ -36,10 +40,18 @@ export default function Schedule() {
   const [selectedDate, setSelectedDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
-  const [cancelReason, setCancelReason] = useState('');
   const [photoPromptBooking, setPhotoPromptBooking] = useState<Booking | null>(null);
   const [photoUploading, setPhotoUploading] = useState(false);
   const [showNewBooking, setShowNewBooking] = useState(false);
+
+  // Master note (заметка мастера)
+  const [masterNote, setMasterNote] = useState('');
+  const [noteSaving, setNoteSaving] = useState(false);
+
+  // Event type editing
+  const [editingEventType, setEditingEventType] = useState(false);
+  const [pickedEventType, setPickedEventType] = useState('service');
+
   const pendingOpenRef = useRef<number | null>(
     (location.state as { openBookingId?: number } | null)?.openBookingId ?? null
   );
@@ -59,42 +71,43 @@ export default function Schedule() {
         setSelectedBooking(target);
       }
       pendingOpenRef.current = null;
-      // Clear navigation state so back button doesn't re-trigger
       window.history.replaceState({}, '');
     }
   }, [data]);
+
+  // Sync master note + event type when booking changes
+  useEffect(() => {
+    if (selectedBooking) {
+      setMasterNote((selectedBooking as any).master_comment || '');
+      setPickedEventType((selectedBooking as any).event_type || 'service');
+      setEditingEventType(false);
+    }
+  }, [selectedBooking]);
 
   if (isLoading) return <div className="px-screen-x py-section-y"><BookingCardSkeleton count={5} /></div>;
 
   const bookings = toArray<Booking>(data);
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
 
-  const handleAction = async (action: 'confirm' | 'complete' | 'cancel' | 'no_show') => {
+  // ── Status action handler (for StatusBar) ──
+  const handleStatusAction = async (targetStatus: string, cancelReason?: string) => {
     if (!selectedBooking) return;
     setActionLoading(true);
     try {
-      switch (action) {
-        case 'confirm':
-          await bookingApi.confirm(selectedBooking.id);
-          toast.success('Запись подтверждена');
-          break;
-        case 'complete':
-          await bookingApi.complete(selectedBooking.id);
-          toast.success('Визит завершён');
-          setPhotoPromptBooking(selectedBooking);
-          break;
-        case 'cancel':
-          await bookingApi.cancelByMaster(selectedBooking.id, cancelReason || undefined);
-          toast.success('Запись отменена');
-          break;
-        case 'no_show':
-          await bookingApi.noShow(selectedBooking.id);
-          toast.success('Отмечен как не пришёл');
-          break;
+      await bookingApi.updateStatus(selectedBooking.id, {
+        status: targetStatus,
+        cancel_reason: cancelReason,
+      });
+      const label = bookingStatusLabel(targetStatus);
+      toast.success(`Статус: ${label}`);
+
+      // Photo prompt after completing
+      if (targetStatus === 'completed') {
+        setPhotoPromptBooking(selectedBooking);
       }
+
       await queryClient.invalidateQueries({ queryKey: ['master-schedule', selectedDate] });
       setSelectedBooking(null);
-      setCancelReason('');
     } catch {
       toast.error('Ошибка при обновлении статуса');
     } finally {
@@ -102,9 +115,43 @@ export default function Schedule() {
     }
   };
 
-  const isPending = selectedBooking?.status === 'pending';
-  const isConfirmed = selectedBooking?.status === 'confirmed' || selectedBooking?.status === 'paid';
-  const isActive = isPending || isConfirmed;
+  // ── Save master note ──
+  const saveMasterNote = async () => {
+    if (!selectedBooking) return;
+    setNoteSaving(true);
+    try {
+      await bookingApi.updateStatus(selectedBooking.id, {
+        status: selectedBooking.status,
+        master_comment: masterNote,
+      });
+      toast.success('Заметка сохранена');
+    } catch {
+      toast.error('Ошибка сохранения заметки');
+    } finally {
+      setNoteSaving(false);
+    }
+  };
+
+  // ── Save event type ──
+  const saveEventType = async () => {
+    if (!selectedBooking) return;
+    setActionLoading(true);
+    try {
+      await bookingApi.updateStatus(selectedBooking.id, {
+        status: selectedBooking.status,
+        event_type: pickedEventType,
+      });
+      toast.success('Тип события обновлён');
+      setEditingEventType(false);
+      await queryClient.invalidateQueries({ queryKey: ['master-schedule', selectedDate] });
+    } catch {
+      toast.error('Ошибка обновления типа');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const isActive = selectedBooking && ['pending', 'confirmed', 'paid'].includes(selectedBooking.status);
 
   return (
     <div className="px-screen-x">
@@ -256,6 +303,7 @@ export default function Schedule() {
         <div className="flex flex-col gap-2.5">
           {bookings.map((b) => {
             const canAct = ['pending', 'confirmed', 'paid'].includes(b.status);
+            const eventType = (b as any).event_type || 'service';
             return (
               <Card
                 key={b.id}
@@ -273,6 +321,11 @@ export default function Schedule() {
                         {b.service_name} · {b.duration_min} мин
                         {b.price_final ? ` · ${fmtRub(b.price_final)}` : ''}
                       </div>
+                      {eventType !== 'service' && (
+                        <div className="mt-1.5">
+                          <EventTypeChip type={eventType} />
+                        </div>
+                      )}
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
@@ -289,15 +342,16 @@ export default function Schedule() {
         </div>
       )}
 
-      {/* Booking Detail Bottom Sheet */}
+      {/* ═══ Booking Detail Bottom Sheet ═══ */}
       <BottomSheet
         isOpen={!!selectedBooking}
-        onClose={() => { setSelectedBooking(null); setCancelReason(''); }}
+        onClose={() => { setSelectedBooking(null); setEditingEventType(false); }}
         title="Детали записи"
       >
         {selectedBooking && (
           <div className="px-screen-x pb-36">
-            <div className="flex flex-col gap-3 mb-5">
+            {/* Info rows */}
+            <div className="flex flex-col gap-3 mb-4">
               <div className="flex justify-between items-center">
                 <span className="text-sm text-tg-hint">Статус</span>
                 <StatusBadge
@@ -305,10 +359,43 @@ export default function Schedule() {
                   variant={bookingStatusVariant(selectedBooking.status)}
                 />
               </div>
+
+              {/* Event type row */}
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-tg-hint">Тип</span>
+                <button
+                  onClick={() => setEditingEventType(!editingEventType)}
+                  className="active:scale-95 transition-transform"
+                >
+                  <EventTypeChip type={pickedEventType} size="md" />
+                </button>
+              </div>
+
+              {editingEventType && (
+                <div className="bg-tg-secondary/50 rounded-card p-3">
+                  <EventTypePicker
+                    value={pickedEventType}
+                    onChange={setPickedEventType}
+                  />
+                  {pickedEventType !== ((selectedBooking as any).event_type || 'service') && (
+                    <Button
+                      size="sm"
+                      fullWidth
+                      loading={actionLoading}
+                      onClick={saveEventType}
+                      className="mt-2"
+                    >
+                      Сохранить тип
+                    </Button>
+                  )}
+                </div>
+              )}
+
               <div className="flex justify-between">
                 <span className="text-sm text-tg-hint">Клиент</span>
                 <span className="text-sm font-medium">{selectedBooking.client_name || 'Не указан'}</span>
               </div>
+
               {selectedBooking.client_phone && (
                 <div className="flex justify-between">
                   <span className="text-sm text-tg-hint">Телефон</span>
@@ -317,6 +404,7 @@ export default function Schedule() {
                   </a>
                 </div>
               )}
+
               <div className="flex justify-between">
                 <span className="text-sm text-tg-hint">Услуга</span>
                 <span className="text-sm font-medium">{selectedBooking.service_name}</span>
@@ -343,54 +431,45 @@ export default function Schedule() {
               )}
             </div>
 
-            {/* Action buttons */}
+            {/* Contact buttons */}
+            <ContactButtons
+              phone={selectedBooking.client_phone}
+              clientPlatform={(selectedBooking as any).client_platform}
+              clientPlatformId={(selectedBooking as any).client_platform_id}
+              className="mb-4"
+            />
+
+            {/* Master note (заметка мастера) */}
+            <div className="mb-4">
+              <div className="text-xs text-tg-hint mb-1.5">Заметка мастера</div>
+              <textarea
+                value={masterNote}
+                onChange={(e) => setMasterNote(e.target.value)}
+                placeholder="Пометка для себя: особенности клиента, предпочтения…"
+                rows={2}
+                className="w-full px-3 py-2.5 rounded-card bg-tg-secondary text-sm text-tg-text resize-none outline-none placeholder:text-tg-hint/50"
+              />
+              {masterNote !== ((selectedBooking as any).master_comment || '') && (
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  fullWidth
+                  loading={noteSaving}
+                  onClick={saveMasterNote}
+                  className="mt-1.5"
+                >
+                  Сохранить заметку
+                </Button>
+              )}
+            </div>
+
+            {/* Status actions — horizontal chip bar */}
             {isActive && (
-              <div className="flex flex-col gap-2">
-                {isPending && (
-                  <Button
-                    onClick={() => handleAction('confirm')}
-                    loading={actionLoading}
-                    fullWidth
-                  >
-                    Подтвердить
-                  </Button>
-                )}
-                {isConfirmed && (
-                  <Button
-                    onClick={() => handleAction('complete')}
-                    loading={actionLoading}
-                    fullWidth
-                  >
-                    Завершить визит
-                  </Button>
-                )}
-                {isConfirmed && (
-                  <Button
-                    onClick={() => handleAction('no_show')}
-                    loading={actionLoading}
-                    variant="secondary"
-                    fullWidth
-                  >
-                    Не пришёл
-                  </Button>
-                )}
-                <div className="mt-1">
-                  <input
-                    value={cancelReason}
-                    onChange={(e) => setCancelReason(e.target.value)}
-                    placeholder="Причина отмены (необязательно)"
-                    className="input-field mb-2"
-                  />
-                  <Button
-                    onClick={() => handleAction('cancel')}
-                    loading={actionLoading}
-                    variant="danger"
-                    fullWidth
-                  >
-                    Отменить запись
-                  </Button>
-                </div>
-              </div>
+              <StatusBar
+                currentStatus={selectedBooking.status}
+                loading={actionLoading}
+                onAction={handleStatusAction}
+              />
             )}
 
             {!isActive && (

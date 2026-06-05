@@ -225,6 +225,7 @@ class BookingService:
         cancel_reason: Optional[str] = None,
         master_comment: Optional[str] = None,
         price_final: Optional[int] = None,
+        event_type: Optional[str] = None,
     ) -> Appointment:
         """Обновить статус записи."""
         previous_status = appointment.status
@@ -246,6 +247,9 @@ class BookingService:
 
         if master_comment is not None:
             appointment.master_comment = master_comment
+
+        if event_type is not None:
+            appointment.event_type = event_type
         if price_final is not None:
             appointment.price_final = price_final
 

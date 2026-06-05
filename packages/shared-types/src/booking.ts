@@ -35,6 +35,9 @@ export interface Booking {
   price_final: number | null;
   discount_amount: number;
   source: string;
+  event_type?: string;
+  client_platform?: string;
+  client_platform_id?: string;
 }
 
 /** Источник записи. */

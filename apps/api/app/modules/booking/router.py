@@ -301,6 +301,7 @@ async def update_booking_status(
         cancel_reason=body.cancel_reason,
         master_comment=body.master_comment,
         price_final=body.price_final,
+        event_type=body.event_type,
     )
 
     # При отмене/завершении слот может освободиться — сбрасываем кэш
