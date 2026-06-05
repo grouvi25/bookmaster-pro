@@ -163,11 +163,23 @@ class AuthService:
                 )).scalar_one_or_none()
                 if not c:
                     is_orphan = True
+            elif existing.role == "new":
+                # Identity с role="new" — незавершённая регистрация или отвязанный аккаунт.
+                # Разрешаем повторную регистрацию.
+                is_orphan = True
             elif existing.role not in _VALID_USER_ROLES:
                 # Невалидная роль — тоже orphan
                 is_orphan = True
 
             if is_orphan:
+                # Удаляем связанные записи перед удалением identity
+                from app.modules.clients.models import Client as _ClientModel
+                for _M in (_ClientModel, Master):
+                    _stale = (await self.db.execute(
+                        select(_M).where(_M.identity_id == existing.id)
+                    )).scalar_one_or_none()
+                    if _stale:
+                        await self.db.delete(_stale)
                 await self.db.delete(existing)
                 await self.db.flush()
             else:
