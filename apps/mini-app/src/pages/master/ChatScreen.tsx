@@ -21,13 +21,15 @@ interface Message {
 interface Props {
   threadId: number;
   partnerName: string;
+  partnerAvatar?: string | null;
   onBack: () => void;
 }
 
-export default function ChatScreen({ threadId, partnerName, onBack }: Props) {
+export default function ChatScreen({ threadId, partnerName, partnerAvatar, onBack }: Props) {
   const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
   const [wsMessages, setWsMessages] = useState<Message[]>([]);
+  const [online, setOnline] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const wsRef = useRef<WebSocket | null>(null);
@@ -68,6 +70,8 @@ export default function ChatScreen({ threadId, partnerName, onBack }: Props) {
     const ws = new WebSocket(wsUrl);
     wsRef.current = ws;
 
+    ws.onopen = () => setOnline(true);
+
     ws.onmessage = (event) => {
       try {
         const msg: Message = JSON.parse(event.data);
@@ -86,6 +90,7 @@ export default function ChatScreen({ threadId, partnerName, onBack }: Props) {
     };
 
     ws.onclose = () => {
+      setOnline(false);
       // Reconnect after 3 seconds
       setTimeout(() => {
         if (wsRef.current === ws) {
@@ -107,6 +112,14 @@ export default function ChatScreen({ threadId, partnerName, onBack }: Props) {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages.length]);
+
+  // Auto-grow textarea
+  useEffect(() => {
+    const el = inputRef.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 112) + 'px';
+  }, [text]);
 
   // Send message
   const handleSend = async () => {
@@ -156,21 +169,42 @@ export default function ChatScreen({ threadId, partnerName, onBack }: Props) {
     }
   });
 
+  const handleBack = () => {
+    queryClient.invalidateQueries({ queryKey: ['message-threads'] });
+    onBack();
+  };
+
   return (
-    <div className="flex flex-col h-screen bg-tg-bg text-tg-text">
+    <div className="fixed inset-0 z-[60] flex flex-col bg-tg-bg text-tg-text animate-fade-in">
       {/* Header */}
-      <div className="flex items-center gap-3 px-4 py-3 bg-surface-primary border-b border-tg-secondary shrink-0">
+      <div className="flex items-center gap-3 px-3 py-2.5 bg-surface-primary border-b border-tg-secondary shrink-0 safe-area-top">
         <button
-          onClick={() => {
-            queryClient.invalidateQueries({ queryKey: ['message-threads'] });
-            onBack();
-          }}
+          onClick={handleBack}
+          aria-label="Назад"
           className="p-1 -ml-1 active:scale-90 transition-transform"
         >
           <ChevronLeft className="w-6 h-6" />
         </button>
+
+        {/* Avatar */}
+        <div className="w-9 h-9 rounded-full bg-brand-100 flex items-center justify-center shrink-0 overflow-hidden">
+          {partnerAvatar ? (
+            <img src={partnerAvatar} alt="" className="w-full h-full object-cover" />
+          ) : (
+            <span className="text-base font-semibold text-brand-500">
+              {(partnerName || '?')[0].toUpperCase()}
+            </span>
+          )}
+        </div>
+
         <div className="flex-1 min-w-0">
-          <h2 className="font-semibold text-sm truncate">{partnerName}</h2>
+          <h2 className="font-semibold text-sm truncate leading-tight">{partnerName}</h2>
+          <span className={clsx(
+            'text-[11px] leading-tight',
+            online ? 'text-green-500' : 'text-tg-hint'
+          )}>
+            {online ? 'в сети' : 'не в сети'}
+          </span>
         </div>
       </div>
 
@@ -181,15 +215,18 @@ export default function ChatScreen({ threadId, partnerName, onBack }: Props) {
             <div className="w-8 h-8 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
           </div>
         ) : messages.length === 0 ? (
-          <div className="text-center py-12 text-tg-hint text-sm">
-            Начните диалог — напишите первое сообщение
+          <div className="flex flex-col items-center justify-center py-16 text-center px-8">
+            <div className="text-4xl mb-3">💬</div>
+            <p className="text-tg-hint text-sm">
+              Начните диалог — напишите первое сообщение
+            </p>
           </div>
         ) : (
           groupedByDate.map(group => (
             <div key={group.date}>
               {/* Date divider */}
               <div className="flex items-center justify-center mb-3">
-                <span className="text-[11px] text-tg-hint bg-tg-secondary/50 px-3 py-0.5 rounded-full">
+                <span className="text-[11px] text-tg-hint bg-tg-secondary/60 px-3 py-0.5 rounded-full">
                   {group.date}
                 </span>
               </div>
@@ -208,7 +245,7 @@ export default function ChatScreen({ threadId, partnerName, onBack }: Props) {
                     >
                       <div
                         className={clsx(
-                          'max-w-[80%] px-3 py-2 rounded-2xl text-sm leading-snug',
+                          'max-w-[80%] px-3 py-2 rounded-2xl text-sm leading-snug shadow-sm',
                           isMine
                             ? 'bg-brand-500 text-white rounded-br-md'
                             : 'bg-surface-primary rounded-bl-md'
@@ -254,12 +291,13 @@ export default function ChatScreen({ threadId, partnerName, onBack }: Props) {
             onKeyDown={handleKeyDown}
             placeholder="Сообщение..."
             rows={1}
-            className="flex-1 resize-none text-sm py-2.5 px-3 rounded-2xl bg-tg-bg outline-none max-h-28"
+            className="flex-1 resize-none text-sm py-2.5 px-3.5 rounded-2xl bg-tg-bg outline-none max-h-28 border border-tg-secondary focus:border-brand-500 transition-colors"
             style={{ minHeight: '40px' }}
           />
           <button
             onClick={handleSend}
             disabled={!text.trim() || sending}
+            aria-label="Отправить"
             className={clsx(
               'p-2.5 rounded-full transition-all shrink-0',
               text.trim()

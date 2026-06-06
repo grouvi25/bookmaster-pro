@@ -136,6 +136,18 @@ class NotificationService:
                 button_url=button_url,
             )
 
+    @staticmethod
+    async def send_to_admin(platform_id: str, text: str) -> bool:
+        """Отправить сообщение суперадмину в Telegram по его platform_id.
+
+        Используется для алёртов об ошибках (monitoring/alerts.py).
+        """
+        try:
+            return await NotificationService._tg_send(chat_id=str(platform_id), text=text)
+        except Exception as e:
+            logger.warning(f"send_to_admin failed for {platform_id}: {e}")
+            return False
+
     # ─── Telegram ─────────────────────────────────────────────────────
     @staticmethod
     async def _tg_send(

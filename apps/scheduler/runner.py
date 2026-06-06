@@ -167,6 +167,12 @@ def create_scheduler() -> AsyncIOScheduler:
         id="waitlist_notify", replace_existing=True,
     )
 
+    # Мониторинг: проверка ошибок и алёрты суперадмину (TZ2 §3,5)
+    scheduler.add_job(
+        check_error_alerts, "interval", minutes=5,
+        id="error_alerts", replace_existing=True,
+    )
+
     return scheduler
 
 

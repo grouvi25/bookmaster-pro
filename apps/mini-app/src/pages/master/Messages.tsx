@@ -1,12 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useLocation } from 'react-router-dom';
 import { messagesApi } from '@/api/endpoints';
 import PageHeader from '@/shared/ui/PageHeader';
 import EmptyState from '@/shared/ui/EmptyState';
 import Card from '@/shared/ui/Card';
 import { BookingCardSkeleton } from '@/shared/ui/Skeleton';
-import BackButton from '@/components/common/BackButton';
-import { useLocation } from 'react-router-dom';
 import ChatScreen from '@/pages/master/ChatScreen';
 import { formatDistanceToNow } from 'date-fns';
 import { ru } from 'date-fns/locale';
@@ -27,13 +26,13 @@ export default function Messages() {
   const location = useLocation();
   const [activeThread, setActiveThread] = useState<Thread | null>(null);
 
-  // Если перешли из карточки клиента — сразу открываем чат
+  // Если перешли из карточки клиента / записи — сразу открываем чат
   useEffect(() => {
     const state = location.state as { openThread?: Thread } | null;
     if (state?.openThread) {
       setActiveThread(state.openThread);
       // Очищаем state чтобы при возврате назад не открывался снова
-      window.history.replaceState({}, ''  );
+      window.history.replaceState({}, '');
     }
   }, [location.state]);
 
@@ -48,6 +47,7 @@ export default function Messages() {
       <ChatScreen
         threadId={activeThread.id}
         partnerName={activeThread.partner_name || 'Чат'}
+        partnerAvatar={activeThread.partner_avatar}
         onBack={() => setActiveThread(null)}
       />
     );
@@ -56,11 +56,11 @@ export default function Messages() {
   const threads: Thread[] = data?.items || [];
 
   return (
-    <div className="min-h-screen bg-tg-bg text-tg-text pb-24">
-      <PageHeader title="Сообщения" left={<BackButton />} />
+    <div className="px-screen-x pb-24">
+      <PageHeader title="Чаты" />
 
       {isLoading ? (
-        <div className="px-screen-x space-y-3">
+        <div className="space-y-3">
           <BookingCardSkeleton />
           <BookingCardSkeleton />
         </div>
@@ -68,10 +68,10 @@ export default function Messages() {
         <EmptyState
           emoji="💬"
           title="Нет диалогов"
-          description="Когда клиент или мастер напишет, диалог появится здесь"
+          description="Когда вы или собеседник напишете первое сообщение, диалог появится здесь"
         />
       ) : (
-        <div className="px-screen-x space-y-2">
+        <div className="space-y-2">
           {threads.map(t => {
             const unread = t.master_unread + t.client_unread;
             return (
@@ -86,7 +86,7 @@ export default function Messages() {
                     {t.partner_avatar ? (
                       <img src={t.partner_avatar} alt="" className="w-full h-full object-cover" />
                     ) : (
-                      <span className="text-lg">
+                      <span className="text-lg font-semibold text-brand-500">
                         {(t.partner_name || '?')[0].toUpperCase()}
                       </span>
                     )}

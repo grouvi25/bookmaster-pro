@@ -86,7 +86,7 @@ async def identify(
     service = AuthService(db)
     result = await service.identify(platform, platform_id)
 
-    _auth_logger.warning(
+    _auth_logger.info(
         "IDENTIFY platform=%s pid=%s -> role=%s has_token=%s user_id=%s",
         platform, platform_id, result["role"],
         bool(result.get("token")), result.get("user_id"),
