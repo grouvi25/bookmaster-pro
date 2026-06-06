@@ -182,6 +182,49 @@ class NotificationService:
                 logger.warning(f"TG API {resp.status_code}: {resp.text[:200]}")
             return False
 
+    @staticmethod
+    def _max_button(button_text: str, button_url):
+        """Построить кнопку MAX.
+
+        Если ссылка ведёт на наш мини-апп — используем тип open_app
+        (открывает мини-приложение ВНУТРИ MAX с авторизацией), а не link,
+        который открыл бы внешний браузер без контекста.
+        """
+        from urllib.parse import urlparse, parse_qs
+
+        param = None
+        is_app = False
+        if button_url:
+            try:
+                parsed = urlparse(button_url)
+                qs = parse_qs(parsed.query)
+                for k in ("startParam", "startapp", "start_param", "tgWebAppStartParam"):
+                    if qs.get(k):
+                        param = qs[k][0]
+                        is_app = True
+                        break
+                app_host = urlparse(settings.APP_URL).netloc
+                if not is_app and app_host and parsed.netloc == app_host:
+                    is_app = True
+            except Exception:
+                pass
+
+        if is_app and settings.MAX_BOT_USERNAME:
+            button = {
+                "type": "open_app",
+                "text": button_text,
+                "web_app": settings.MAX_BOT_USERNAME,
+            }
+            if param:
+                button["payload"] = param
+            return button
+
+        return {
+            "type": "link",
+            "text": button_text,
+            "url": button_url or settings.APP_URL,
+        }
+
     # ─── MAX ──────────────────────────────────────────────────────────
     @staticmethod
     async def _max_send(
@@ -197,14 +240,11 @@ class NotificationService:
         # auth — токен БЕЗ «Bearer», кнопки — attachment inline_keyboard.
         payload: dict = {"text": text[:4000]}
         if button_text:
-            url = button_url or settings.APP_URL
             payload["attachments"] = [{
                 "type": "inline_keyboard",
-                "payload": {"buttons": [[{
-                    "type": "link",
-                    "text": button_text,
-                    "url": url,
-                }]]},
+                "payload": {"buttons": [[
+                    NotificationService._max_button(button_text, button_url)
+                ]]},
             }]
         async with httpx.AsyncClient(timeout=10.0) as client:
             resp = await client.post(

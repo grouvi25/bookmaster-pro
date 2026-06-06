@@ -194,6 +194,12 @@ function AppRouter() {
             const toMaster = authRole === 'master' || authRole === 'superadmin';
             navigate(toMaster ? '/master/messages' : '/client/messages', { state: { openThreadId: threadId } });
           }
+        } else if (startParam === 'my_bookings') {
+          navigate('/client');
+        } else if (startParam === 'book') {
+          navigate('/client/nearby');
+        } else if (startParam === 'reviews') {
+          navigate('/master');
         } else if (startParam.startsWith('ref_')) {
           navigate(`/?ref=${startParam.slice(4)}`);
         }

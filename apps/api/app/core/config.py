@@ -21,6 +21,7 @@ class Settings(BaseSettings):
     TG_WEBHOOK_SECRET: str = ""
     MAX_BOT_TOKEN: str = ""
     MAX_WEBHOOK_URL: str = ""
+    MAX_BOT_USERNAME: str = ""
 
     # === Суперадмин ===
     SUPERADMIN_IDS: str = ""
