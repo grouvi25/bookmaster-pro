@@ -4,7 +4,7 @@
 import { MetadataRoute } from 'next';
 
 export default function robots(): MetadataRoute.Robots {
-  const baseUrl = process.env.MARKETPLACE_URL || 'https://freelance-gid.online';
+  const baseUrl = process.env.MARKETPLACE_URL || 'https://dealmaster.ru';
 
   return {
     rules: [

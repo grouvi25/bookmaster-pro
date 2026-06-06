@@ -8,7 +8,7 @@ import axios from 'axios';
 export const dynamic = 'force-dynamic';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = process.env.MARKETPLACE_URL || 'https://freelance-gid.online';
+  const baseUrl = process.env.MARKETPLACE_URL || 'https://dealmaster.ru';
 
   // Статические страницы
   const staticPages: MetadataRoute.Sitemap = [

@@ -98,9 +98,13 @@ class AuthService:
         if found.is_banned or primary.is_banned:
             return {"role": "banned", "token": None, "user_id": found.id, "display_name": None, "master_id": None}
 
-        # Жёсткая привязка привилегий к конфигу: если в БД осталась роль
-        # 'superadmin' (или любая другая вне whitelist), но platform_id уже
-        # не в SUPERADMIN_IDS — НЕ доверяем БД. Пользователь проходит онбординг.
+        # Жёсткая привязка: если в БД role='superadmin' но platform_id
+        # НЕ в SUPERADMIN_IDS — сбрасываем. Защита от «заражения» через привязку.
+        if primary.role == "superadmin" and not is_superadmin(primary.platform_id):
+            primary.role = "new"
+            await self.db.flush()
+            return {"role": "new", "token": None, "user_id": found.id, "display_name": None, "master_id": None}
+
         # Если роль "new" — пользователь не зарегистрирован, не выдаём токен.
         if primary.role == "new":
             return {"role": "new", "token": None, "user_id": found.id, "display_name": None, "master_id": None}
@@ -332,6 +336,7 @@ class AuthService:
     async def switch_role(self, identity_id: int, target_role: str) -> dict:
         """Switch superadmin to master/client role.
         Auto-creates Master/Client record if missing.
+        ВАЖНО: superadmin-роль выдаётся ТОЛЬКО если platform_id в SUPERADMIN_IDS.
         """
         result = await self.db.execute(
             select(Identity).where(Identity.id == identity_id)
@@ -339,6 +344,10 @@ class AuthService:
         identity = result.scalar_one_or_none()
         if not identity:
             raise ValueError("Identity not found")
+
+        # Жёсткая проверка: switch в superadmin только для настоящих суперадминов
+        if target_role == "superadmin" and not is_superadmin(identity.platform_id):
+            raise ValueError("Superadmin access denied: not in SUPERADMIN_IDS")
 
         display_name = "SuperAdmin"
         master_id = None

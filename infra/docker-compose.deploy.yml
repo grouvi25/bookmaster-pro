@@ -103,9 +103,9 @@ services:
       context: ..
       dockerfile: apps/mini-app/Dockerfile
       args:
-        VITE_API_URL: ${VITE_API_URL:-https://api.freelance-gid.online}
+        VITE_API_URL: ${VITE_API_URL:-https://api.dealmaster.ru}
         VITE_TG_BOT_USERNAME: ${VITE_TG_BOT_USERNAME}
-        VITE_APP_URL: ${VITE_APP_URL:-https://app.freelance-gid.online}
+        VITE_APP_URL: ${VITE_APP_URL:-https://app.dealmaster.ru}
     ports:
       - "127.0.0.1:5173:5173"
     networks: [bookmaster]
@@ -155,7 +155,7 @@ services:
       dockerfile: apps/marketplace/Dockerfile
     environment:
       API_URL: http://api:8000/api/v1
-      APP_URL: ${APP_URL:-https://app.freelance-gid.online}
+      APP_URL: ${APP_URL:-https://app.dealmaster.ru}
       NEXT_PUBLIC_TG_BOT_USERNAME: ${TG_BOT_USERNAME:-swift_sellbot}
     ports:
       - "0.0.0.0:3000:3000"
