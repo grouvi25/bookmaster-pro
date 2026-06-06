@@ -1,3 +1,7 @@
+import logging
+
+_auth_logger = logging.getLogger("auth.identify")
+
 """
 Auth router — /api/v1/auth
 """
@@ -81,6 +85,12 @@ async def identify(
 
     service = AuthService(db)
     result = await service.identify(platform, platform_id)
+
+    _auth_logger.warning(
+        "IDENTIFY platform=%s pid=%s -> role=%s has_token=%s user_id=%s",
+        platform, platform_id, result["role"],
+        bool(result.get("token")), result.get("user_id"),
+    )
 
     token = result.get("token")
     return IdentifyResponse(

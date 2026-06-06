@@ -1,7 +1,7 @@
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
-import { clientsApi } from '@/api/endpoints';
+import { clientsApi, messagesApi } from '@/api/endpoints';
 import { PageSkeleton } from '@/shared/ui/Skeleton';
 import Card from '@/shared/ui/Card';
 import Button from '@/shared/ui/Button';
@@ -17,6 +17,7 @@ import {
   FileText,
   Gift,
   Plus,
+  MessageCircle,
 } from 'lucide-react';
 
 interface VisitItem {
@@ -69,6 +70,7 @@ const TIER_LABELS: Record<string, string> = {
 
 export default function ClientDetail() {
   const { clientId } = useParams<{ clientId: string }>();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
 
   const { data: client, isLoading } = useQuery<ClientDetailData>({
@@ -82,6 +84,20 @@ export default function ClientDetail() {
   const [newTag, setNewTag] = useState('');
   const [newNote, setNewNote] = useState('');
   const [saving, setSaving] = useState(false);
+  const [openingChat, setOpeningChat] = useState(false);
+
+  const handleOpenChat = async () => {
+    if (openingChat || !clientId) return;
+    setOpeningChat(true);
+    try {
+      const { data: thread } = await messagesApi.openThread({ client_id: Number(clientId) });
+      navigate('/master/messages', { state: { openThread: thread } });
+    } catch {
+      toast.error('Не удалось открыть чат');
+    } finally {
+      setOpeningChat(false);
+    }
+  };
 
   if (isLoading) return <PageSkeleton />;
   if (!client) {
@@ -171,6 +187,16 @@ export default function ClientDetail() {
           </Card>
         </div>
       </Card>
+
+      {/* Кнопка чата */}
+      <button
+        onClick={handleOpenChat}
+        disabled={openingChat}
+        className="w-full mb-4 flex items-center justify-center gap-2 p-3 bg-brand-500 text-white rounded-btn text-sm font-semibold active:scale-[0.97] transition-all disabled:opacity-50"
+      >
+        <MessageCircle className="w-4 h-4" />
+        {openingChat ? 'Открываю...' : 'Написать клиенту'}
+      </button>
 
       {/* Contact info */}
       <Card className="mb-4">

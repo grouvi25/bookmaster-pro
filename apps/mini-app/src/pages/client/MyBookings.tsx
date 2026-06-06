@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { bookingApi } from '@/api/endpoints';
+import { bookingApi, messagesApi } from '@/api/endpoints';
 import { toArray } from '@/shared/lib/normalize';
 import { fmtRub } from '@/shared/lib/format';
 import {
@@ -145,6 +145,21 @@ export default function MyBookings({ hideBack }: { hideBack?: boolean } = {}) {
                     </button>
                   )}
                 </div>
+                  {b.master_id && (
+                    <button
+                      onClick={async () => {
+                        try {
+                          const { data: thread } = await messagesApi.openThread({ master_id: b.master_id });
+                          navigate('/client/messages', { state: { openThread: thread } });
+                        } catch {
+                          toast.error('Не удалось открыть чат');
+                        }
+                      }}
+                      className="flex items-center gap-1 text-aux text-tg-link interactive"
+                    >
+                      {'💬'} Написать
+                    </button>
+                  )}
               </Card>
             );
           })}

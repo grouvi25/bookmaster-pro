@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { messagesApi } from '@/api/endpoints';
 import PageHeader from '@/shared/ui/PageHeader';
@@ -6,6 +6,7 @@ import EmptyState from '@/shared/ui/EmptyState';
 import Card from '@/shared/ui/Card';
 import { BookingCardSkeleton } from '@/shared/ui/Skeleton';
 import BackButton from '@/components/common/BackButton';
+import { useLocation } from 'react-router-dom';
 import ChatScreen from '@/pages/master/ChatScreen';
 import { formatDistanceToNow } from 'date-fns';
 import { ru } from 'date-fns/locale';
@@ -23,7 +24,18 @@ interface Thread {
 }
 
 export default function Messages() {
+  const location = useLocation();
   const [activeThread, setActiveThread] = useState<Thread | null>(null);
+
+  // Если перешли из карточки клиента — сразу открываем чат
+  useEffect(() => {
+    const state = location.state as { openThread?: Thread } | null;
+    if (state?.openThread) {
+      setActiveThread(state.openThread);
+      // Очищаем state чтобы при возврате назад не открывался снова
+      window.history.replaceState({}, ''  );
+    }
+  }, [location.state]);
 
   const { data, isLoading } = useQuery({
     queryKey: ['message-threads'],
