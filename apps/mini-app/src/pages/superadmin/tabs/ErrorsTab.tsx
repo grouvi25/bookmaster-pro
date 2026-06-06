@@ -9,7 +9,7 @@ import Card from '@/shared/ui/Card';
 import Button from '@/shared/ui/Button';
 import StatusBadge from '@/shared/ui/StatusBadge';
 import EmptyState from '@/shared/ui/EmptyState';
-import { CheckCircle, Eye, EyeOff, ChevronDown, ChevronUp, Search } from 'lucide-react';
+import { CheckCircle, Eye, EyeOff, ChevronDown, ChevronUp, Search, Sparkles } from 'lucide-react';
 import clsx from 'clsx';
 
 interface ErrorEvent {
@@ -81,6 +81,21 @@ function ErrorRow({
   onStatusChange: (id: number, status: string) => void;
   isUpdating: boolean;
 }) {
+  const [aiSolution, setAiSolution] = useState<string | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
+
+  const handleAiSuggest = async () => {
+    setAiLoading(true);
+    try {
+      const res = await monitoringApi.suggestSolution(error.id);
+      setAiSolution(res.data.solution);
+    } catch (e: any) {
+      setAiSolution(`Ошибка: ${e.response?.data?.detail || e.message}`);
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
   return (
     <Card className="text-left">
       <button
@@ -147,6 +162,18 @@ function ErrorRow({
             </div>
           )}
 
+          {/* AI suggestion */}
+          {aiSolution && (
+            <div className="mb-3 p-3 rounded-xl bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800">
+              <div className="text-[10px] font-semibold text-blue-600 dark:text-blue-400 mb-1 flex items-center gap-1">
+                <Sparkles className="w-3 h-3" /> AI-подсказка
+              </div>
+              <div className="text-xs text-tg-text whitespace-pre-wrap leading-relaxed">
+                {aiSolution}
+              </div>
+            </div>
+          )}
+
           {/* Action buttons */}
           <div className="flex gap-2 flex-wrap">
             {error.status !== 'resolved' && (
@@ -170,6 +197,15 @@ function ErrorRow({
                 <Eye className="w-3.5 h-3.5" /> Ознакомлен
               </Button>
             )}
+            <Button
+              size="sm"
+              variant="secondary"
+              loading={aiLoading}
+              onClick={handleAiSuggest}
+              className="flex items-center gap-1"
+            >
+              <Sparkles className="w-3.5 h-3.5" /> AI
+            </Button>
             {error.status !== 'ignored' && (
               <Button
                 size="sm"

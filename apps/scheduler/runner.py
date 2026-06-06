@@ -196,6 +196,73 @@ async def cleanup_expired_link_codes():
     except Exception as e:
         logger.error(f"Error cleaning up link codes: {e}")
 
+
+
+async def verify_backup():
+    """Проверяем что бэкап за сегодня существует и не нулевой в S3."""
+    from datetime import date
+    import time as _time
+    try:
+        import aioboto3
+    except ImportError:
+        logger.warning("aioboto3 not installed, skipping backup verification")
+        return
+
+    today = date.today().isoformat()
+    logger.info(f"Verifying backup for {today}...")
+
+    try:
+        session = aioboto3.Session()
+        async with session.client(
+            "s3",
+            endpoint_url=settings.S3_ENDPOINT_URL,
+            aws_access_key_id=settings.S3_ACCESS_KEY_ID,
+            aws_secret_access_key=settings.S3_SECRET_ACCESS_KEY,
+        ) as s3:
+            try:
+                resp = await s3.head_object(
+                    Bucket="bookmaster-backups",
+                    Key=f"daily/{today}/manifest.json",
+                )
+                size = resp.get("ContentLength", 0)
+                if size < 10:
+                    raise ValueError(f"Manifest too small: {size} bytes")
+                logger.info(f"Backup verified OK: {today} (manifest {size} bytes)")
+                # Update Prometheus metric
+                try:
+                    from app.core.metrics import LAST_BACKUP_TIMESTAMP
+                    LAST_BACKUP_TIMESTAMP.set(_time.time())
+                except Exception:
+                    pass
+            except s3.exceptions.ClientError as e:
+                if "404" in str(e) or "NoSuchKey" in str(e):
+                    await _alert_backup_missing(today, "manifest.json not found in S3")
+                else:
+                    await _alert_backup_missing(today, str(e))
+            except ValueError as e:
+                await _alert_backup_missing(today, str(e))
+    except Exception as e:
+        logger.error(f"verify_backup error: {e}")
+        await _alert_backup_missing(today, str(e))
+
+
+async def _alert_backup_missing(date_str: str, reason: str):
+    """Уведомить суперадмина что бэкап не найден."""
+    msg = f"⚠️ Бэкап за {date_str} НЕ прошёл верификацию!\nПричина: {reason}"
+    logger.error(msg)
+    try:
+        from app.modules.notifications.service import NotificationService
+        for admin_id in settings.superadmin_list:
+            try:
+                await NotificationService.send_to_admin(
+                    platform_id=admin_id,
+                    text=msg,
+                )
+            except Exception as e:
+                logger.warning(f"Failed to alert admin {admin_id}: {e}")
+    except Exception as e:
+        logger.warning(f"Could not send backup alert: {e}")
+
 async def main():
     logger.info("Starting BookMaster Pro Scheduler worker...")
     scheduler = create_scheduler()
@@ -203,6 +270,12 @@ async def main():
     scheduler.add_job(
         cleanup_expired_link_codes, "cron", hour=4, minute=0,
         id="cleanup_link_codes", replace_existing=True,
+    )
+
+    # Мониторинг: верификация бэкапа (ТЗ3 — проверка что бэкап создался)
+    scheduler.add_job(
+        verify_backup, "cron", hour=1, minute=30,
+        id="verify_backup", replace_existing=True,
     )
 
     scheduler.start()

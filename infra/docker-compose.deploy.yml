@@ -85,6 +85,12 @@ services:
   bot-tg:
     <<: [*restart, *env]
     container_name: bm_bot_tg
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "3"
+        tag: "bookmaster/bot-tg"
     build:
       context: ..
       dockerfile: apps/bot-tg/Dockerfile
@@ -113,6 +119,12 @@ services:
   bot-max:
     <<: [*restart, *env]
     container_name: bm_bot_max
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "3"
+        tag: "bookmaster/bot-max"
     build:
       context: ..
       dockerfile: apps/bot-max/Dockerfile
@@ -150,6 +162,12 @@ services:
   marketplace:
     <<: [*restart, *env]
     container_name: bm_marketplace
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "3"
+        tag: "bookmaster/marketplace"
     build:
       context: ..
       dockerfile: apps/marketplace/Dockerfile

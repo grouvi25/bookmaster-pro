@@ -590,6 +590,8 @@ export const monitoringApi = {
     api.post('/monitoring/solutions', data),
   listBackups: (limit?: number) =>
     api.get('/monitoring/backups', { params: { limit: limit ?? 30 } }),
+  suggestSolution: (errorId: number) =>
+    api.post(`/monitoring/errors/${errorId}/suggest-solution`),
 };
 
 

@@ -106,6 +106,68 @@ async def update_error_status(
     return {"ok": True, "status": event.status}
 
 
+
+
+# ── AI-подсказки ──────────────────────────────────────────────
+
+@router.post("/errors/{error_id}/suggest-solution")
+async def suggest_solution(
+    error_id: int,
+    user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """AI анализирует стектрейс и предлагает решение."""
+    _require_superadmin(user)
+
+    result = await db.execute(
+        select(ErrorEvent).where(ErrorEvent.id == error_id)
+    )
+    event = result.scalar_one_or_none()
+    if not event:
+        raise HTTPException(status_code=404, detail="Error event not found")
+
+    # Build prompt
+    prompt = f"""Ты — senior Python/FastAPI разработчик проекта BookMaster Pro (FastAPI + PostgreSQL + Redis + aiogram).
+Проанализируй ошибку и предложи краткое решение (1-3 конкретных действия).
+
+Тип: {event.error_type}
+Модуль: {event.module or 'unknown'}
+Сообщение: {event.error_msg[:300]}
+Повторений: {event.count}
+
+Стектрейс:
+{(event.stack_trace or 'Нет стектрейса')[-1500:]}
+
+Формат ответа: краткий markdown, 1-3 пункта. Без вступлений."""
+
+    try:
+        from app.modules.ai.providers import OpenAIProvider
+        provider = OpenAIProvider()
+        solution_text = await provider.chat(
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.2,
+            max_tokens=400,
+        )
+    except Exception as e:
+        logger.error(f"AI suggest_solution failed: {e}")
+        raise HTTPException(status_code=500, detail=f"AI error: {str(e)[:200]}")
+
+    # Save to error_solutions
+    sol = ErrorSolution(
+        fingerprint=event.fingerprint,
+        solution=solution_text,
+        added_by="ai",
+        is_verified=False,
+    )
+    db.add(sol)
+    await db.flush()
+    await db.commit()
+
+    return {
+        "solution": solution_text,
+        "solution_id": sol.id,
+    }
+
 # ── Решения ──────────────────────────────────────────────────
 
 @router.get("/solutions/{fingerprint}", response_model=list[ErrorSolutionOut])
