@@ -13,7 +13,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth import validate_telegram_init_data, validate_max_init_data, get_current_user
 from app.core.database import get_db
-from app.core.config import settings
 from app.core.rate_limit import rate_limit
 from app.modules.auth.schemas import (
     IdentifyRequest,
@@ -103,100 +102,6 @@ async def identify(
         master_id=result.get("master_id"),
     )
 
-
-
-
-@router.get("/me")
-async def me(user: dict = Depends(get_current_user)):
-    """Возвращает текущую роль из JWT — для восстановления сессии без initData."""
-    return {
-        "role": user.get("role"),
-        "identity_id": user.get("identity_id"),
-        "platform": user.get("platform"),
-    }
-
-
-
-@router.post("/desktop-login")
-async def desktop_login(
-    body: dict,
-    db: AsyncSession = Depends(get_db),
-):
-    """
-    Вход с десктопа по коду привязки.
-    Пользователь генерирует код в Telegram-приложении (Настройки → Связанные аккаунты),
-    затем вводит его на десктопе. Возвращает JWT-токен БЕЗ привязки аккаунтов.
-    """
-    from datetime import datetime, timezone
-    from app.core.auth import create_access_token
-
-    code = (body.get("code") or "").strip()
-    if not code or len(code) != 6:
-        raise HTTPException(400, "Введите 6-значный код")
-
-    result = await db.execute(
-        select(IdentityLinkCode).where(
-            IdentityLinkCode.code == code,
-            IdentityLinkCode.used == False,
-        )
-    )
-    link_code = result.scalar_one_or_none()
-
-    if not link_code:
-        raise HTTPException(400, "Код не найден или уже использован")
-
-    if link_code.expires_at < datetime.now(timezone.utc):
-        raise HTTPException(400, "Код истёк. Сгенерируйте новый в Telegram.")
-
-    # Получаем identity
-    identity = await db.get(Identity, link_code.identity_id)
-    if not identity:
-        raise HTTPException(400, "Аккаунт не найден")
-
-    # Если вторичная — берём primary
-    if identity.linked_identity_id:
-        primary = await db.get(Identity, identity.linked_identity_id)
-        if primary:
-            identity = primary
-
-    # Определяем роль
-    role = identity.role or "client"
-    platform_id = identity.platform_id or ""
-    if platform_id in [sid.strip() for sid in settings.SUPERADMIN_IDS.split(",") if sid.strip()]:
-        role = "superadmin"
-
-    # Помечаем код использованным
-    link_code.used = True
-    await db.commit()
-
-    # Выдаём токен
-    token = create_access_token(
-        data={
-            "sub": str(identity.id),
-            "identity_id": identity.id,
-            "platform": identity.platform,
-            "platform_id": platform_id,
-            "role": role,
-        }
-    )
-
-    # Ищем master_id если мастер
-    master_id = None
-    if role in ("master", "superadmin"):
-        from app.modules.masters.models import Master
-        r = await db.execute(
-            select(Master.id).where(Master.identity_id == identity.id)
-        )
-        m = r.scalar_one_or_none()
-        if m:
-            master_id = m
-
-    return {
-        "access_token": token,
-        "role": role,
-        "user_id": identity.id,
-        "master_id": master_id,
-    }
 
 @router.post("/register", response_model=TokenResponse)
 async def register(
@@ -348,7 +253,7 @@ async def apply_promo_code(
 from pydantic import BaseModel as PydanticBaseModel, Field as PydField
 
 from app.modules.auth.link_service import AccountLinkService
-from app.modules.auth.models import Identity, IdentityLinkCode
+from app.modules.auth.models import Identity
 
 
 class ApplyLinkCodeRequest(PydanticBaseModel):
@@ -427,7 +332,7 @@ async def unlink_account(
     привязана к текущему primary.
     """
     from sqlalchemy import select as sa_select
-    from app.modules.auth.models import Identity, IdentityLinkCode
+    from app.modules.auth.models import Identity
 
     primary_id = int(user["sub"])
     svc = AccountLinkService(db)
@@ -541,3 +446,13 @@ async def get_linked_platforms(
     svc = AccountLinkService(db)
     platforms = await svc.get_linked_platforms(primary_id)
     return {"platforms": platforms}
+
+
+@router.get("/me")
+async def auth_me(user: dict = Depends(get_current_user)):
+    """Возвращает роль и identity текущего пользователя по JWT."""
+    return {
+        "role": user.get("role"),
+        "identity_id": user.get("identity_id"),
+        "platform": user.get("platform"),
+    }
