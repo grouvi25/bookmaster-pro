@@ -13,6 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth import validate_telegram_init_data, validate_max_init_data, get_current_user
 from app.core.database import get_db
+from app.core.config import settings
 from app.core.rate_limit import rate_limit
 from app.modules.auth.schemas import (
     IdentifyRequest,
