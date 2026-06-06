@@ -263,7 +263,11 @@ async def get_client_bookings(
 
     result = await db.execute(
         select(Appointment)
-        .options(selectinload(Appointment.service), selectinload(Appointment.master))
+        .options(
+            selectinload(Appointment.service),
+            selectinload(Appointment.master),
+            selectinload(Appointment.client).selectinload(Client.identity),
+        )
         .where(Appointment.client_id == client.id)
         .order_by(Appointment.time_start.desc())
     )
