@@ -26,6 +26,7 @@ api.interceptors.response.use(
       localStorage.removeItem('bm_access_token');
       localStorage.removeItem('bm_user_role');
       localStorage.removeItem('bm_master_id');
+      localStorage.removeItem('sa_original_token');
     }
     return Promise.reject(error);
   }

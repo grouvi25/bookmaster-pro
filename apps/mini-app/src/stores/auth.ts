@@ -64,6 +64,9 @@ export const useAuthStore = create<AuthState>((set) => ({
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(ROLE_KEY);
     localStorage.removeItem(MASTER_ID_KEY);
+    // Очищаем сохранённый superadmin-токен при выходе/смене аккаунта,
+    // чтобы он не "заражал" другие аккаунты через SuperadminReturnButton.
+    localStorage.removeItem('sa_original_token');
     set({ token: null, role: null, user: null, masterId: null });
   },
 }));

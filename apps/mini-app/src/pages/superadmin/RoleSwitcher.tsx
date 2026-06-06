@@ -54,11 +54,11 @@ export function RoleSwitcher() {
 /** Плавающая кнопка возврата в суперадминку, когда работаем под master/client. */
 export function SuperadminReturnButton() {
   const navigate = useNavigate();
-  const { role, setAuth } = useAuthStore();
+  const { role, token, setAuth } = useAuthStore();
   const [loading, setLoading] = useState(false);
 
   const originalToken = localStorage.getItem(ORIGINAL_TOKEN_KEY);
-  if (role === 'superadmin' || !originalToken) return null;
+  if (role === 'superadmin' || !originalToken || !token) return null;
 
   const handleReturn = async () => {
     if (loading) return;
