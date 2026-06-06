@@ -47,6 +47,7 @@ const VoiceDiary = lazy(() => import('@/pages/master/VoiceDiary'));
 const WidgetSettings = lazy(() => import('@/pages/master/WidgetSettings'));
 const SubscriptionPackages = lazy(() => import('@/pages/master/SubscriptionPackages'));
 const WorkSchedule = lazy(() => import('@/pages/master/WorkSchedule'));
+const Messages = lazy(() => import('@/pages/master/Messages'));
 
 // Клиентские дополнительные экраны (lazy)
 const LoyaltyHistory = lazy(() => import('@/pages/client/LoyaltyHistory'));
@@ -239,6 +240,7 @@ function AppRouter() {
           <Route path="/client/nearby" element={<NearbyMasters />} />
           <Route path="/client/loyalty" element={<ClientLoyalty />} />
           <Route path="/client/profile" element={<ClientProfile />} />
+          <Route path="/client/messages" element={<Messages />} />
         </Route>
 
         {/* Клиентские роуты — запись к мастеру (без tab bar) */}
@@ -280,6 +282,7 @@ function AppRouter() {
           <Route path="/master/widget" element={<WidgetSettings />} />
           <Route path="/master/subscription-packages" element={<SubscriptionPackages />} />
           <Route path="/master/work-schedule" element={<WorkSchedule />} />
+          <Route path="/master/messages" element={<Messages />} />
         </Route>
 
         {/* Публичная страница-линк (TapLink) */}

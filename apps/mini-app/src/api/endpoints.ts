@@ -591,3 +591,20 @@ export const monitoringApi = {
   listBackups: (limit?: number) =>
     api.get('/monitoring/backups', { params: { limit: limit ?? 30 } }),
 };
+
+
+// ── Messages (внутренняя переписка) ──
+export const messagesApi = {
+  threads: (params?: { offset?: number; limit?: number }) =>
+    api.get(`/messages/threads`, { params }),
+  openThread: (params: { client_id?: number; master_id?: number; appointment_id?: number }) =>
+    api.post(`/messages/threads/open`, null, { params }),
+  messages: (threadId: number, params?: { before_id?: number; limit?: number }) =>
+    api.get(`/messages/threads/${threadId}`, { params }),
+  send: (threadId: number, data: { text?: string; attachment_url?: string }) =>
+    api.post(`/messages/threads/${threadId}/messages`, data),
+  markRead: (threadId: number) =>
+    api.post(`/messages/threads/${threadId}/read`),
+  unread: () =>
+    api.get(`/messages/unread`),
+};

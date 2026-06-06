@@ -162,6 +162,9 @@ app.include_router(uploads_router, prefix="/api/v1/uploads", tags=["uploads"])
 
 
 from app.modules.monitoring.router import router as monitoring_router
+
+from app.modules.messages.router import router as messages_router
+app.include_router(messages_router, prefix="/api/v1/messages", tags=["messages"])
 app.include_router(monitoring_router, prefix="/api/v1/monitoring", tags=["monitoring"])
 
 # ── APScheduler вынесен в отдельный воркер apps/scheduler/runner.py ──
