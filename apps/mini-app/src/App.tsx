@@ -7,6 +7,11 @@ import { authApi } from '@/api/endpoints';
 import { ShieldAlert, CalendarDays } from 'lucide-react';
 import { ToastContainer } from '@/shared/ui/Toast';
 import FullscreenLoader from '@/shared/ui/FullscreenLoader';
+import api from '@/api/client';
+
+// Снимок токена ДО монтирования React — чтобы 401-интерцептор (NPS и т.д.)
+// не успел стереть его из localStorage раньше, чем init() его прочитает.
+const _bootToken = localStorage.getItem('bm_access_token');
 
 // Layouts (eager — нужны сразу)
 import ClientLayout from '@/layouts/ClientLayout';
@@ -166,11 +171,14 @@ function AppRouter() {
         }
       } else {
         // Нет initData (десктопный браузер / вне контекста Telegram/MAX).
-        // Пробуем восстановить сессию через кэшированный JWT-токен.
-        const cachedToken = useAuthStore.getState().token;
+        // Используем снимок токена, сделанный при загрузке модуля (_bootToken),
+        // потому что 401-интерцептор (NPS и т.п.) мог уже стереть его из localStorage.
+        const cachedToken = _bootToken || useAuthStore.getState().token;
         if (cachedToken) {
           try {
-            const resp = await authApi.me();
+            const resp = await api.get('/auth/me', {
+              headers: { Authorization: `Bearer ${cachedToken}` },
+            });
             const { role: serverRole } = resp.data;
             if (serverRole && serverRole !== 'new' && serverRole !== 'banned') {
               setAuth(cachedToken, serverRole, useAuthStore.getState().masterId);
@@ -360,16 +368,62 @@ function MasterProfileRoute() {
 }
 
 function HomePage() {
+  const [code, setCode] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const { setAuth } = useAuthStore();
+
+  const handleLogin = async () => {
+    if (code.length !== 6) return;
+    setLoading(true);
+    setError('');
+    try {
+      const resp = await authApi.desktopLogin(code);
+      const data = resp.data;
+      if (data.access_token) {
+        setAuth(data.access_token, data.role, data.master_id);
+        window.location.reload();
+      }
+    } catch (err: any) {
+      setError(err?.response?.data?.detail || 'Неверный или просроченный код');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-tg-bg text-tg-text p-6 animate-fade-in">
       <CalendarDays className="w-12 h-12 text-brand-500 mb-4" strokeWidth={1.5} />
       <h1 className="text-2xl font-bold mb-2">BookMaster Pro</h1>
-      <p className="text-tg-hint text-center mb-6">
+      <p className="text-tg-hint text-center mb-4">
         Платформа онлайн-записи к мастерам
       </p>
-      <p className="text-tg-hint text-sm text-center">
-        Откройте ссылку от мастера для записи
-      </p>
+
+      <div className="w-full max-w-xs flex flex-col gap-3 mt-4">
+        <p className="text-tg-hint text-sm text-center">
+          Для входа с компьютера введите код из приложения
+        </p>
+        <p className="text-tg-hint text-xs text-center opacity-70">
+          Telegram → BookMaster → Настройки → Связанные аккаунты → «Получить код»
+        </p>
+        <input
+          value={code}
+          onChange={(e) => { setCode(e.target.value.replace(/\D/g, '').slice(0, 6)); setError(''); }}
+          placeholder="000000"
+          maxLength={6}
+          inputMode="numeric"
+          className="text-center text-2xl tracking-[0.5em] font-mono bg-surface-elevated rounded-card p-3 border border-border-primary focus:border-brand-500 focus:outline-none transition-colors"
+          onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
+        />
+        {error && <p className="text-status-danger text-sm text-center">{error}</p>}
+        <button
+          onClick={handleLogin}
+          disabled={code.length !== 6 || loading}
+          className="bg-brand-500 text-white rounded-xl py-3 font-semibold text-base disabled:opacity-40 transition-opacity active:scale-[0.98]"
+        >
+          {loading ? 'Вход...' : 'Войти'}
+        </button>
+      </div>
     </div>
   );
 }
