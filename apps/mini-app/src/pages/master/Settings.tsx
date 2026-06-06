@@ -100,6 +100,12 @@ function SettingsMain({ onNavigate }: { onNavigate: (tab: SettingsTab) => void }
         onClick={() => onNavigate('services')}
       />
       <MenuItem
+        emoji={'🎁'}
+        label="Промокоды и лояльность"
+        description="Скидочные коды и бонусы клиентам"
+        onClick={() => navigate('/master/tools')}
+      />
+      <MenuItem
         emoji={'👤'}
         label="Профиль"
         description="Настройки профиля"
