@@ -103,6 +103,17 @@ async def identify(
     )
 
 
+
+
+@router.get("/me")
+async def me(user: dict = Depends(get_current_user)):
+    """Возвращает текущую роль из JWT — для восстановления сессии без initData."""
+    return {
+        "role": user.get("role"),
+        "identity_id": user.get("identity_id"),
+        "platform": user.get("platform"),
+    }
+
 @router.post("/register", response_model=TokenResponse)
 async def register(
     body: RegisterRequest,

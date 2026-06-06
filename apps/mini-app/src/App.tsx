@@ -164,6 +164,23 @@ function AppRouter() {
             authRole = useAuthStore.getState().role;
           }
         }
+      } else {
+        // Нет initData (десктопный браузер / вне контекста Telegram/MAX).
+        // Пробуем восстановить сессию через кэшированный JWT-токен.
+        const cachedToken = useAuthStore.getState().token;
+        if (cachedToken) {
+          try {
+            const resp = await authApi.me();
+            const { role: serverRole } = resp.data;
+            if (serverRole && serverRole !== 'new' && serverRole !== 'banned') {
+              setAuth(cachedToken, serverRole, useAuthStore.getState().masterId);
+              authRole = serverRole;
+            }
+          } catch {
+            // Токен истёк — чистим.
+            logout();
+          }
+        }
       }
 
       // Deep link навигация

@@ -172,6 +172,8 @@ interface LocationPayload {
 export const authApi = {
   identify: (initData: string, platform?: string) =>
     api.post('/auth/identify', { init_data: initData, platform }),
+  me: () =>
+    api.get('/auth/me'),
   register: (data: { init_data: string; role: string; name?: string; specialization?: string; city?: string; phone?: string; platform?: string; platform_id?: string }) =>
     api.post('/auth/register', {
       init_data: data.init_data,
