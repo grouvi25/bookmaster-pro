@@ -1,5 +1,6 @@
 import { useEffect, useState, Component, lazy, Suspense, type ReactNode } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useParams, useLocation } from 'react-router-dom';
+import api from '@/api/client';
 import { PlatformAdapter } from '@/platform/platform-adapter';
 import { useAuthStore } from '@/stores/auth';
 import { useBookingStore } from '@/stores/booking';
@@ -162,6 +163,24 @@ function AppRouter() {
             // Сетевая ошибка / сервер недоступен — оффлайн-режим:
             // доверяем закэшированной роли (master/client) из localStorage.
             authRole = useAuthStore.getState().role;
+          }
+        }
+      } else {
+        // Нет Telegram/MAX контекста (десктоп-браузер).
+        // Если есть сохранённый токен — валидируем через /auth/me.
+        const cachedToken = localStorage.getItem('bm_access_token');
+        if (cachedToken) {
+          try {
+            const meResp = await api.get('/auth/me');
+            const meData = meResp.data;
+            if (meData.role) {
+              authRole = meData.role;
+              // Обновляем стор с актуальной ролью из токена
+              setAuth(cachedToken, meData.role, null);
+            }
+          } catch {
+            // Токен невалидный/просрочен — чистим
+            logout();
           }
         }
       }
