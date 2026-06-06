@@ -188,6 +188,12 @@ function AppRouter() {
           navigate(`/support/ticket/${startParam.slice(7)}`);
         } else if (startParam.startsWith('rate_ticket_')) {
           navigate(`/support/ticket/${startParam.slice(12)}?rate=1`);
+        } else if (startParam.startsWith('chat-')) {
+          const threadId = Number(startParam.slice(5));
+          if (threadId) {
+            const toMaster = authRole === 'master' || authRole === 'superadmin';
+            navigate(toMaster ? '/master/messages' : '/client/messages', { state: { openThreadId: threadId } });
+          }
         } else if (startParam.startsWith('ref_')) {
           navigate(`/?ref=${startParam.slice(4)}`);
         }

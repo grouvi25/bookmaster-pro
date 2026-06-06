@@ -25,13 +25,16 @@ interface Thread {
 export default function Messages() {
   const location = useLocation();
   const [activeThread, setActiveThread] = useState<Thread | null>(null);
+  const [pendingThreadId, setPendingThreadId] = useState<number | null>(null);
 
   // Если перешли из карточки клиента / записи — сразу открываем чат
   useEffect(() => {
-    const state = location.state as { openThread?: Thread } | null;
+    const state = location.state as { openThread?: Thread; openThreadId?: number } | null;
     if (state?.openThread) {
       setActiveThread(state.openThread);
-      // Очищаем state чтобы при возврате назад не открывался снова
+      window.history.replaceState({}, '');
+    } else if (state?.openThreadId) {
+      setPendingThreadId(state.openThreadId);
       window.history.replaceState({}, '');
     }
   }, [location.state]);
@@ -41,6 +44,17 @@ export default function Messages() {
     queryFn: () => messagesApi.threads().then(r => r.data),
     refetchInterval: 15_000,
   });
+
+  // Deep-link по push «Ответить»: открываем тред по id, когда список загрузился
+  useEffect(() => {
+    if (pendingThreadId && data?.items) {
+      const t = (data.items as Thread[]).find((x) => x.id === pendingThreadId);
+      if (t) {
+        setActiveThread(t);
+        setPendingThreadId(null);
+      }
+    }
+  }, [pendingThreadId, data]);
 
   if (activeThread) {
     return (
