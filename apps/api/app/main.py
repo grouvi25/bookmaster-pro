@@ -37,6 +37,47 @@ app = FastAPI(
 
 setup_middleware(app)
 
+
+# ── Global exception handler — ловит все необработанные ошибки ──
+from fastapi import Request
+from fastapi.responses import JSONResponse
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    """Глобальный перехват — логирует + пишет в ErrorTracker (БД)."""
+    from app.core.request_context import get_request_id, get_user_id
+
+    request_id = get_request_id()
+    user_id = get_user_id()
+
+    logger.error(
+        f"Unhandled exception: {type(exc).__name__}: {exc}",
+        exc_info=exc,
+        extra={"request_id": request_id, "path": str(request.url.path)},
+    )
+
+    # Пишем в БД через ErrorTracker
+    try:
+        from app.core.database import async_session_factory
+        async with async_session_factory() as session:
+            from app.modules.monitoring.tracker import ErrorTracker
+            tracker = ErrorTracker(session)
+            await tracker.track(
+                exc,
+                module=f"api:{request.url.path}",
+                severity="critical",
+                request_id=request_id,
+                user_id=user_id,
+            )
+            await session.commit()
+    except Exception as track_err:
+        logger.warning(f"ErrorTracker failed in global handler: {track_err}")
+
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Internal server error"},
+    )
+
 # Prometheus metrics
 from app.core.metrics import setup_metrics_middleware, setup_metrics_endpoint
 setup_metrics_middleware(app)

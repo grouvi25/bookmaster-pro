@@ -24,11 +24,6 @@ apscheduler==3.10.4
 
 # === AI ===
 openai==1.40.0
-langchain==0.2.12
-langchain-openai==0.1.20
-langchain-community==0.2.11
-langchain-postgres==0.0.9
-tiktoken==0.7.0
 
 # === PAYMENTS ===
 yookassa==3.10.1

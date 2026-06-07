@@ -112,6 +112,24 @@ class BookingService:
                     f"Лимит записей по тарифу исчерпан ({current_count}/{flags.max_bookings_per_month})"
                 )
 
+
+        # ═══ Anti-NoShow: проверка blacklist + AI-скоринг (ТЗ 10.1) ═══
+        if client_id:
+            from app.modules.booking.noshow_scoring import check_booking_allowed
+            noshow_result = await check_booking_allowed(self.db, client_id, master_id)
+            if noshow_result.get("blacklisted"):
+                raise ValueError(
+                    "Запись невозможна: слишком много неявок. "
+                    "Обратитесь к мастеру для разблокировки."
+                )
+            # Если AI-скоринг требует предоплату — ставим флаг
+            # (фронтенд покажет требование предоплаты)
+            _noshow_require_prepay = noshow_result.get("require_prepay", False)
+            _noshow_risk_score = noshow_result.get("risk_score", 0)
+        else:
+            _noshow_require_prepay = False
+            _noshow_risk_score = 0
+
         # Получаем услугу
         result = await self.db.execute(
             select(Service).where(Service.id == service_id)

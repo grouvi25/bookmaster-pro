@@ -46,6 +46,5 @@ BookMaster_*.pdf
 *.bak*
 *.orig
 .env.backup.20260604_084238
-tbank_cert.pem tbank_key.pem
 tbank_cert.pem
 tbank_key.pem
