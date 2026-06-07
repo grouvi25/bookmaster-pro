@@ -63,7 +63,8 @@ class SlotService:
             return []
 
         duration = service.duration_min
-        buffer = master.buffer_minutes
+        # Per-service буфер (приоритет) или глобальный мастера
+        buffer = service.buffer_after_min if service.buffer_after_min is not None else master.buffer_minutes
 
         # 3. Получаем шаблон расписания на этот день недели ИЛИ specific_date
         day_of_week = target_date.weekday()

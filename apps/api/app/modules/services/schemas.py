@@ -18,6 +18,7 @@ class ServiceCreate(BaseModel):
     is_consultation: bool = False
     consultation_url: Optional[str] = None
     sort_order: int = 0
+    buffer_after_min: Optional[int] = None  # буфер после услуги (мин)
 
 
 class ServiceUpdate(BaseModel):
@@ -32,6 +33,7 @@ class ServiceUpdate(BaseModel):
     is_consultation: Optional[bool] = None
     consultation_url: Optional[str] = None
     sort_order: Optional[int] = None
+    buffer_after_min: Optional[int] = None  # буфер после услуги (мин)
 
 
 class ServiceOut(BaseModel):
@@ -48,6 +50,7 @@ class ServiceOut(BaseModel):
     is_consultation: bool = False
     consultation_url: Optional[str] = None
     sort_order: int = 0
+    buffer_after_min: Optional[int] = None  # буфер после услуги (мин)
 
     @field_validator("is_active", "is_online", "is_consultation", mode="before")
     @classmethod

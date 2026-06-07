@@ -28,5 +28,6 @@ class Service(BaseModel):
     consultation_url = Column(String(500), nullable=True)  # ссылка на звонок
     deposit_type = Column(String(20), default="none")  # 'none' | 'fixed' | 'percent'
     deposit_value = Column(Float, nullable=True)  # сумма или процент депозита
+    buffer_after_min = Column(Integer, nullable=True)  # индивидуальный буфер после услуги (мин)
 
     master = relationship("Master", back_populates="services")

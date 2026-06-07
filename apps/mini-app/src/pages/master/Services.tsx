@@ -35,6 +35,7 @@ interface ServiceItem {
   category: string | null;
   is_active: boolean;
   sort_order: number;
+  buffer_after_min: number | null;
 }
 
 function SortableServiceCard({
@@ -75,6 +76,7 @@ function SortableServiceCard({
           <div className="font-medium text-sm truncate">{svc.name}</div>
           <div className="text-xs text-tg-hint">
             {svc.duration_min} мин
+            {svc.buffer_after_min != null && ` + ${svc.buffer_after_min} буфер`}
             {svc.category && ` · ${svc.category}`}
           </div>
         </div>
@@ -117,6 +119,7 @@ export default function Services() {
   const [formDuration, setFormDuration] = useState('60');
   const [formCategory, setFormCategory] = useState('');
   const [formDescription, setFormDescription] = useState('');
+  const [formBuffer, setFormBuffer] = useState('');
   const [formLoading, setFormLoading] = useState(false);
 
   const [localOrder, setLocalOrder] = useState<ServiceItem[] | null>(null);
@@ -156,6 +159,7 @@ export default function Services() {
     setFormDuration('60');
     setFormCategory('');
     setFormDescription('');
+    setFormBuffer('');
     setEditingId(null);
     setShowForm(false);
   };
@@ -168,6 +172,7 @@ export default function Services() {
     setFormDuration(String(svc.duration_min));
     setFormCategory(svc.category ?? '');
     setFormDescription(svc.description ?? '');
+    setFormBuffer(svc.buffer_after_min != null ? String(svc.buffer_after_min) : '');
     setShowForm(true);
   };
 
@@ -185,6 +190,7 @@ export default function Services() {
         price_max?: number;
         category?: string;
         description?: string;
+        buffer_after_min?: number | null;
       } = {
         name: formName.trim(),
         price: formPrice ? Number(formPrice) : 0,
@@ -193,6 +199,7 @@ export default function Services() {
       if (formPriceMax) payload.price_max = Number(formPriceMax);
       if (formCategory.trim()) payload.category = formCategory.trim();
       if (formDescription.trim()) payload.description = formDescription.trim();
+      payload.buffer_after_min = formBuffer ? Number(formBuffer) : null;
 
       if (editingId) {
         await servicesApi.update(editingId, payload);
@@ -284,7 +291,14 @@ export default function Services() {
               <input
                 value={formDuration}
                 onChange={(e) => setFormDuration(e.target.value)}
-                placeholder="Мин"
+                placeholder="Длит. мин"
+                type="number"
+                className="w-24 input-field"
+              />
+              <input
+                value={formBuffer}
+                onChange={(e) => setFormBuffer(e.target.value)}
+                placeholder="Буфер мин"
                 type="number"
                 className="w-24 input-field"
               />
