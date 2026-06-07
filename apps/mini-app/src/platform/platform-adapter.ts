@@ -96,9 +96,19 @@ class PlatformAdapterClass {
         } catch { /* noop */ }
         return 'max';
       }
-      // Telegram
+      // Telegram — с initData или user
       const tg = getTelegram();
       if (tg && (tg.initDataUnsafe?.user || tg.initData)) {
+        this._platform = 'telegram';
+        try {
+          tg.ready?.();
+          tg.expand?.();
+        } catch { /* noop */ }
+        return 'telegram';
+      }
+      // Telegram Desktop: мост есть, но initData пуст — всё равно Telegram.
+      // Desktop-клиент иногда инжектит данные с задержкой.
+      if (tg) {
         this._platform = 'telegram';
         try {
           tg.ready?.();
@@ -111,9 +121,29 @@ class PlatformAdapterClass {
         this._platform = 'max';
         return 'max';
       }
+      // Fallback: URL-параметры или UserAgent
+      const hash = window.location.hash || '';
+      const search = window.location.search || '';
+      const haystack = hash + search;
+      if (haystack.includes('tgWebAppData') || haystack.includes('tgWebAppPlatform') || /Telegram/i.test(navigator.userAgent || '')) {
+        this._platform = 'telegram';
+        return 'telegram';
+      }
     }
     this._platform = 'unknown';
     return 'unknown';
+  }
+
+  /**
+   * Проверить, находимся ли мы в Telegram-контексте (даже без initData).
+   */
+  isTelegramContext(): boolean {
+    if (typeof window === 'undefined') return false;
+    if (getTelegram()) return true;
+    const haystack = (window.location.hash || '') + (window.location.search || '');
+    if (haystack.includes('tgWebAppData') || haystack.includes('tgWebAppPlatform')) return true;
+    if (/Telegram/i.test(navigator.userAgent || '')) return true;
+    return false;
   }
 
   /**

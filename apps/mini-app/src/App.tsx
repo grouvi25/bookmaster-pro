@@ -140,7 +140,15 @@ function AppRouter() {
 
       let authRole: string | null = null;
 
-      const initData = PlatformAdapter.getInitData();
+      // На Desktop initData может появиться с задержкой — пробуем до 3 раз
+      let initData = PlatformAdapter.getInitData();
+      if (!initData && PlatformAdapter.isTelegramContext()) {
+        for (let attempt = 0; attempt < 3 && !initData; attempt++) {
+          await new Promise((r) => setTimeout(r, 400));
+          PlatformAdapter.detectPlatform();
+          initData = PlatformAdapter.getInitData();
+        }
+      }
       if (initData) {
         setHasTelegramContext(true);
         try {
@@ -362,16 +370,46 @@ function MasterProfileRoute() {
 }
 
 function HomePage() {
+  const inTelegram = PlatformAdapter.isTelegramContext();
+  const [retrying, setRetrying] = useState(false);
+
+  const handleRetry = () => {
+    setRetrying(true);
+    window.location.reload();
+  };
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-tg-bg text-tg-text p-6 animate-fade-in">
       <CalendarDays className="w-12 h-12 text-brand-500 mb-4" strokeWidth={1.5} />
       <h1 className="text-2xl font-bold mb-2">BookMaster Pro</h1>
-      <p className="text-tg-hint text-center mb-6">
-        Платформа онлайн-записи к мастерам
-      </p>
-      <p className="text-tg-hint text-sm text-center">
-        Откройте ссылку от мастера для записи
-      </p>
+      {inTelegram ? (
+        <>
+          <p className="text-tg-hint text-center mb-4">
+            Не удалось авторизоваться. Попробуйте:
+          </p>
+          <ul className="text-tg-hint text-sm text-left mb-6 space-y-1">
+            <li>• Закрыть и открыть мини-приложение заново</li>
+            <li>• Обновить Telegram Desktop до последней версии</li>
+            <li>• Открыть через мобильный Telegram</li>
+          </ul>
+          <button
+            onClick={handleRetry}
+            disabled={retrying}
+            className="px-6 py-2.5 bg-brand-500 text-white rounded-xl text-sm font-semibold disabled:opacity-50"
+          >
+            {retrying ? 'Загрузка…' : 'Попробовать снова'}
+          </button>
+        </>
+      ) : (
+        <>
+          <p className="text-tg-hint text-center mb-6">
+            Платформа онлайн-записи к мастерам
+          </p>
+          <p className="text-tg-hint text-sm text-center">
+            Откройте ссылку от мастера для записи
+          </p>
+        </>
+      )}
     </div>
   );
 }

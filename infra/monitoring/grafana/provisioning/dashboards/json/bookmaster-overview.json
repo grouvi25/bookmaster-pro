@@ -7,87 +7,135 @@
   "links": [],
   "panels": [
     {
+      "title": "🖥️ Сервер",
+      "type": "row",
+      "gridPos": {"h": 1, "w": 24, "x": 0, "y": 0},
+      "collapsed": false
+    },
+    {
+      "title": "CPU Usage %",
+      "type": "timeseries",
+      "gridPos": {"h": 7, "w": 8, "x": 0, "y": 1},
+      "fieldConfig": {"defaults": {"unit": "percent", "max": 100, "thresholds": {"steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 70}, {"color": "red", "value": 90}]}}},
+      "targets": [{"expr": "100 - (avg(rate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100)", "legendFormat": "CPU %"}]
+    },
+    {
+      "title": "RAM Usage",
+      "type": "timeseries",
+      "gridPos": {"h": 7, "w": 8, "x": 8, "y": 1},
+      "fieldConfig": {"defaults": {"unit": "bytes"}},
+      "targets": [
+        {"expr": "node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes", "legendFormat": "Used"},
+        {"expr": "node_memory_MemTotal_bytes", "legendFormat": "Total"}
+      ]
+    },
+    {
+      "title": "Disk Usage",
+      "type": "gauge",
+      "gridPos": {"h": 7, "w": 4, "x": 16, "y": 1},
+      "fieldConfig": {"defaults": {"unit": "percentunit", "max": 1, "thresholds": {"steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 0.7}, {"color": "red", "value": 0.85}]}}},
+      "targets": [{"expr": "1 - (node_filesystem_avail_bytes{mountpoint=\"/etc/hostname\"} / node_filesystem_size_bytes{mountpoint=\"/etc/hostname\"})", "legendFormat": "Disk %"}]
+    },
+    {
+      "title": "Disk Free",
+      "type": "stat",
+      "gridPos": {"h": 7, "w": 4, "x": 20, "y": 1},
+      "fieldConfig": {"defaults": {"unit": "bytes"}},
+      "targets": [{"expr": "node_filesystem_avail_bytes{mountpoint=\"/etc/hostname\"}", "legendFormat": "Free"}]
+    },
+    {
+      "title": "📊 API",
+      "type": "row",
+      "gridPos": {"h": 1, "w": 24, "x": 0, "y": 8},
+      "collapsed": false
+    },
+    {
       "title": "Request Rate (req/s)",
       "type": "timeseries",
-      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 9},
       "targets": [
-        {
-          "expr": "sum(rate(http_requests_total[5m])) by (status_code)",
-          "legendFormat": "{{status_code}}"
-        }
+        {"expr": "sum(rate(http_requests_total[5m])) by (status_code)", "legendFormat": "{{status_code}}"}
       ]
     },
     {
-      "title": "Response Time (p95)",
+      "title": "Response Time (p95 / p50)",
       "type": "timeseries",
-      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 9},
+      "fieldConfig": {"defaults": {"unit": "s"}},
       "targets": [
-        {
-          "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))",
-          "legendFormat": "p95"
-        },
-        {
-          "expr": "histogram_quantile(0.50, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))",
-          "legendFormat": "p50"
-        }
+        {"expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))", "legendFormat": "p95"},
+        {"expr": "histogram_quantile(0.50, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))", "legendFormat": "p50"}
       ]
     },
     {
-      "title": "Bookings Created",
+      "title": "Error Rate (5xx / 4xx)",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 17},
+      "fieldConfig": {"defaults": {"custom": {"fillOpacity": 20}}},
+      "targets": [
+        {"expr": "sum(rate(http_requests_total{status_code=~\"5..\"}[5m]))", "legendFormat": "5xx/s"},
+        {"expr": "sum(rate(http_requests_total{status_code=~\"4..\"}[5m]))", "legendFormat": "4xx/s"}
+      ]
+    },
+    {
+      "title": "Top Endpoints (by RPS)",
+      "type": "table",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 17},
+      "targets": [
+        {"expr": "topk(10, sum(rate(http_requests_total[5m])) by (endpoint))", "legendFormat": "{{endpoint}}", "format": "table", "instant": true}
+      ],
+      "transformations": [{"id": "organize", "options": {"excludeByName": {"Time": true}}}]
+    },
+    {
+      "title": "📈 Бизнес-метрики",
+      "type": "row",
+      "gridPos": {"h": 1, "w": 24, "x": 0, "y": 25},
+      "collapsed": false
+    },
+    {
+      "title": "Записей создано",
       "type": "stat",
-      "gridPos": {"h": 4, "w": 4, "x": 0, "y": 8},
-      "targets": [
-        {"expr": "sum(bookings_created_total)", "legendFormat": "total"}
-      ]
+      "gridPos": {"h": 4, "w": 4, "x": 0, "y": 26},
+      "fieldConfig": {"defaults": {"color": {"mode": "thresholds"}, "thresholds": {"steps": [{"color": "blue", "value": null}]}}},
+      "targets": [{"expr": "sum(bookings_created_total)", "legendFormat": "total"}]
     },
     {
-      "title": "Payments (succeeded)",
+      "title": "Платежей",
       "type": "stat",
-      "gridPos": {"h": 4, "w": 4, "x": 4, "y": 8},
-      "targets": [
-        {"expr": "sum(payments_total{status=\"succeeded\"})", "legendFormat": "succeeded"}
-      ]
+      "gridPos": {"h": 4, "w": 4, "x": 4, "y": 26},
+      "fieldConfig": {"defaults": {"color": {"mode": "thresholds"}, "thresholds": {"steps": [{"color": "green", "value": null}]}}},
+      "targets": [{"expr": "sum(payments_total{status=\"succeeded\"})", "legendFormat": "succeeded"}]
     },
     {
-      "title": "AI Requests",
+      "title": "AI запросов",
       "type": "stat",
-      "gridPos": {"h": 4, "w": 4, "x": 8, "y": 8},
-      "targets": [
-        {"expr": "sum(ai_requests_total)", "legendFormat": "total"}
-      ]
+      "gridPos": {"h": 4, "w": 4, "x": 8, "y": 26},
+      "fieldConfig": {"defaults": {"color": {"mode": "thresholds"}, "thresholds": {"steps": [{"color": "purple", "value": null}]}}},
+      "targets": [{"expr": "sum(ai_requests_total)", "legendFormat": "total"}]
     },
     {
-      "title": "Active Connections",
+      "title": "Активных соединений",
       "type": "gauge",
-      "gridPos": {"h": 4, "w": 4, "x": 12, "y": 8},
+      "gridPos": {"h": 4, "w": 4, "x": 12, "y": 26},
+      "fieldConfig": {"defaults": {"thresholds": {"steps": [{"color": "green", "value": null}, {"color": "red", "value": 50}]}}},
+      "targets": [{"expr": "sum(http_requests_in_progress)", "legendFormat": "in-flight"}]
+    },
+    {
+      "title": "Уведомления",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 30},
       "targets": [
-        {"expr": "sum(http_requests_in_progress)", "legendFormat": "in-flight"}
+        {"expr": "sum(rate(notifications_sent_total[5m])) by (platform, status)", "legendFormat": "{{platform}} {{status}}"}
       ]
     },
     {
-      "title": "Notifications Sent",
+      "title": "API Memory (RSS)",
       "type": "timeseries",
-      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 12},
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 30},
+      "fieldConfig": {"defaults": {"unit": "bytes"}},
       "targets": [
-        {
-          "expr": "sum(rate(notifications_sent_total[5m])) by (platform, status)",
-          "legendFormat": "{{platform}} {{status}}"
-        }
-      ]
-    },
-    {
-      "title": "Error Rate",
-      "type": "timeseries",
-      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 12},
-      "targets": [
-        {
-          "expr": "sum(rate(http_requests_total{status_code=~\"5..\"}[5m]))",
-          "legendFormat": "5xx errors/s"
-        },
-        {
-          "expr": "sum(rate(http_requests_total{status_code=~\"4..\"}[5m]))",
-          "legendFormat": "4xx errors/s"
-        }
+        {"expr": "process_resident_memory_bytes", "legendFormat": "API RSS"},
+        {"expr": "process_virtual_memory_bytes", "legendFormat": "API Virtual"}
       ]
     }
   ],
@@ -96,5 +144,6 @@
   "templating": {"list": []},
   "time": {"from": "now-6h", "to": "now"},
   "title": "BookMaster Pro — Overview",
-  "uid": "bookmaster-overview"
+  "uid": "bookmaster-overview",
+  "refresh": "30s"
 }

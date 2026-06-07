@@ -48,3 +48,6 @@ BookMaster_*.pdf
 .env.backup.20260604_084238
 tbank_cert.pem
 tbank_key.pem
+# Infra secrets and venvs
+infra/shipper-venv/
+infra/yc_sa_key.json
