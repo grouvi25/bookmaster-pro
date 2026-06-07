@@ -3,9 +3,9 @@ Portfolio router — /api/v1/portfolio
 CRUD фото работ мастера, публичная галерея.
 """
 
-from typing import List
+from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
@@ -80,6 +80,38 @@ async def update_photo(
     )
     if not photo:
         raise HTTPException(status_code=404, detail="Photo not found")
+    await db.commit()
+    return photo
+
+
+
+
+@router.post("/upload", response_model=WorkPhotoOut)
+async def upload_portfolio_photo(
+    file: UploadFile = File(...),
+    caption: Optional[str] = Query(None, max_length=500),
+    master: Master = Depends(require_feature("portfolio_enabled")),
+    db: AsyncSession = Depends(get_db),
+):
+    """Загрузить фото в портфолио (конвертация в WebP, до 1920px)."""
+    from app.core.storage import StorageService, ALLOWED_IMAGE_TYPES
+
+    if file.content_type and file.content_type not in ALLOWED_IMAGE_TYPES:
+        raise HTTPException(status_code=400, detail="Недопустимый формат изображения")
+
+    content = await file.read()
+    if len(content) > 10 * 1024 * 1024:
+        raise HTTPException(status_code=413, detail="Файл слишком большой (макс 10 MB)")
+
+    result = await StorageService.upload_portfolio(content)
+
+    svc = PortfolioService(db)
+    photo = await svc.add_photo(
+        master_id=master.id,
+        s3_key=result["s3_key"],
+        caption=caption,
+        is_portfolio=True,
+    )
     await db.commit()
     return photo
 

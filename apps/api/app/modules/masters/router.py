@@ -6,7 +6,7 @@ import io
 import math
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File
 from fastapi.responses import StreamingResponse
 from sqlalchemy import select, and_
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -329,6 +329,77 @@ async def get_master_qr_public(
         media_type="image/png",
         headers={"Content-Disposition": f"attachment; filename=qr_{slug}.png"},
     )
+
+
+
+
+# ── Загрузка аватара / обложки ──────────────────────────────
+
+@router.post("/me/avatar")
+async def upload_avatar(
+    file: UploadFile = File(...),
+    user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Загрузить аватар мастера (конвертация в WebP, 400×400)."""
+    from app.core.storage import StorageService, ALLOWED_IMAGE_TYPES
+
+    if file.content_type and file.content_type not in ALLOWED_IMAGE_TYPES:
+        raise HTTPException(status_code=400, detail="Недопустимый формат изображения")
+
+    content = await file.read()
+    if len(content) > 10 * 1024 * 1024:
+        raise HTTPException(status_code=413, detail="Файл слишком большой (макс 10 MB)")
+
+    service = MasterService(db)
+    master = await service.get_by_identity(int(user["sub"]))
+    if not master:
+        raise HTTPException(status_code=404, detail="Master not found")
+
+    # Удаляем старый аватар из S3
+    if master.avatar_url and "/avatars/" in master.avatar_url:
+        old_key = master.avatar_url.split(f"{settings.S3_PUBLIC_URL}/")[-1]
+        if old_key:
+            await StorageService.delete_file(old_key)
+
+    result = await StorageService.upload_avatar(content)
+    master.avatar_url = result["public_url"]
+    await db.flush()
+
+    return {"avatar_url": result["public_url"], "s3_key": result["s3_key"]}
+
+
+@router.post("/me/cover")
+async def upload_cover(
+    file: UploadFile = File(...),
+    user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Загрузить обложку мастера (конвертация в WebP, 1200×600)."""
+    from app.core.storage import StorageService, ALLOWED_IMAGE_TYPES
+
+    if file.content_type and file.content_type not in ALLOWED_IMAGE_TYPES:
+        raise HTTPException(status_code=400, detail="Недопустимый формат изображения")
+
+    content = await file.read()
+    if len(content) > 10 * 1024 * 1024:
+        raise HTTPException(status_code=413, detail="Файл слишком большой (макс 10 MB)")
+
+    service = MasterService(db)
+    master = await service.get_by_identity(int(user["sub"]))
+    if not master:
+        raise HTTPException(status_code=404, detail="Master not found")
+
+    if master.cover_url and "/covers/" in master.cover_url:
+        old_key = master.cover_url.split(f"{settings.S3_PUBLIC_URL}/")[-1]
+        if old_key:
+            await StorageService.delete_file(old_key)
+
+    result = await StorageService.upload_cover(content)
+    master.cover_url = result["public_url"]
+    await db.flush()
+
+    return {"cover_url": result["public_url"], "s3_key": result["s3_key"]}
 
 
 # ── Локации (мультикабинет) ────────────────────────────────

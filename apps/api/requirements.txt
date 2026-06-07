@@ -45,6 +45,7 @@ aiofiles==23.2.1
 python-dateutil==2.9.0
 pytz==2024.1
 pillow==10.4.0
+pillow-heif==0.18.0
 qrcode[pil]==7.4.2
 pydub==0.25.1
 

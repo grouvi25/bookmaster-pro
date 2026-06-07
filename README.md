@@ -1,269 +1,191 @@
 # BookMaster Pro
 
-Полнофункциональная платформа онлайн-записи к мастерам услуг.  
-Telegram Web App + VK MAX Mini-App · Python/FastAPI · React 18 · PostgreSQL · AI-ассистент
-
----
-
-## Что это
-
-BookMaster Pro — экосистема из трёх продуктов:
-
-1. **Mini-App для мастера** — управление бизнесом (расписание, CRM, аналитика, AI-помощник)
-2. **Mini-App для клиента** — запись, история визитов, баллы лояльности, отзывы
-3. **Маркетплейс-сайт** — публичный каталог мастеров с SEO (Next.js SSR)
-
-Бот-слой (TG + MAX) работает только как канал доставки уведомлений и точка входа в Mini-App.
-
----
+Платформа для бронирования записей к мастерам услуг.
+Telegram Mini-App + MAX Mini-App + Marketplace.
 
 ## Архитектура
 
-```
-bookmaster-pro/
-├── apps/
-│   ├── api/              # FastAPI backend (Python 3.12)
-│   ├── mini-app/         # React 18 Mini-App (TG + MAX)
-│   ├── marketplace/      # Next.js 14 SSR (SEO маркетплейс)
-│   ├── bot-tg/           # Telegram бот (aiogram 3)
-│   ├── bot-max/          # MAX бот (httpx + webhook)
-│   └── scheduler/        # APScheduler (фоновые задачи)
-├── packages/
-│   ├── shared-types/     # Общие TypeScript типы
-│   └── shared-config/    # Общие константы
-├── infra/
-│   ├── docker-compose.deploy.yml
-│   ├── nginx/
-│   └── docker/
-├── .env.example
-├── turbo.json
-└── pnpm-workspace.yaml
-```
+| Компонент | Стек | Порт |
+|-----------|------|------|
+| API | FastAPI + SQLAlchemy + asyncpg | 8000 (внутри Docker), 8010 (хост) |
+| Mini-App | React 18 + Vite + TanStack Query | 5173 → nginx → app.dealmaster.ru |
+| Marketplace | Next.js 14 SSR | 3000 |
+| Bot TG | aiogram 3 | — |
+| Bot MAX | aiogram 3 | — |
+| Scheduler | APScheduler (Redis jobstore) | — |
+| DB | PostgreSQL 16 + PostGIS | 5432 |
+| Cache | Redis 7 | 6379 |
 
----
+### Мониторинг
 
-## Технологический стек
-
-| Слой | Технология | Версия |
-|------|-----------|--------|
-| Backend | FastAPI + SQLAlchemy 2 async + Alembic | Python 3.12 |
-| Frontend | React 18 + TypeScript + Vite + Tailwind + Zustand | Vite 5 |
-| БД | PostgreSQL 16 + pgvector + PostGIS + pg_trgm | PG 16 |
-| Кэш / очереди | Redis 7 | 7-alpine |
-| AI | OpenAI GPT-4o / YandexGPT + RAG (pgvector) | — |
-| STT | OpenAI Whisper / Yandex SpeechKit | — |
-| Платежи | ЮKassa Splits API | — |
-| Боты | aiogram 3 (TG) + httpx webhooks (MAX) | — |
-| Маркетплейс | Next.js 14 App Router (SSR) | — |
-| Планировщик | APScheduler + Redis jobstore | — |
-| Мониторинг | Sentry + Prometheus + Grafana | — |
-| Инфра | Docker Compose + Nginx (SSL, rate limit) | — |
-
----
-
-## Модули (24 штуки)
-
-| Модуль | Описание |
-|--------|----------|
-| **Auth** | JWT + Telegram initData / MAX Bridge, определение роли |
-| **Masters** | Профиль, локации, расписание, настройки |
-| **Services** | CRUD услуг с категориями и сортировкой |
-| **Booking** | Генерация слотов, создание/отмена/завершение записей |
-| **Payments** | ЮKassa: создание, webhook, расщепление, refund, рекуррент |
-| **CRM (Clients)** | Карточка клиента, теги, заметки, сегменты, история |
-| **Loyalty** | Баллы, уровни (new/regular/vip), стрики, рефералы, сгорание |
-| **Promo** | Промокоды, скидки (%, фикс.), лимиты, аналитика |
-| **Waitlist** | Лист ожидания + автоуведомление при освобождении слота |
-| **Reviews** | Отзывы 1-5★, ответы мастера, модерация |
-| **AI** | RAG-советник, клиентский чат-бот, контент-мастер, голосовой дневник |
-| **Analytics** | Дашборд: выручка, топ-услуги, воронка, динамика |
-| **Portfolio** | Фото работ (S3), галерея на профиле |
-| **Consultations** | Онлайн-консультации (слоты, бронирование, видеозвонок) |
-| **Support** | Тикеты, SLA-трекинг, приоритеты, модерация |
-| **Broadcast** | Рассылки по сегментам клиентов |
-| **NPS** | Ежеквартальный NPS-опрос мастеров |
-| **Marketplace** | Каталог мастеров, геопоиск, FTS, SEO-страницы |
-| **Widget** | Встраиваемый iframe для внешних сайтов |
-| **Uploads** | S3 загрузка файлов (presigned URL) |
-| **Superadmin** | Дашборд, финансы, мастера, тикеты, SLA, growth, промо-коды, broadcast, команда |
-| **Feature Flags** | Тарифные ограничения per-мастер |
-| **Webhooks** | ЮKassa incoming, валидация IP |
-| **No-show** | AI-скоринг риска, авто-предоплата, чёрный список |
-
----
-
-## Роли
-
-| Роль | Интерфейс | Возможности |
-|------|-----------|-------------|
-| **Суперадмин** | Mini-App → скрытая вкладка | Полное управление платформой |
-| **Модератор** | Mini-App → панель модератора | Тикеты, верификация, отзывы |
-| **Мастер** | Mini-App → мастерский режим (6 вкладок) | Свои данные, клиенты, AI |
-| **Клиент** | Mini-App → клиентский режим | Запись, история, баллы |
-
----
+| Компонент | Описание |
+|-----------|----------|
+| Prometheus | Scraping api:8000/metrics + node-exporter:9100 |
+| Grafana | 127.0.0.1:3001 — 16 панелей |
+| Node Exporter | Системные метрики |
+| Telegram alerts | Каждые 5 мин — контейнеры, nginx, диск, API, CPU, RAM |
+| YC Cloud Logging | gRPC shipper каждые 30с |
 
 ## Быстрый старт (development)
 
-### 1. Клонировать и настроить
-
 ```bash
-git clone <repo-url> && cd bookmaster-pro
+# Клонирование
+git clone https://github.com/grouvi25/bookmaster-pro.git
+cd bookmaster-pro
+git checkout init-branch
+
+# Установка зависимостей
+pnpm install        # frontend (mini-app, marketplace)
+cd apps/api && pip install -r requirements.txt  # backend
+
+# Настройка
 cp .env.example .env
-# Заполнить .env (минимум: DATABASE_URL, REDIS_URL, SECRET_KEY, TG_BOT_TOKEN)
-```
+# Заполнить: DB_PASSWORD, REDIS_PASSWORD, S3_*, TG_BOT_TOKEN,
+#            MAX_BOT_TOKEN, YOOKASSA_*, OPENAI_API_KEY,
+#            SUPERADMIN_IDS (через запятую)
 
-### 2. Поднять инфраструктуру
-
-```bash
-cd infra && docker compose up -d db redis
-```
-
-### 3. Backend
-
-```bash
-cd apps/api
-python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-alembic upgrade head
-uvicorn app.main:app --reload --port 8000
-```
-
-### 4. Frontend (Mini-App)
-
-```bash
-cd apps/mini-app
-pnpm install
-pnpm dev
-```
-
-### 5. Scheduler (фоновые задачи)
-
-```bash
-cd apps/scheduler
-python runner.py
-```
-
-### 6. Боты
-
-```bash
-# Telegram
-cd apps/bot-tg && python -m app.bot
-
-# MAX
-cd apps/bot-max && uvicorn app.bot:app --port 8082
-```
-
----
-
-## Production деплой
-
-Полный стек поднимается через Docker Compose:
-
-```bash
+# Запуск (dev)
 docker compose -f infra/docker-compose.deploy.yml up -d
 ```
 
-**Контейнеры:** db, redis, api, scheduler, bot-tg, bot-max, mini-app, marketplace
+## Деплой на VPS (Yandex Cloud)
 
-**Nginx:** SSL termination, rate limiting (30r/m API, 10r/m auth), WebSocket proxy для AI-чата.
+### Сервер
+- **VPS:** `158.160.177.113` (Debian 12, Yandex Cloud)
+- **SSH:** `ssh -i bm_deploy bmaster@158.160.177.113`
+- **Домен:** `dealmaster.ru` (app.dealmaster.ru, api.dealmaster.ru)
 
-**Деплой-скрипты:**
-- `.deploy_apply.py` — полный деплой (pull → build → migrate → restart → smoke test)
-- `.deploy_smoke.py` — проверка здоровья всех сервисов
-- `.deploy_add_superadmin.py` — добавление суперадмина в .env
+### Структура на сервере
 
----
-
-## Тарифная матрица
-
-| Функция | Старт (590₽) | Базовый (990₽) | Профи (1990₽) | Профи+AI (2990₽) | Бизнес (4990₽) |
-|---------|:---:|:---:|:---:|:---:|:---:|
-| Записей/мес | 30 | 150 | ∞ | ∞ | ∞ |
-| Услуг | 3 | 10 | ∞ | ∞ | ∞ |
-| CRM расширенный | ❌ | ❌ | ✅ | ✅ | ✅ |
-| Лояльность | ❌ | ❌ | ✅ | ✅ | ✅ |
-| AI Советник | ❌ | ❌ | ✅ | ✅ | ✅ |
-| AI Голосовой | ❌ | ❌ | ❌ | ✅ | ✅ |
-| AI токены/мес | — | — | 200K | 1M | 3M |
-| Маркетплейс | ❌ | ✅ | ✅ | ✅ | ✅+Featured |
-| Онлайн-консультации | ❌ | ❌ | ✅ | ✅ | ✅ |
-| Комиссия онлайн-оплат | 7% | 7% | 6% | 5.5% | 5% |
-
----
-
-## Переменные окружения
-
-Все переменные описаны в `.env.example`. Ключевые:
-
-```env
-# Платформы
-TG_BOT_TOKEN=               # от @BotFather
-MAX_BOT_TOKEN=              # VK Dev Console
-SUPERADMIN_IDS=123456789    # TG user_id через запятую
-
-# БД
-DATABASE_URL=postgresql+asyncpg://user:pass@localhost:5432/bookmaster
-REDIS_URL=redis://localhost:6379/0
-
-# AI (опционально — без них AI-модуль работает в dummy-режиме)
-AI_DEFAULT_PROVIDER=openai
-AI_PROXY_URL=               # Railway прокси (обход блокировок из РФ)
-OPENAI_API_KEY=sk-...
-
-# Платежи
-YOOKASSA_SHOP_ID=
-YOOKASSA_SECRET_KEY=
-
-# Приложение
-APP_URL=https://app.bookmaster.pro
-SECRET_KEY=change-me-64-chars
+```
+/opt/bookmaster/
+├── .env                          # Переменные окружения (все сервисы)
+├── apps/
+│   ├── api/                      # FastAPI backend
+│   ├── mini-app/                 # React frontend
+│   ├── marketplace/              # Next.js marketplace
+│   ├── bot-tg/                   # Telegram бот
+│   ├── bot-max/                  # MAX бот
+│   └── scheduler/                # APScheduler воркер
+├── infra/
+│   ├── docker-compose.deploy.yml # Основной compose (8 сервисов)
+│   ├── monitoring/               # Prometheus + Grafana
+│   ├── nginx/                    # Конфиги nginx
+│   └── scripts/
+│       ├── backup.sh             # Бэкап PostgreSQL+Redis → S3
+│       ├── monitor_alerts.sh     # Telegram алерты
+│       ├── deploy.sh             # Скрипт деплоя
+│       └── yc_log_shipper.py     # Отправка логов в YC
+└── packages/
+    ├── shared-config/
+    └── shared-types/
 ```
 
----
-
-## Scheduler — фоновые задачи
-
-| Job | Расписание | Что делает |
-|-----|-----------|-----------|
-| remind_24h | каждый час | Напоминание за 24ч до визита |
-| remind_2h | каждые 30 мин | Напоминание за 2ч |
-| cleanup_pending | каждую минуту | Освобождение незабронированных слотов (>5 мин) |
-| admin_daily | 9:00 | Список записей на сегодня мастеру |
-| birthday_promo | 8:00 | Поздравление + бонус за 3 дня до ДР |
-| reactivation | 11:00 | Приглашение неактивных клиентов (>30 дней) |
-| post_visit_review | каждый час | Запрос отзыва через 1ч после визита |
-| post_visit_rebooking | каждые 2ч | Приглашение записаться снова (через 24ч) |
-| billing_reminder | 10:00 | Напоминание об оплате подписки (за 3 дня) |
-| billing_auto_charge | 6:00 | Автосписание рекуррентной оплаты |
-| ai_reindex | 3:00 | Переиндексация RAG-базы знаний |
-| loyalty_expire | 2:00 | Сгорание просроченных баллов |
-| loyalty_expiry_warn | 10:30 | Предупреждение о скором сгорании |
-| waitlist_notify | каждые 5 мин | Уведомление из листа ожидания |
-
----
-
-## Тестирование
+### Деплой
 
 ```bash
-cd apps/api
-pip install -r requirements-test.txt
-pytest tests/ -v
+cd /opt/bookmaster/infra
+
+# Билд одного сервиса (mini-app ОБЯЗАТЕЛЬНО --no-cache)
+docker compose -f docker-compose.deploy.yml build --no-cache mini-app
+
+# Запуск с пересозданием
+docker compose -f docker-compose.deploy.yml up -d --force-recreate mini-app
+
+# Полный деплой всех сервисов
+docker compose -f docker-compose.deploy.yml up -d --build --force-recreate
 ```
 
-Тесты используют SQLite in-memory — не требуют запущенного PostgreSQL.
+### Важные особенности
 
----
+1. **Nginx** — systemd-сервис, НЕ Docker контейнер
+   ```bash
+   systemctl status nginx
+   systemctl reload nginx
+   ```
 
-## CI/CD
+2. **API порт** — внутри Docker `8000`, маппинг на хост `8010`
 
-GitHub Actions (`.github/workflows/ci.yml`):
-- Backend: ruff lint + pytest
-- Frontend: TypeScript type check + build
-- Marketplace: Next.js build
+3. **mini-app** — ВСЕГДА билдить с `--no-cache`, иначе кешированные слои
 
----
+4. **Миграции** — запускать внутри контейнера:
+   ```bash
+   docker exec -it bm_api alembic upgrade head
+   ```
+
+5. **БД** — имя `bookmaster` (не bookmaster_db), пользователь `bookmaster`
+
+### Бэкапы
+
+- **Расписание:** ежедневно в 00:00 (crontab bmaster)
+- **Хранилище:** YC S3 бакет `bookmaster-backups`
+- **Ротация:** daily/ — 30 дней, monthly/ — 365 дней
+- **Проверка:**
+  ```bash
+  # Последний бэкап
+  aws s3 ls s3://bookmaster-backups/daily/ --endpoint-url https://storage.yandexcloud.net | tail -5
+  ```
+
+### Мониторинг
+
+```bash
+# Все контейнеры
+docker ps --format "table {{.Names}}\t{{.Status}}"
+
+# Health check
+curl http://localhost:8010/health/detailed
+
+# Логи
+docker logs bm_api --tail 50
+docker logs bm_scheduler --tail 50
+
+# Grafana
+# http://127.0.0.1:3001 (admin/bookmaster2024)
+# Доступ через SSH tunnel: ssh -L 3001:127.0.0.1:3001 bmaster@158.160.177.113
+```
+
+### Переменные окружения (.env)
+
+| Переменная | Описание |
+|------------|----------|
+| `DB_PASSWORD` | Пароль PostgreSQL |
+| `REDIS_PASSWORD` | Пароль Redis |
+| `TG_BOT_TOKEN` | Токен Telegram бота |
+| `MAX_BOT_TOKEN` | Токен MAX бота |
+| `MAX_BOT_USERNAME` | Username MAX бота (для deeplinks) |
+| `YOOKASSA_SHOP_ID` | YooKassa Shop ID |
+| `YOOKASSA_SECRET_KEY` | YooKassa секретный ключ |
+| `OPENAI_API_KEY` | Ключ OpenAI (через AI_PROXY_URL для РФ) |
+| `SUPERADMIN_IDS` | ID суперадминов через запятую |
+| `S3_*` | Настройки Yandex Cloud S3 |
+| `APP_URL` | URL мини-приложения (app.dealmaster.ru) |
+| `API_URL` | URL API (api.dealmaster.ru) |
+
+## Модули API
+
+| Модуль | Описание |
+|--------|----------|
+| auth | Аутентификация TG/MAX, кросс-платформенная привязка |
+| masters | Профиль мастера, расписание, локации, QR |
+| booking | Бронирование, Redis-блокировка слотов, anti-noshow |
+| payments | YooKassa, T-Bank выплаты мастерам |
+| clients | CRM — карточки клиентов, сегменты |
+| services | Услуги мастера |
+| loyalty | Программа лояльности, промокоды, рефералы |
+| ai | AI-чат (WebSocket), контент-генерация, STT/TTS, RAG |
+| analytics | Аналитика и дашборд |
+| reviews | Отзывы и рейтинг |
+| monitoring | Ошибки (ErrorTracker), AI-подсказки, бэкапы |
+| notifications | Push TG/MAX, email, шаблоны |
+| broadcast | Рассылки по сегментам |
+| nps | NPS-опросы |
+| marketplace | API маркетплейса |
+| portfolio | Портфолио мастера |
+| consultations | Онлайн-консультации |
+| support | Тикеты поддержки |
+| superadmin | Панель суперадмина (14 табов) |
+| uploads | S3 загрузка файлов, StorageService |
 
 ## Лицензия
 
-Проприетарный код. Все права защищены.
+Proprietary. All rights reserved.
