@@ -639,3 +639,22 @@ export const expensesApi = {
   parseReceipt: (formData: FormData) =>
     api.post('/expenses/parse-receipt', formData),
 };
+
+// ── Rentals (аренда рабочих мест) ──
+
+export const rentalsApi = {
+  listActive: (params?: { city?: string; listing_type?: string; max_price?: number }) =>
+    api.get('/rentals/', { params }),
+  my: () => api.get('/rentals/my'),
+  get: (id: number) => api.get(`/rentals/${id}`),
+  create: (data: Record<string, unknown>) => api.post('/rentals/', data),
+  update: (id: number, data: Record<string, unknown>) =>
+    api.patch(`/rentals/${id}`, data),
+  delete: (id: number) => api.delete(`/rentals/${id}`),
+  request: (listingId: number, data: { message?: string }) =>
+    api.post(`/rentals/${listingId}/request`, data),
+  incomingRequests: () => api.get('/rentals/requests/incoming'),
+  myRequests: () => api.get('/rentals/requests/my'),
+  respond: (requestId: number, approve: boolean) =>
+    api.patch(`/rentals/requests/${requestId}`, null, { params: { approve } }),
+};

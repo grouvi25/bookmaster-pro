@@ -127,6 +127,12 @@ function SettingsMain({ onNavigate }: { onNavigate: (tab: SettingsTab) => void }
         onClick={() => onNavigate('support')}
       />
       <MenuItem
+        emoji={'💰'}
+        label="Расходы"
+        description="Учёт расходов и чеков"
+        onClick={() => navigate('/master/expenses')}
+      />
+      <MenuItem
         emoji={'🔗'}
         label="Моя страница-визитка"
         description="TapLink-аналог"
@@ -170,6 +176,12 @@ function SettingsMain({ onNavigate }: { onNavigate: (tab: SettingsTab) => void }
           onClick={() => navigate('/master/locations')}
         />
       )}
+      <MenuItem
+        emoji={'🏠'}
+        label="Аренда рабочих мест"
+        description="Сдать или снять кресло / кабинет"
+        onClick={() => navigate('/master/rentals')}
+      />
     </div>
   );
 }
