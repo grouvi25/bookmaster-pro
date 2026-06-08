@@ -1,16 +1,16 @@
 import { useState, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { mastersApi, analyticsApi, supportApi, servicesApi, uploadsApi } from '@/api/endpoints';
+import { mastersApi, analyticsApi, supportApi, uploadsApi } from '@/api/endpoints';
 import { toArray } from '@/shared/lib/normalize';
-import { ListSkeleton, StatGridSkeleton, ServiceCardSkeleton, TicketCardSkeleton } from '@/shared/ui/Skeleton';
+import { ListSkeleton, StatGridSkeleton, TicketCardSkeleton } from '@/shared/ui/Skeleton';
 import Button from '@/shared/ui/Button';
 import Card from '@/shared/ui/Card';
 import StatCard from '@/shared/ui/StatCard';
 import PageHeader from '@/shared/ui/PageHeader';
 import MenuItem from '@/shared/ui/MenuItem';
 import { toast } from '@/shared/ui/Toast';
-import type { Service, SupportTicket, MasterProfile } from '@/shared/types/api';
+import type { SupportTicket, MasterProfile } from '@/shared/types/api';
 import { useFeatureFlag } from '@/hooks/useFeatureFlag';
 import { ArrowLeft, Camera } from 'lucide-react';
 import { clsx } from 'clsx';
@@ -19,14 +19,13 @@ import LinkedAccountsSection from '@/modules/settings/LinkedAccountsSection';
 const TAB_TITLES: Record<SettingsTab, string> = {
   main: 'Настройки',
   analytics: 'Аналитика',
-  services: 'Мои услуги',
   profile: 'Профиль',
   payments: 'Приём оплаты',
   notifications: 'Уведомления',
   support: 'Поддержка',
 };
 
-type SettingsTab = 'main' | 'analytics' | 'services' | 'profile' | 'payments' | 'notifications' | 'support';
+type SettingsTab = 'main' | 'analytics' | 'profile' | 'payments' | 'notifications' | 'support';
 
 export default function Settings() {
   const [searchParams] = useSearchParams();
@@ -53,8 +52,6 @@ export default function Settings() {
         <SettingsMain onNavigate={setTab} />
       ) : tab === 'analytics' ? (
         <AnalyticsSection />
-      ) : tab === 'services' ? (
-        <ServicesSection />
       ) : tab === 'profile' ? (
         <ProfileSection />
       ) : tab === 'payments' ? (
@@ -97,7 +94,7 @@ function SettingsMain({ onNavigate }: { onNavigate: (tab: SettingsTab) => void }
         emoji={'📋'}
         label="Мои услуги"
         description="Управление услугами"
-        onClick={() => onNavigate('services')}
+        onClick={() => navigate('/master/services')}
       />
       <MenuItem
         emoji={'🎁'}
@@ -215,98 +212,6 @@ function AnalyticsSection() {
   );
 }
 
-function ServicesSection() {
-  const queryClient = useQueryClient();
-  const { data, isLoading } = useQuery({
-    queryKey: ['my-services'],
-    queryFn: () => servicesApi.list().then((r) => r.data),
-  });
-  const [showForm, setShowForm] = useState(false);
-  const [formName, setFormName] = useState('');
-  const [formPrice, setFormPrice] = useState('');
-  const [formDuration, setFormDuration] = useState('60');
-  const [formLoading, setFormLoading] = useState(false);
-
-  if (isLoading) return <ServiceCardSkeleton count={3} />;
-
-  const services = toArray<Service>(data);
-
-  const handleCreate = async () => {
-    if (!formName.trim()) { toast.error('Введите название'); return; }
-    setFormLoading(true);
-    try {
-      await servicesApi.create({
-        name: formName.trim(),
-        price: formPrice ? Number(formPrice) : 0,
-        duration_min: Number(formDuration) || 60,
-      });
-      await queryClient.invalidateQueries({ queryKey: ['my-services'] });
-      toast.success('Услуга добавлена');
-      setShowForm(false);
-      setFormName(''); setFormPrice(''); setFormDuration('60');
-    } catch {
-      toast.error('Ошибка при создании');
-    } finally {
-      setFormLoading(false);
-    }
-  };
-
-  const handleDelete = async (id: number) => {
-    try {
-      await servicesApi.delete(id);
-      await queryClient.invalidateQueries({ queryKey: ['my-services'] });
-      toast.success('Услуга удалена');
-    } catch {
-      toast.error('Ошибка при удалении');
-    }
-  };
-
-  return (
-        <div className="animate-fade-in">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-h2">Мои услуги</h2>
-        <button onClick={() => setShowForm(!showForm)} className="flex items-center gap-1 text-tg-link text-body">
-          {'➕'} Добавить
-        </button>
-      </div>
-
-      {showForm && (
-        <Card className="mb-3">
-          <div className="flex flex-col gap-3">
-            <input value={formName} onChange={e => setFormName(e.target.value)}
-              placeholder="Название услуги" className="input-field" />
-            <div className="flex gap-2">
-              <input value={formPrice} onChange={e => setFormPrice(e.target.value)}
-                placeholder="Цена, ₽" type="number" className="input-field flex-1" />
-              <input value={formDuration} onChange={e => setFormDuration(e.target.value)}
-                placeholder="Мин" type="number" className="input-field w-20" />
-            </div>
-            <Button onClick={handleCreate} loading={formLoading} fullWidth size="sm">Создать</Button>
-          </div>
-        </Card>
-      )}
-
-      <div className="flex flex-col gap-card-gap">
-        {services.map((svc) => (
-          <Card key={svc.id} className="flex justify-between items-center">
-            <div>
-              <div className="font-medium text-body">{svc.name}</div>
-              <div className="text-aux text-tg-hint">{svc.duration_min} мин</div>
-            </div>
-            <div className="flex items-center gap-3">
-              <span className="font-bold text-body text-tg-link">
-                {svc.price ? `${Number(svc.price).toLocaleString('ru')} ₽` : 'Дог.'}
-              </span>
-              <button onClick={() => handleDelete(svc.id)} className="text-status-danger interactive">
-                {'🗑️'}
-              </button>
-            </div>
-          </Card>
-        ))}
-      </div>
-    </div>
-  );
-}
 
 function ProfileSection() {
   const queryClient = useQueryClient();
