@@ -25,10 +25,40 @@ class PromoService:
     async def list_by_master(self, master_id: int) -> List[Promotion]:
         result = await self.db.execute(
             select(Promotion)
-            .where(Promotion.master_id == master_id)
+            .where(Promotion.master_id == master_id, Promotion.is_active.is_(True))
             .order_by(Promotion.created_at.desc())
         )
         return list(result.scalars().all())
+
+    async def update(self, promo_id: int, master_id: int, data: dict) -> Promotion | None:
+        result = await self.db.execute(
+            select(Promotion).where(
+                Promotion.id == promo_id,
+                Promotion.master_id == master_id,
+            )
+        )
+        promo = result.scalar_one_or_none()
+        if not promo:
+            return None
+        for k, v in data.items():
+            if v is not None:
+                setattr(promo, k, v)
+        await self.db.flush()
+        return promo
+
+    async def delete(self, promo_id: int, master_id: int) -> bool:
+        result = await self.db.execute(
+            select(Promotion).where(
+                Promotion.id == promo_id,
+                Promotion.master_id == master_id,
+            )
+        )
+        promo = result.scalar_one_or_none()
+        if promo:
+            await self.db.delete(promo)
+            await self.db.flush()
+            return True
+        return False
 
     async def deactivate(self, promo_id: int, master_id: int) -> bool:
         result = await self.db.execute(

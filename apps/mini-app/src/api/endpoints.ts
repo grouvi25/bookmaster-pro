@@ -295,6 +295,8 @@ export const promoApi = {
     api.post('/promo/validate', { code, master_id: masterId }),
   list: () => api.get('/promo/'),
   create: (data: PromoPayload) => api.post('/promo/', data),
+  update: (id: number, data: Partial<PromoPayload>) => api.patch(`/promo/${id}`, data),
+  delete: (id: number) => api.delete(`/promo/${id}`),
   apply: (code: string) => api.post('/auth/apply-promo-code', { code }),
 };
 

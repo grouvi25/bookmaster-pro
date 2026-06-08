@@ -11,7 +11,7 @@ from app.core.auth import get_current_user
 from app.core.database import get_db
 from app.modules.masters.service import MasterService
 from app.modules.promo.schemas import (
-    PromoCreate, PromoOut,
+    PromoCreate, PromoUpdate, PromoOut,
     PromoValidateRequest, PromoValidateResponse,
 )
 from app.modules.promo.service import PromoService
@@ -46,18 +46,37 @@ async def list_promos(
     return await service.list_by_master(master.id)
 
 
+@router.patch("/{promo_id}", response_model=PromoOut)
+async def update_promo(
+    promo_id: int,
+    body: PromoUpdate,
+    user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Обновить промоакцию."""
+    master = await MasterService(db).get_by_identity(int(user["sub"]))
+    if not master:
+        raise HTTPException(status_code=403, detail="Not a master")
+    service = PromoService(db)
+    data = body.model_dump(exclude_unset=True)
+    promo = await service.update(promo_id, master.id, data)
+    if not promo:
+        raise HTTPException(status_code=404, detail="Promo not found")
+    return promo
+
+
 @router.delete("/{promo_id}", status_code=204)
 async def deactivate_promo(
     promo_id: int,
     user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """Деактивировать промоакцию."""
+    """Удалить промоакцию."""
     master = await MasterService(db).get_by_identity(int(user["sub"]))
     if not master:
         raise HTTPException(status_code=403, detail="Not a master")
     service = PromoService(db)
-    if not await service.deactivate(promo_id, master.id):
+    if not await service.delete(promo_id, master.id):
         raise HTTPException(status_code=404, detail="Promo not found")
 
 

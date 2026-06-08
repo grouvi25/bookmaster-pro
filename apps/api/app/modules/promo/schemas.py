@@ -21,6 +21,16 @@ class PromoCreate(BaseModel):
     valid_until: Optional[date] = None
 
 
+class PromoUpdate(BaseModel):
+    code: Optional[str] = None
+    discount_type: Optional[str] = None
+    discount_value: Optional[Decimal] = None
+    max_uses: Optional[int] = None
+    valid_from: Optional[date] = None
+    valid_until: Optional[date] = None
+    is_active: Optional[bool] = None
+
+
 class PromoOut(BaseModel):
     id: int
     master_id: int
