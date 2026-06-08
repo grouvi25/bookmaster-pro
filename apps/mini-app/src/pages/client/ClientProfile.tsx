@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { reviewsApi } from '@/api/endpoints';
+import { reviewsApi, loyaltyApi, bookingApi } from '@/api/endpoints';
+import { toArray } from '@/shared/lib/normalize';
 import { ListSkeleton } from '@/shared/ui/Skeleton';
 import Card from '@/shared/ui/Card';
 import EmptyState from '@/shared/ui/EmptyState';
@@ -22,9 +24,52 @@ export default function ClientProfile() {
     queryFn: () => reviewsApi.myReviews().then((r) => r.data),
   });
 
+  // Referral link sharing
+  const [copiedRef, setCopiedRef] = useState(false);
+  const { data: bookingsData } = useQuery({
+    queryKey: ['my-bookings'],
+    queryFn: () => bookingApi.myBookings().then((r: { data: unknown }) => r.data),
+  });
+  const bookings = toArray<{ master_id: number; master_name?: string }>(bookingsData);
+  const masterIds = [...new Set(bookings.map((b) => b.master_id))];
+  const firstMasterId = masterIds[0];
+
+  const { data: refLink } = useQuery({
+    queryKey: ['referral-link', firstMasterId],
+    queryFn: () => loyaltyApi.getReferralLink(firstMasterId!).then((r: { data: { referral_code: string; master_name: string } }) => r.data),
+    enabled: !!firstMasterId,
+  });
+
+  const copyReferralLink = () => {
+    if (!refLink) return;
+    const botUrl = `https://t.me/profibook_bot?startapp=ref_${refLink.referral_code}`;
+    navigator.clipboard.writeText(botUrl).then(() => {
+      setCopiedRef(true);
+      setTimeout(() => setCopiedRef(false), 2000);
+    });
+  };
+
   return (
     <div className="px-screen-x py-section-y animate-fade-in">
       <h1 className="text-h1 mb-section-y">Мой профиль</h1>
+
+      {/* Referral link */}
+      {refLink && (
+        <div className="mb-section-y">
+          <h2 className="text-h2 mb-3">🎁 Пригласить друга</h2>
+          <div className="bg-tg-secondary rounded-2xl p-4">
+            <p className="text-sm text-tg-hint mb-3">
+              Пригласи друга к мастеру <strong className="text-tg-text">{refLink.master_name}</strong> и получи бонусные баллы!
+            </p>
+            <button
+              onClick={copyReferralLink}
+              className="w-full py-2.5 px-4 rounded-xl bg-brand-500 text-white font-semibold text-sm active:scale-[0.98] transition-transform"
+            >
+              {copiedRef ? '✅ Ссылка скопирована!' : '📋 Скопировать ссылку'}
+            </button>
+          </div>
+        </div>
+      )}
 
       <h2 className="text-h2 mb-3">Мои отзывы</h2>
 

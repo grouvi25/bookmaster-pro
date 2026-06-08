@@ -224,3 +224,39 @@ async def update_loyalty_settings(
         birthday_bonus=master.loyalty_birthday_bonus or 300,
         max_spend_percent=master.loyalty_max_spend_percent or 30,
     )
+
+
+@router.get("/referrals/stats")
+async def get_referral_stats(
+    user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Статистика рефералов для мастера."""
+    master = await MasterService(db).get_by_identity(int(user["sub"]))
+    if not master:
+        raise HTTPException(status_code=403, detail="Not a master")
+    
+    service = LoyaltyService(db)
+    return await service.get_referral_stats(master.id)
+
+
+@router.get("/referral-link/{master_id}")
+async def get_referral_link(
+    master_id: int,
+    user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Получить реферальную ссылку клиента для конкретного мастера."""
+    result = await db.execute(
+        select(Client).where(Client.identity_id == int(user["sub"]))
+    )
+    client = result.scalar_one_or_none()
+    if not client:
+        raise HTTPException(status_code=403, detail="Not a client")
+    
+    service = LoyaltyService(db)
+    try:
+        return await service.get_referral_link(master_id, client.id)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+

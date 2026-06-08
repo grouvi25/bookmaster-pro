@@ -1,3 +1,4 @@
+from datetime import datetime
 """
 Loyalty schemas.
 """
@@ -58,3 +59,22 @@ class LoyaltySettingsUpdate(BaseModel):
     review_bonus: Optional[int] = None
     birthday_bonus: Optional[int] = None
     max_spend_percent: Optional[int] = None
+
+class ReferralOut(BaseModel):
+    id: int
+    referrer_client: int
+    referrer_name: Optional[str] = None
+    referred_client: int
+    referred_name: Optional[str] = None
+    bonus_applied: Optional[int] = None
+    first_visit_id: Optional[int] = None
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class ReferralStatsOut(BaseModel):
+    total_referrals: int
+    total_bonus_given: int
+    referrals: list

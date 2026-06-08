@@ -309,6 +309,9 @@ export const loyaltyApi = {
   getSettings: () => api.get('/loyalty/settings'),
   updateSettings: (data: LoyaltySettingsPayload) =>
     api.put('/loyalty/settings', data),
+  getReferralStats: () => api.get('/loyalty/referrals/stats'),
+  getReferralLink: (masterId: number) =>
+    api.get(`/loyalty/referral-link/${masterId}`),
 };
 
 // ── Reviews ──

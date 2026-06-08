@@ -344,3 +344,66 @@ class LoyaltyService:
 
         await self.db.flush()
         return {"status": "ok", "bonus_applied": referral_bonus, "master_id": master.id}
+
+    async def get_referral_stats(self, master_id: int) -> dict:
+        """Get referral statistics for a master."""
+        from app.modules.clients.models import Client
+        
+        result = await self.db.execute(
+            select(Referral)
+            .where(Referral.master_id == master_id)
+            .order_by(Referral.created_at.desc())
+        )
+        referrals = list(result.scalars().all())
+        
+        # Get client names
+        client_ids = set()
+        for r in referrals:
+            client_ids.add(r.referrer_client)
+            client_ids.add(r.referred_client)
+        
+        client_names = {}
+        if client_ids:
+            result = await self.db.execute(
+                select(Client).where(Client.id.in_(client_ids))
+            )
+            for c in result.scalars().all():
+                client_names[c.id] = c.display_name or f"Клиент #{c.id}"
+        
+        total_bonus = sum(r.bonus_applied or 0 for r in referrals)
+        
+        items = []
+        for r in referrals:
+            items.append({
+                "id": r.id,
+                "referrer_client": r.referrer_client,
+                "referrer_name": client_names.get(r.referrer_client, ""),
+                "referred_client": r.referred_client,
+                "referred_name": client_names.get(r.referred_client, ""),
+                "bonus_applied": r.bonus_applied,
+                "first_visit_id": r.first_visit_id,
+                "created_at": r.created_at.isoformat() if r.created_at else None,
+            })
+        
+        return {
+            "total_referrals": len(referrals),
+            "total_bonus_given": total_bonus,
+            "referrals": items,
+        }
+
+    async def get_referral_link(self, master_id: int, client_id: int) -> dict:
+        """Generate referral link for a client."""
+        result = await self.db.execute(
+            select(Master).where(Master.id == master_id)
+        )
+        master = result.scalar_one_or_none()
+        if not master:
+            raise ValueError("Master not found")
+        
+        code = f"{master.slug}_{client_id}"
+        return {
+            "referral_code": code,
+            "master_slug": master.slug,
+            "master_name": master.display_name,
+        }
+

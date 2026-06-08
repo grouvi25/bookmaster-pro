@@ -14,16 +14,19 @@ import ConfirmDialog from '@/shared/ui/ConfirmDialog';
 import type { Promo, LoyaltyTransaction } from '@/shared/types/api';
 import FeatureGate from '@/shared/ui/FeatureGate';
 import { Plus, Pencil, Trash2, X, Check, Copy } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
-type ToolsTab = 'promo' | 'loyalty';
+type ToolsTab = 'promo' | 'loyalty' | 'referrals';
 
 const TABS: { key: ToolsTab; label: string; emoji?: string }[] = [
   { key: 'promo', label: 'Промокоды', emoji: '🎫' },
   { key: 'loyalty', label: 'Лояльность', emoji: '⭐' },
+  { key: 'referrals', label: 'Рефералы', emoji: '👥' },
 ];
 
 export default function Tools() {
   const [tab, setTab] = useState<ToolsTab>('promo');
+  const navigate = useNavigate();
 
   return (
     <div className="px-screen-x">
@@ -35,10 +38,12 @@ export default function Tools() {
 
       {tab === 'promo' ? (
         <PromoSection />
-      ) : (
+      ) : tab === 'loyalty' ? (
         <FeatureGate flag="loyalty_enabled">
           <LoyaltySection />
         </FeatureGate>
+      ) : (
+        (() => { navigate('/master/referrals'); return null; })()
       )}
     </div>
   );

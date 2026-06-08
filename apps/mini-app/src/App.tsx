@@ -47,6 +47,7 @@ const AIKnowledge = lazy(() => import('@/pages/master/AIKnowledge'));
 const VoiceDiary = lazy(() => import('@/pages/master/VoiceDiary'));
 const WidgetSettings = lazy(() => import('@/pages/master/WidgetSettings'));
 const SubscriptionPackages = lazy(() => import('@/pages/master/SubscriptionPackages'));
+const ReferralProgram = lazy(() => import('@/pages/master/ReferralProgram'));
 const WorkSchedule = lazy(() => import('@/pages/master/WorkSchedule'));
 const Messages = lazy(() => import('@/pages/master/Messages'));
 
@@ -228,7 +229,15 @@ function AppRouter() {
         } else if (startParam === 'reviews') {
           navigate('/master');
         } else if (startParam.startsWith('ref_')) {
-          navigate(`/?ref=${startParam.slice(4)}`);
+          // Process referral: call API, then navigate to client home
+          const refCode = startParam.slice(4);
+          try {
+            const { loyaltyApi } = await import('@/api/endpoints');
+            await loyaltyApi.processReferral(refCode);
+          } catch {
+            // Referral may already exist or code invalid — ignore silently
+          }
+          navigate('/client');
         }
       } else if (authRole === 'superadmin') {
         navigate('/superadmin');
@@ -320,6 +329,7 @@ function AppRouter() {
           <Route path="/master/ai/voice-diary" element={<VoiceDiary />} />
           <Route path="/master/widget" element={<WidgetSettings />} />
           <Route path="/master/subscription-packages" element={<SubscriptionPackages />} />
+          <Route path="/master/referrals" element={<ReferralProgram />} />
           <Route path="/master/work-schedule" element={<WorkSchedule />} />
           <Route path="/master/messages" element={<Messages />} />
         </Route>
