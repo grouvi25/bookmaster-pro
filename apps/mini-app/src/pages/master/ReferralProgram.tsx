@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 
 import { useQuery } from '@tanstack/react-query';
 import { loyaltyApi } from '@/api/endpoints';
@@ -101,9 +102,9 @@ export default function ReferralProgram() {
         <div className="mt-3 pt-3 border-t border-tg-secondary">
           <div className="text-xs text-tg-hint">
             Размер бонуса настраивается в{' '}
-            <a href="/master/loyalty-settings" className="text-brand-500 hover:underline">
+            <Link to="/master/loyalty-settings" className="text-brand-500 hover:underline">
               настройках лояльности
-            </a>
+            </Link>
           </div>
         </div>
       </Card>
