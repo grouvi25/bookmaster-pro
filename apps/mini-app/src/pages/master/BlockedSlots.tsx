@@ -8,6 +8,7 @@ import PageHeader from '@/shared/ui/PageHeader';
 import EmptyState from '@/shared/ui/EmptyState';
 import { toast } from '@/shared/ui/Toast';
 import { Plus, Trash2 } from 'lucide-react';
+import ConfirmDialog from '@/shared/ui/ConfirmDialog';
 import api from '@/api/client';
 
 interface BlockedSlot {
@@ -22,6 +23,7 @@ interface BlockedSlot {
 export default function BlockedSlots() {
   const queryClient = useQueryClient();
   const [showCreate, setShowCreate] = useState(false);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
 
   const { data, isLoading } = useQuery<BlockedSlot[]>({
     queryKey: ['blocked-slots'],
@@ -88,7 +90,7 @@ export default function BlockedSlots() {
                 )}
               </div>
               <button
-                onClick={() => deleteMutation.mutate(slot.id)}
+                onClick={() => setDeleteConfirmId(slot.id)}
                 className="text-status-danger p-2"
               >
                 <Trash2 className="w-4 h-4" />
@@ -98,6 +100,16 @@ export default function BlockedSlots() {
         </div>
       )}
       </div>
+
+      <ConfirmDialog
+        isOpen={deleteConfirmId !== null}
+        onClose={() => setDeleteConfirmId(null)}
+        onConfirm={() => { if (deleteConfirmId) { deleteMutation.mutate(deleteConfirmId); setDeleteConfirmId(null); } }}
+        title="Удалить блокировку?"
+        description="Блокировка будет снята, слоты станут доступны для записи."
+        confirmLabel="Удалить"
+        variant="danger"
+      />
     </div>
   );
 }

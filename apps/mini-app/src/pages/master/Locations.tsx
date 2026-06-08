@@ -8,9 +8,11 @@ import Card from '@/shared/ui/Card';
 import Button from '@/shared/ui/Button';
 import EmptyState from '@/shared/ui/EmptyState';
 import { MapPin, Plus, Trash2, Check } from 'lucide-react';
+import ConfirmDialog from '@/shared/ui/ConfirmDialog';
 
 export default function Locations() {
   const [showCreate, setShowCreate] = useState(false);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
   const queryClient = useQueryClient();
 
   const { data, isLoading } = useQuery({
@@ -76,7 +78,7 @@ export default function Locations() {
                 </div>
               </div>
               <button
-                onClick={() => deleteMutation.mutate(loc.id)}
+                onClick={() => setDeleteConfirmId(loc.id)}
                 className="text-status-danger p-1"
               >
                 <Trash2 className="w-4 h-4" />
@@ -86,6 +88,16 @@ export default function Locations() {
         )}
       </div>
       </div>
+
+      <ConfirmDialog
+        isOpen={deleteConfirmId !== null}
+        onClose={() => setDeleteConfirmId(null)}
+        onConfirm={() => { if (deleteConfirmId) { deleteMutation.mutate(deleteConfirmId); setDeleteConfirmId(null); } }}
+        title="Удалить локацию?"
+        description={deleteConfirmId ? `«${locations.find((l) => l.id === deleteConfirmId)?.name ?? ''}» — будет удалена.` : undefined}
+        confirmLabel="Удалить"
+        variant="danger"
+      />
     </div>
   );
 }

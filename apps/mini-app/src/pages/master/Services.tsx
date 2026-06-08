@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { servicesApi } from '@/api/endpoints';
 import { toArray } from '@/shared/lib/normalize';
@@ -8,7 +9,8 @@ import Card from '@/shared/ui/Card';
 import { toast } from '@/shared/ui/Toast';
 import PageHeader from '@/shared/ui/PageHeader';
 import EmptyState from '@/shared/ui/EmptyState';
-import { Plus, GripVertical, Pencil, Trash2, X, Check } from 'lucide-react';
+import ConfirmDialog from '@/shared/ui/ConfirmDialog';
+import { Plus, GripVertical, Pencil, Trash2, X, Check, ArrowLeft } from 'lucide-react';
 import {
   DndContext,
   closestCenter,
@@ -105,6 +107,7 @@ function SortableServiceCard({
 }
 
 export default function Services() {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { data, isLoading } = useQuery({
     queryKey: ['my-services'],
@@ -121,6 +124,7 @@ export default function Services() {
   const [formDescription, setFormDescription] = useState('');
   const [formBuffer, setFormBuffer] = useState('');
   const [formLoading, setFormLoading] = useState(false);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
 
   const [localOrder, setLocalOrder] = useState<ServiceItem[] | null>(null);
 
@@ -217,7 +221,10 @@ export default function Services() {
     }
   };
 
-  const handleDelete = async (id: number) => {
+  const confirmDelete = async () => {
+    if (!deleteConfirmId) return;
+    const id = deleteConfirmId;
+    setDeleteConfirmId(null);
     const prev = queryClient.getQueryData(['my-services']);
     queryClient.setQueryData(['my-services'], (old: unknown) => {
       if (Array.isArray(old)) return old.filter((s: ServiceItem) => s.id !== id);
@@ -239,6 +246,11 @@ export default function Services() {
     <div >
       <PageHeader
         title="Мои услуги"
+        left={
+          <button onClick={() => navigate(-1)} className="p-2">
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+        }
         right={
           <button
             onClick={() => {
@@ -346,7 +358,7 @@ export default function Services() {
                   key={svc.id}
                   svc={svc}
                   onEdit={startEdit}
-                  onDelete={handleDelete}
+                  onDelete={(id) => setDeleteConfirmId(id)}
                 />
               ))}
             </div>
@@ -358,6 +370,20 @@ export default function Services() {
         Перетаскивайте услуги для изменения порядка
       </p>
       </div>
+
+      <ConfirmDialog
+        isOpen={deleteConfirmId !== null}
+        onClose={() => setDeleteConfirmId(null)}
+        onConfirm={confirmDelete}
+        title="Удалить услугу?"
+        description={
+          deleteConfirmId
+            ? `«${services.find((s) => s.id === deleteConfirmId)?.name ?? ''}» — будет удалена без возможности восстановления.`
+            : undefined
+        }
+        confirmLabel="Удалить"
+        variant="danger"
+      />
     </div>
   );
 }

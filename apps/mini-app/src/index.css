@@ -80,7 +80,7 @@
     height: 50px;
     padding: 0 14px;
     background: var(--tg-theme-secondary-bg-color, #f4f4f5);
-    border: 1.5px solid var(--tg-theme-section-separator-color, rgba(0, 0, 0, 0.1));
+    border: 1px solid var(--tg-theme-section-separator-color, color-mix(in srgb, var(--tg-theme-hint-color, #999) 35%, transparent));
     border-radius: 12px;
     font-size: 15px;
     color: var(--tg-theme-text-color, #000000);

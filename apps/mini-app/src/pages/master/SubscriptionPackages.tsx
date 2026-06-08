@@ -9,6 +9,7 @@ import Button from '@/shared/ui/Button';
 import Card from '@/shared/ui/Card';
 import FeatureGate from '@/shared/ui/FeatureGate';
 import { Package, Plus, Trash2 } from 'lucide-react';
+import ConfirmDialog from '@/shared/ui/ConfirmDialog';
 import { toast } from '@/shared/ui/Toast';
 
 interface SubscriptionPackage {
@@ -38,6 +39,7 @@ export default function SubscriptionPackages() {
 function SubscriptionPackagesContent() {
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
   const [formData, setFormData] = useState({
     service_id: 0,
     total_visits: 5,
@@ -181,7 +183,7 @@ function SubscriptionPackagesContent() {
                   </p>
                 </div>
                 <button
-                  onClick={() => deleteMutation.mutate(pkg.id)}
+                  onClick={() => setDeleteConfirmId(pkg.id)}
                   className="p-2 text-status-danger hover:text-status-danger"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -191,6 +193,16 @@ function SubscriptionPackagesContent() {
           </div>
         )}
       </div>
+
+      <ConfirmDialog
+        isOpen={deleteConfirmId !== null}
+        onClose={() => setDeleteConfirmId(null)}
+        onConfirm={() => { if (deleteConfirmId) { deleteMutation.mutate(deleteConfirmId); setDeleteConfirmId(null); } }}
+        title="Удалить абонемент?"
+        description={deleteConfirmId ? `«${packages.find((p) => p.id === deleteConfirmId)?.service_name ?? 'Пакет'}» — будет удалён.` : undefined}
+        confirmLabel="Удалить"
+        variant="danger"
+      />
     </div>
   );
 }

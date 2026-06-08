@@ -9,6 +9,7 @@ import Card from '@/shared/ui/Card';
 import Button from '@/shared/ui/Button';
 import PageHeader from '@/shared/ui/PageHeader';
 import { toast } from '@/shared/ui/Toast';
+import ConfirmDialog from '@/shared/ui/ConfirmDialog';
 import {
   Link2, Eye, Copy, Plus, Trash2,
   User, Image, QrCode, Download,
@@ -45,6 +46,7 @@ export default function LinkPageEditor() {
   const [socialLinks, setSocialLinks] = useState<SocialLink[]>([]);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [deletePhotoId, setDeletePhotoId] = useState<number | null>(null);
 
   useEffect(() => {
     if (master) {
@@ -316,7 +318,7 @@ export default function LinkPageEditor() {
                   className="w-full aspect-square object-cover"
                 />
                 <button
-                  onClick={() => handlePhotoDelete(item.id)}
+                  onClick={() => setDeletePhotoId(item.id)}
                   className="absolute top-1 right-1 w-6 h-6 bg-black/60 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                 >
                   <Trash2 className="w-3 h-3 text-white" />
@@ -336,6 +338,16 @@ export default function LinkPageEditor() {
         Сохранить изменения
       </Button>
       </div>
+
+      <ConfirmDialog
+        isOpen={deletePhotoId !== null}
+        onClose={() => setDeletePhotoId(null)}
+        onConfirm={async () => { if (deletePhotoId) { await handlePhotoDelete(deletePhotoId); setDeletePhotoId(null); } }}
+        title="Удалить фото?"
+        description="Фото будет удалено из портфолио."
+        confirmLabel="Удалить"
+        variant="danger"
+      />
     </div>
   );
 }

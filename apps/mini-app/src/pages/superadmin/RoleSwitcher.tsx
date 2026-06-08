@@ -82,10 +82,10 @@ export function SuperadminReturnButton() {
     <button
       onClick={handleReturn}
       disabled={loading}
-      className="fixed top-4 right-4 z-[100] flex items-center gap-1.5 px-3 py-2 bg-status-danger text-white rounded-full text-xs font-semibold shadow-lg active:scale-95 transition-all disabled:opacity-50"
+      className="fixed top-1.5 left-1/2 -translate-x-1/2 z-[100] w-7 h-7 flex items-center justify-center bg-status-danger/80 backdrop-blur text-white rounded-full shadow-md active:scale-90 transition-all disabled:opacity-50"
+      title="Вернуться в суперадмин-панель"
     >
       <ArrowRightLeft className="w-3.5 h-3.5" />
-      {loading ? '...' : 'Суперадмин'}
     </button>
   );
 }
