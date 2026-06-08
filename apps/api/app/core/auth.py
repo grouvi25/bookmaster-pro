@@ -61,10 +61,16 @@ def validate_telegram_init_data(init_data: str) -> Optional[dict]:
         if time.time() - auth_date > 86400:
             return None
 
-        # Build data-check-string
+        # Build data-check-string.
+        # Exclude BOTH "hash" AND "signature":
+        # - "hash"      — always excluded (it's the value being verified)
+        # - "signature" — added in Bot API 7.3 (Telegram Desktop got it first);
+        #                 Telegram computes "hash" WITHOUT "signature", so
+        #                 including it here causes a mismatch on Desktop clients.
+        _EXCLUDED_KEYS = {"hash", "signature"}
         data_pairs = []
         for key in sorted(parsed.keys()):
-            if key != "hash":
+            if key not in _EXCLUDED_KEYS:
                 data_pairs.append(f"{key}={unquote(parsed[key][0])}")
         data_check_string = "\n".join(data_pairs)
 
@@ -81,11 +87,16 @@ def validate_telegram_init_data(init_data: str) -> Optional[dict]:
         if computed_hash != received_hash:
             return None
 
-        # Parse user data
+        # Parse user data.
+        # Return the user dict if present; otherwise return an empty dict to
+        # signal "hash is valid but no user payload" instead of returning None
+        # (which the caller cannot distinguish from "hash verification failed").
         user_str = parsed.get("user", [None])[0]
         if user_str:
             return json.loads(unquote(user_str))
-        return None
+        # Hash verified, but no user field (e.g. channel/group context).
+        # Return an empty dict so the caller knows validation succeeded.
+        return {}
     except Exception:
         return None
 

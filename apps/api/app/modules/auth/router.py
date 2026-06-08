@@ -50,13 +50,20 @@ def _resolve_platform(body) -> tuple[str, str, dict | None]:
             if tg_user is None:
                 raise HTTPException(status_code=401, detail="Invalid initData")
             platform = "telegram"
-            platform_id = platform_id or str(tg_user["id"])
+            # tg_user can be {} if hash is valid but no "user" field in initData
+            # (e.g. channel/group context or future Telegram changes).
+            # Fall back to an explicitly provided platform_id in that case.
+            if not platform_id and tg_user.get("id"):
+                platform_id = str(tg_user["id"])
+            if not platform_id:
+                raise HTTPException(status_code=401, detail="Cannot determine platform_id from initData")
         else:
             # Platform not specified — auto-detect.
             tg_user = validate_telegram_init_data(body.init_data)
             if tg_user is not None:
                 platform = "telegram"
-                platform_id = platform_id or str(tg_user["id"])
+                if not platform_id and tg_user.get("id"):
+                    platform_id = str(tg_user["id"])
             else:
                 max_user = validate_max_init_data(body.init_data)
                 if max_user is None:
