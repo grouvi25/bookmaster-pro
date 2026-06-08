@@ -78,6 +78,17 @@ export async function loadPlatformSDK(): Promise<DetectedPlatform> {
   const platform = detectPlatformEarly();
 
   if (platform === 'telegram') {
+    // Telegram Desktop (нативный клиент) инжектирует window.Telegram.WebApp
+    // с заполненным initData через нативный бридж, без URL-хэша.
+    // Если загрузить CDN-скрипт — он перезапишет initData пустой строкой
+    // (CDN читает initData из URL-хэша, которого на Desktop-нативе нет).
+    // Решение: если initData уже есть — CDN не нужен, пропускаем загрузку.
+    const existingTgWebApp =
+      (window as unknown as Record<string, { WebApp?: { initData?: string } }>)
+        .Telegram?.WebApp;
+    if (existingTgWebApp?.initData) {
+      return 'telegram';
+    }
     await loadScript(TG_SDK);
     return 'telegram';
   }
