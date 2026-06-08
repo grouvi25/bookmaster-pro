@@ -174,7 +174,9 @@ from app.modules.portfolio.router import router as portfolio_router
 app.include_router(portfolio_router, prefix="/api/v1/portfolio", tags=["portfolio"])
 
 from app.modules.support.router import router as support_router
+from app.modules.expenses.router import router as expenses_router
 app.include_router(support_router, prefix="/api/v1/support", tags=["support"])
+app.include_router(expenses_router, prefix="/api/v1/expenses", tags=["expenses"])
 
 from app.modules.marketplace.router import router as marketplace_router
 app.include_router(marketplace_router, prefix="/api/v1/marketplace", tags=["marketplace"])

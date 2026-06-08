@@ -47,6 +47,7 @@ const AIKnowledge = lazy(() => import('@/pages/master/AIKnowledge'));
 const VoiceDiary = lazy(() => import('@/pages/master/VoiceDiary'));
 const WidgetSettings = lazy(() => import('@/pages/master/WidgetSettings'));
 const SubscriptionPackages = lazy(() => import('@/pages/master/SubscriptionPackages'));
+const Expenses = lazy(() => import('@/pages/master/Expenses'));
 const ReferralProgram = lazy(() => import('@/pages/master/ReferralProgram'));
 const WorkSchedule = lazy(() => import('@/pages/master/WorkSchedule'));
 const Messages = lazy(() => import('@/pages/master/Messages'));
@@ -329,6 +330,7 @@ function AppRouter() {
           <Route path="/master/ai/voice-diary" element={<VoiceDiary />} />
           <Route path="/master/widget" element={<WidgetSettings />} />
           <Route path="/master/subscription-packages" element={<SubscriptionPackages />} />
+          <Route path="/master/expenses" element={<Expenses />} />
           <Route path="/master/referrals" element={<ReferralProgram />} />
           <Route path="/master/work-schedule" element={<WorkSchedule />} />
           <Route path="/master/messages" element={<Messages />} />

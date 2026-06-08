@@ -617,3 +617,25 @@ export const messagesApi = {
   unread: () =>
     api.get(`/messages/unread`),
 };
+
+// ── Expenses ──
+
+export const expensesApi = {
+  list: (year?: number, month?: number, category?: string) =>
+    api.get('/expenses/', { params: { year, month, category } }),
+  stats: () => api.get('/expenses/stats'),
+  create: (data: {
+    amount: number;
+    category?: string;
+    description?: string;
+    expense_date?: string;
+    source?: string;
+  }) => api.post('/expenses/', data),
+  update: (id: number, data: Record<string, unknown>) =>
+    api.patch(`/expenses/${id}`, data),
+  delete: (id: number) => api.delete(`/expenses/${id}`),
+  parseVoice: (transcript: string) =>
+    api.post('/expenses/parse-voice', { transcript }),
+  parseReceipt: (formData: FormData) =>
+    api.post('/expenses/parse-receipt', formData),
+};
