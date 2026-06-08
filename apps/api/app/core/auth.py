@@ -49,63 +49,41 @@ def validate_telegram_init_data(init_data: str) -> Optional[dict]:
     Validate Telegram Mini-App initData.
     Returns parsed user data if valid, None if invalid.
     """
-    _vlog = logging.getLogger("auth.validate")
     try:
         parsed = parse_qs(init_data)
-        _vlog.warning("VALIDATE keys=%s", sorted(parsed.keys()))
 
         # Extract and verify hash
         received_hash = parsed.get("hash", [None])[0]
         if not received_hash:
-            _vlog.warning("VALIDATE FAIL: no hash in initData")
             return None
 
         # Check auth_date (не старше 24 часов)
         auth_date = int(parsed.get("auth_date", [0])[0])
-        age = time.time() - auth_date
-        _vlog.warning("VALIDATE auth_date=%s age=%.0fs", auth_date, age)
-        if age > 86400:
-            _vlog.warning("VALIDATE FAIL: auth_date too old (%.0fs > 86400)", age)
+        if time.time() - auth_date > 86400:
             return None
 
-        # Build data-check-string.
-        # Exclude BOTH "hash" AND "signature":
-        # - "hash"      — always excluded (it's the value being verified)
-        # - "signature" — added in Bot API 7.3 (Telegram Desktop got it first);
-        #                 Telegram computes "hash" WITHOUT "signature", so
-        #                 including it here causes a mismatch on Desktop clients.
-        _EXCLUDED_KEYS = {"hash", "signature"}
+        # Build data-check-string: all fields except "hash", sorted by key
         data_pairs = []
         for key in sorted(parsed.keys()):
-            if key not in _EXCLUDED_KEYS:
+            if key != "hash":
                 data_pairs.append(f"{key}={unquote(parsed[key][0])}")
         data_check_string = "\n".join(data_pairs)
 
-        # Compute secret key
+        # HMAC-SHA256: secret = HMAC("WebAppData", BOT_TOKEN)
         secret_key = hmac.HMAC(
             b"WebAppData", settings.TG_BOT_TOKEN.encode(), hashlib.sha256
         ).digest()
-
-        # Compute hash
         computed_hash = hmac.HMAC(
             secret_key, data_check_string.encode(), hashlib.sha256
         ).hexdigest()
 
         if computed_hash != received_hash:
-            _vlog.warning("VALIDATE FAIL: hash mismatch. computed=%s received=%s", computed_hash[:16], received_hash[:16])
-            _vlog.warning("VALIDATE data_check_string (first 200 chars): %s", data_check_string[:200])
             return None
-        _vlog.warning("VALIDATE OK: hash matched, user_present=%s", bool(parsed.get("user")))
 
-        # Parse user data.
-        # Return the user dict if present; otherwise return an empty dict to
-        # signal "hash is valid but no user payload" instead of returning None
-        # (which the caller cannot distinguish from "hash verification failed").
+        # Parse user
         user_str = parsed.get("user", [None])[0]
         if user_str:
             return json.loads(unquote(user_str))
-        # Hash verified, but no user field (e.g. channel/group context).
-        # Return an empty dict so the caller knows validation succeeded.
         return {}
     except Exception:
         return None
