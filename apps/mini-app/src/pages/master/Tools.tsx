@@ -53,7 +53,7 @@ function PromoSection() {
   });
 
   const createMutation = useMutation({
-    mutationFn: (payload: { code: string; discount_percent?: number; discount_amount?: number }) =>
+    mutationFn: (payload: Parameters<typeof promoApi.create>[0]) =>
       promoApi.create(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['promos'] });
@@ -94,18 +94,17 @@ function PromoSection() {
             className="input-field mb-2"
           />
           <Button
-            onClick={() =>
+            onClick={() => {
+              const isPercent = discount.includes('%');
               createMutation.mutate({
+                promo_type: 'code',
                 code,
-                discount_percent: discount.includes('%')
-                  ? parseInt(discount)
-                  : undefined,
-                discount_amount: !discount.includes('%')
-                  ? parseInt(discount)
-                  : undefined,
-              })
-            }
+                discount_type: isPercent ? 'percent' : 'fixed',
+                discount_value: parseInt(discount) || 0,
+              });
+            }}
             disabled={!code || !discount}
+            loading={createMutation.isPending}
             fullWidth
             size="sm"
           >
@@ -128,9 +127,9 @@ function PromoSection() {
                 </div>
               </div>
               <div className="font-medium text-tg-link text-body">
-                {p.discount_percent
-                  ? `-${p.discount_percent}%`
-                  : `-${Number(p.discount_amount ?? p.discount_value).toLocaleString('ru')} ₽`}
+                {p.discount_type === 'percent'
+                  ? `-${Number(p.discount_value)}%`
+                  : `-${Number(p.discount_value).toLocaleString('ru')} ₽`}
               </div>
             </Card>
           ))}

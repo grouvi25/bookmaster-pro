@@ -69,13 +69,15 @@ interface ClientSubscriptionPayload {
 }
 
 interface PromoPayload {
+  promo_type: string;
   code: string;
-  discount_type?: string;
-  discount_value?: number;
-  discount_percent?: number;
-  discount_amount?: number;
-  valid_until?: string;
+  discount_type: string;
+  discount_value: number;
+  min_amount?: number;
   max_uses?: number;
+  service_ids?: number[];
+  valid_from?: string;
+  valid_until?: string;
 }
 
 interface LoyaltySettingsPayload {
