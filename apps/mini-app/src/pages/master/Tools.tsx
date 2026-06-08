@@ -13,8 +13,8 @@ import { toast } from '@/shared/ui/Toast';
 import ConfirmDialog from '@/shared/ui/ConfirmDialog';
 import type { Promo, LoyaltyTransaction } from '@/shared/types/api';
 import FeatureGate from '@/shared/ui/FeatureGate';
-import { Plus, Pencil, Trash2, X, Check, Copy } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Plus, Pencil, Trash2, X, Check, Copy, Settings } from 'lucide-react';
+import { useNavigate, Link } from 'react-router-dom';
 
 type ToolsTab = 'promo' | 'loyalty' | 'referrals';
 
@@ -364,10 +364,20 @@ function LoyaltySection() {
   return (
     <div>
       <Card className="mb-4">
-        <div className="text-body text-tg-text mb-1">{'⭐'} Программа лояльности</div>
-        <p className="text-aux text-tg-hint">
-          Клиенты получают баллы за каждый визит и могут оплачивать ими услуги.
-        </p>
+        <div className="flex justify-between items-start">
+          <div>
+            <div className="text-body text-tg-text mb-1">{'⭐'} Программа лояльности</div>
+            <p className="text-aux text-tg-hint">
+              Клиенты получают баллы за каждый визит и могут оплачивать ими услуги.
+            </p>
+          </div>
+          <Link
+            to="/master/loyalty-settings"
+            className="flex items-center gap-1 text-tg-link text-sm shrink-0 ml-3"
+          >
+            <Settings className="w-4 h-4" /> Настройки
+          </Link>
+        </div>
       </Card>
 
       {history.length === 0 ? (
