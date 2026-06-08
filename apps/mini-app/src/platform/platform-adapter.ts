@@ -96,54 +96,35 @@ class PlatformAdapterClass {
         } catch { /* noop */ }
         return 'max';
       }
-      // Telegram — с initData или user
+      // Telegram
       const tg = getTelegram();
-      if (tg && (tg.initDataUnsafe?.user || tg.initData)) {
-        this._platform = 'telegram';
-        try {
-          tg.ready?.();
-          tg.expand?.();
-        } catch { /* noop */ }
-        return 'telegram';
-      }
-      // Telegram Desktop: мост есть, но initData пуст — всё равно Telegram.
-      // Desktop-клиент иногда инжектит данные с задержкой.
       if (tg) {
-        this._platform = 'telegram';
-        try {
-          tg.ready?.();
-          tg.expand?.();
-        } catch { /* noop */ }
-        return 'telegram';
+        // На Telegram Desktop window.Telegram.WebApp существует, но initData
+        // может быть пустой строкой в момент вызова — SDK ещё не прочитал
+        // tgWebAppData из URL-хэша, или клиент передаёт данные иначе.
+        // Определяем платформу по самому факту наличия объекта WebApp,
+        // а initData читаем в getInitData() с fallback на URL-хэш.
+        const hasContext =
+          !!tg.initDataUnsafe?.user ||
+          !!tg.initData ||
+          typeof tg.ready === 'function';   // ← маркер настоящего TG WebApp
+        if (hasContext) {
+          this._platform = 'telegram';
+          try {
+            tg.ready?.();
+            tg.expand?.();
+          } catch { /* noop */ }
+          return 'telegram';
+        }
       }
       // MAX без пользователя (например, открыт вне диалога) — всё равно MAX
       if (maxApp) {
         this._platform = 'max';
         return 'max';
       }
-      // Fallback: URL-параметры или UserAgent
-      const hash = window.location.hash || '';
-      const search = window.location.search || '';
-      const haystack = hash + search;
-      if (haystack.includes('tgWebAppData') || haystack.includes('tgWebAppPlatform') || /Telegram/i.test(navigator.userAgent || '')) {
-        this._platform = 'telegram';
-        return 'telegram';
-      }
     }
     this._platform = 'unknown';
     return 'unknown';
-  }
-
-  /**
-   * Проверить, находимся ли мы в Telegram-контексте (даже без initData).
-   */
-  isTelegramContext(): boolean {
-    if (typeof window === 'undefined') return false;
-    if (getTelegram()) return true;
-    const haystack = (window.location.hash || '') + (window.location.search || '');
-    if (haystack.includes('tgWebAppData') || haystack.includes('tgWebAppPlatform')) return true;
-    if (/Telegram/i.test(navigator.userAgent || '')) return true;
-    return false;
   }
 
   /**
@@ -164,7 +145,26 @@ class PlatformAdapterClass {
    */
   getInitData(): string {
     if (this._platform === 'telegram') {
-      return getTelegram()?.initData || '';
+      // Основной источник: window.Telegram.WebApp.initData (SDK уже разобрал хэш)
+      const fromWebApp = getTelegram()?.initData;
+      if (fromWebApp) return fromWebApp;
+
+      // Fallback для Telegram Desktop: SDK иногда ещё не заполнил initData
+      // к моменту вызова, но tgWebAppData уже есть в URL-хэше напрямую.
+      // Формат: https://app.example.com/#tgWebAppData=query_id%3D...&tgWebAppVersion=...
+      try {
+        const hash = window.location.hash.startsWith('#')
+          ? window.location.hash.slice(1)
+          : '';
+        if (hash.includes('tgWebAppData')) {
+          const params = new URLSearchParams(hash);
+          const raw = params.get('tgWebAppData');
+          // tgWebAppData — уже URL-encoded initData строка; декодируем один раз
+          if (raw) return decodeURIComponent(raw);
+        }
+      } catch { /* noop */ }
+
+      return '';
     }
     if (this._platform === 'max') {
       // MAX Bridge отдаёт строку WebAppData в window.WebApp.initData.
@@ -182,6 +182,19 @@ class PlatformAdapterClass {
       }
     }
     return '';
+  }
+
+  /**
+   * Проверить, находимся ли мы в Telegram-контексте (даже без initData).
+   */
+  isTelegramContext(): boolean {
+    if (typeof window === 'undefined') return false;
+    if (this._platform === 'telegram') return true;
+    if (getTelegram()) return true;
+    const haystack = (window.location.hash || '') + (window.location.search || '');
+    if (haystack.includes('tgWebAppData') || haystack.includes('tgWebAppPlatform')) return true;
+    if (/Telegram/i.test(navigator.userAgent || '')) return true;
+    return false;
   }
 
   /**

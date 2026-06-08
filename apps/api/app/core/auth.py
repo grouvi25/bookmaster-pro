@@ -1,3 +1,4 @@
+import logging
 """
 JWT authentication + Telegram/MAX initData validation.
 """
@@ -48,17 +49,23 @@ def validate_telegram_init_data(init_data: str) -> Optional[dict]:
     Validate Telegram Mini-App initData.
     Returns parsed user data if valid, None if invalid.
     """
+    _vlog = logging.getLogger("auth.validate")
     try:
         parsed = parse_qs(init_data)
+        _vlog.warning("VALIDATE keys=%s", sorted(parsed.keys()))
 
         # Extract and verify hash
         received_hash = parsed.get("hash", [None])[0]
         if not received_hash:
+            _vlog.warning("VALIDATE FAIL: no hash in initData")
             return None
 
         # Check auth_date (не старше 24 часов)
         auth_date = int(parsed.get("auth_date", [0])[0])
-        if time.time() - auth_date > 86400:
+        age = time.time() - auth_date
+        _vlog.warning("VALIDATE auth_date=%s age=%.0fs", auth_date, age)
+        if age > 86400:
+            _vlog.warning("VALIDATE FAIL: auth_date too old (%.0fs > 86400)", age)
             return None
 
         # Build data-check-string.
@@ -85,7 +92,10 @@ def validate_telegram_init_data(init_data: str) -> Optional[dict]:
         ).hexdigest()
 
         if computed_hash != received_hash:
+            _vlog.warning("VALIDATE FAIL: hash mismatch. computed=%s received=%s", computed_hash[:16], received_hash[:16])
+            _vlog.warning("VALIDATE data_check_string (first 200 chars): %s", data_check_string[:200])
             return None
+        _vlog.warning("VALIDATE OK: hash matched, user_present=%s", bool(parsed.get("user")))
 
         # Parse user data.
         # Return the user dict if present; otherwise return an empty dict to
