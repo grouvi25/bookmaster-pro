@@ -49,6 +49,7 @@ const WidgetSettings = lazy(() => import('@/pages/master/WidgetSettings'));
 const SubscriptionPackages = lazy(() => import('@/pages/master/SubscriptionPackages'));
 const Expenses = lazy(() => import('@/pages/master/Expenses'));
 const Rentals = lazy(() => import('@/pages/master/Rentals'));
+const DataImport = lazy(() => import('@/pages/master/DataImport'));
 const ReferralProgram = lazy(() => import('@/pages/master/ReferralProgram'));
 const WorkSchedule = lazy(() => import('@/pages/master/WorkSchedule'));
 const Messages = lazy(() => import('@/pages/master/Messages'));
@@ -333,6 +334,7 @@ function AppRouter() {
           <Route path="/master/subscription-packages" element={<SubscriptionPackages />} />
           <Route path="/master/expenses" element={<Expenses />} />
           <Route path="/master/rentals" element={<Rentals />} />
+          <Route path="/master/import" element={<DataImport />} />
           <Route path="/master/referrals" element={<ReferralProgram />} />
           <Route path="/master/work-schedule" element={<WorkSchedule />} />
           <Route path="/master/messages" element={<Messages />} />

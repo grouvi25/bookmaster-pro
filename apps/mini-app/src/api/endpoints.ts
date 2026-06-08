@@ -658,3 +658,14 @@ export const rentalsApi = {
   respond: (requestId: number, approve: boolean) =>
     api.patch(`/rentals/requests/${requestId}`, null, { params: { approve } }),
 };
+
+// ── Data Import (CSV/XLSX) ──
+
+export const importApi = {
+  preview: (formData: FormData, importType: string) =>
+    api.post(`/import/preview?import_type=${importType}`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }),
+  confirm: (data: { session_id: string; column_mapping?: Record<string, string> }) =>
+    api.post('/import/confirm', data),
+};

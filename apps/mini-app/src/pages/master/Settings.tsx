@@ -182,6 +182,12 @@ function SettingsMain({ onNavigate }: { onNavigate: (tab: SettingsTab) => void }
         description="Сдать или снять кресло / кабинет"
         onClick={() => navigate('/master/rentals')}
       />
+      <MenuItem
+        emoji={'📥'}
+        label="Импорт данных"
+        description="Загрузить клиентов/услуги из CSV/XLSX"
+        onClick={() => navigate('/master/import')}
+      />
     </div>
   );
 }

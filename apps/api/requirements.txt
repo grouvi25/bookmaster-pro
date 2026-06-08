@@ -55,3 +55,4 @@ prometheus-client==0.21.0
 
 # === GEOSPATIAL ===
 geoalchemy2==0.15.2
+openpyxl==3.1.5
