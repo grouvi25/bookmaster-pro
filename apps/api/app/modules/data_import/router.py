@@ -15,6 +15,7 @@ from app.modules.data_import.service import (
     preview_services,
     execute_client_import,
     execute_service_import,
+    _get_session,
 )
 from app.modules.data_import.schemas import ImportConfirm
 
@@ -31,7 +32,7 @@ async def _get_master(user: dict, db: AsyncSession):
 @router.post("/preview")
 async def import_preview(
     file: UploadFile = File(...),
-    import_type: str = Query("clients", regex="^(clients|services)$"),
+    import_type: str = Query("clients", pattern="^(clients|services)$"),
     user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -65,9 +66,9 @@ async def import_preview(
         )
 
     if import_type == "clients":
-        result = preview_clients(headers, rows, master.id)
+        result = await preview_clients(headers, rows, master.id)
     else:
-        result = preview_services(headers, rows, master.id)
+        result = await preview_services(headers, rows, master.id)
 
     result["file_name"] = file.filename
     return result
@@ -85,8 +86,7 @@ async def import_confirm(
     """
     master = await _get_master(user, db)
 
-    from app.modules.data_import.service import _import_sessions
-    session = _import_sessions.get(body.session_id)
+    session = await _get_session(body.session_id)
     if not session:
         raise HTTPException(status_code=404, detail="Сессия импорта не найдена или истекла")
 

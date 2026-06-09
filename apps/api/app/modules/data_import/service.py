@@ -1,6 +1,6 @@
-
 """
 Data import service — CSV/XLSX parsing for Yclients, Dikidi, generic formats.
+Sessions stored in Redis (shared across workers, survives restarts).
 """
 
 import csv
@@ -84,9 +84,41 @@ SERVICE_FIELD_PATTERNS: Dict[str, List[str]] = {
 }
 
 
-# ── In-memory session store ──
-_import_sessions: Dict[str, Dict] = {}
+# ── Redis session helpers ──
 
+_SESSION_PREFIX = "import_session:"
+_SESSION_TTL = 900  # 15 minutes
+
+
+async def _save_session(session_id: str, data: dict) -> None:
+    """Save import session to Redis with TTL."""
+    from app.core.redis import get_redis
+    redis = await get_redis()
+    await redis.set(
+        f"{_SESSION_PREFIX}{session_id}",
+        json.dumps(data, ensure_ascii=False, default=str),
+        ex=_SESSION_TTL,
+    )
+
+
+async def _get_session(session_id: str) -> Optional[dict]:
+    """Get import session from Redis."""
+    from app.core.redis import get_redis
+    redis = await get_redis()
+    raw = await redis.get(f"{_SESSION_PREFIX}{session_id}")
+    if raw is None:
+        return None
+    return json.loads(raw)
+
+
+async def _delete_session(session_id: str) -> None:
+    """Delete import session from Redis."""
+    from app.core.redis import get_redis
+    redis = await get_redis()
+    await redis.delete(f"{_SESSION_PREFIX}{session_id}")
+
+
+# ── Utility functions ──
 
 def _auto_map_columns(
     headers: List[str],
@@ -122,7 +154,6 @@ def _detect_platform(headers: List[str], rows: List[Dict]) -> str:
         return "yclients"
     if "dikidi" in h_joined:
         return "dikidi"
-    # Yclients has specific column patterns
     yclients_markers = ["лояльность", "карта", "баланс", "категория клиента"]
     for m in yclients_markers:
         if m in h_joined:
@@ -193,7 +224,6 @@ def parse_file_bytes(
                 rows.append(row_dict)
         wb.close()
     else:
-        # CSV — try multiple encodings
         text = None
         for enc in ["utf-8-sig", "utf-8", "cp1251", "latin-1"]:
             try:
@@ -204,7 +234,6 @@ def parse_file_bytes(
         if not text:
             return [], []
 
-        # Detect delimiter
         sniffer = csv.Sniffer()
         try:
             dialect = sniffer.sniff(text[:2000])
@@ -218,17 +247,16 @@ def parse_file_bytes(
             if any(v for v in row.values()):
                 rows.append({k: str(v or "").strip() for k, v in row.items()})
 
-    # Remove empty headers
     headers = [h for h in headers if h.strip()]
     return headers, rows
 
 
-def preview_clients(
+async def preview_clients(
     headers: List[str],
     rows: List[Dict[str, str]],
     master_id: int,
 ) -> Dict:
-    """Generate import preview for clients."""
+    """Generate import preview for clients. Stats computed from ALL rows."""
     mapping = _auto_map_columns(headers, CLIENT_FIELD_PATTERNS)
     platform = _detect_platform(headers, rows)
     session_id = str(uuid.uuid4())
@@ -239,14 +267,13 @@ def preview_clients(
     duplicates = 0
     seen_phones: set = set()
 
-    for i, row in enumerate(rows[:200]):
+    # Process ALL rows for accurate stats
+    for i, row in enumerate(rows):
         pr = {"row_num": i + 1, "data": {}, "status": "ok", "message": None}
 
-        # Map fields
         for src_col, tgt_field in mapping.items():
             pr["data"][tgt_field] = row.get(src_col, "")
 
-        # Validate
         name = pr["data"].get("name", "").strip()
         phone_raw = pr["data"].get("phone", "").strip()
         phone = _parse_phone(phone_raw)
@@ -258,7 +285,7 @@ def preview_clients(
         elif phone_raw and not phone:
             pr["status"] = "warning"
             pr["message"] = f"Невалидный телефон: {phone_raw}"
-            valid += 1  # still importable, just without phone
+            valid += 1
         elif phone and phone in seen_phones:
             pr["status"] = "warning"
             pr["message"] = "Дублирующийся телефон"
@@ -275,16 +302,18 @@ def preview_clients(
             parsed = _parse_date(pr["data"]["birthday"])
             pr["data"]["birthday"] = str(parsed) if parsed else pr["data"]["birthday"]
 
-        preview_rows.append(pr)
+        # Only keep first 20 rows for preview response
+        if i < 20:
+            preview_rows.append(pr)
 
-    # Store session
-    _import_sessions[session_id] = {
+    # Store session in Redis
+    await _save_session(session_id, {
         "type": "clients",
         "master_id": master_id,
         "rows": rows,
         "mapping": mapping,
         "platform": platform,
-    }
+    })
 
     return {
         "file_name": "",
@@ -296,17 +325,17 @@ def preview_clients(
         "duplicate_rows": duplicates,
         "columns_found": headers,
         "column_mapping": mapping,
-        "preview_rows": preview_rows[:20],
+        "preview_rows": preview_rows,
         "session_id": session_id,
     }
 
 
-def preview_services(
+async def preview_services(
     headers: List[str],
     rows: List[Dict[str, str]],
     master_id: int,
 ) -> Dict:
-    """Generate import preview for services."""
+    """Generate import preview for services. Stats computed from ALL rows."""
     mapping = _auto_map_columns(headers, SERVICE_FIELD_PATTERNS)
     session_id = str(uuid.uuid4())
 
@@ -314,7 +343,8 @@ def preview_services(
     valid = 0
     errors = 0
 
-    for i, row in enumerate(rows[:200]):
+    # Process ALL rows for accurate stats
+    for i, row in enumerate(rows):
         pr = {"row_num": i + 1, "data": {}, "status": "ok", "message": None}
 
         for src_col, tgt_field in mapping.items():
@@ -340,14 +370,15 @@ def preview_services(
                 pr["message"] = "Нет цены и длительности"
             valid += 1
 
-        preview_rows.append(pr)
+        if i < 20:
+            preview_rows.append(pr)
 
-    _import_sessions[session_id] = {
+    await _save_session(session_id, {
         "type": "services",
         "master_id": master_id,
         "rows": rows,
         "mapping": mapping,
-    }
+    })
 
     return {
         "file_name": "",
@@ -358,7 +389,7 @@ def preview_services(
         "duplicate_rows": 0,
         "columns_found": headers,
         "column_mapping": mapping,
-        "preview_rows": preview_rows[:20],
+        "preview_rows": preview_rows,
         "session_id": session_id,
     }
 
@@ -368,11 +399,11 @@ async def execute_client_import(
     db: AsyncSession,
     custom_mapping: Optional[Dict[str, str]] = None,
 ) -> Dict:
-    """Actually import clients from a confirmed session."""
+    """Actually import clients from a confirmed session (Redis-backed)."""
     from app.modules.auth.models import Identity
-    from app.modules.clients.models import Client, ClientMasterLink
+    from app.modules.clients.models import Client, ClientProfile, ClientMasterLink
 
-    session = _import_sessions.get(session_id)
+    session = await _get_session(session_id)
     if not session or session["type"] != "clients":
         return {"imported": 0, "skipped": 0, "errors": 0, "details": ["Сессия не найдена"]}
 
@@ -393,9 +424,20 @@ async def execute_client_import(
         if row[0]:
             existing_phones.add(row[0])
 
+    # Get existing client_master_links for this master to prevent duplicates
+    existing_links: set = set()
+    q_links = select(ClientMasterLink.client_id).where(
+        ClientMasterLink.master_id == master_id
+    )
+    result_links = await db.execute(q_links)
+    for row in result_links:
+        existing_links.add(row[0])
+
     rev_mapping = {v: k for k, v in mapping.items()}
 
     for i, row in enumerate(rows):
+        # Use savepoint per row so one failure doesn't break the whole batch
+        savepoint = await db.begin_nested()
         try:
             name = row.get(rev_mapping.get("name", ""), "").strip()
             phone_raw = row.get(rev_mapping.get("phone", ""), "").strip()
@@ -404,10 +446,14 @@ async def execute_client_import(
             notes = row.get(rev_mapping.get("notes", ""), "").strip()
             tags_raw = row.get(rev_mapping.get("tags", ""), "").strip()
             source_raw = row.get(rev_mapping.get("source", ""), "").strip()
+            email = row.get(rev_mapping.get("email", ""), "").strip()
             city = row.get(rev_mapping.get("city", ""), "").strip()
+            last_visit_raw = row.get(rev_mapping.get("last_visit", ""), "").strip()
+            discount_raw = row.get(rev_mapping.get("discount", ""), "").strip()
 
             if not name and not phone:
                 skipped += 1
+                await savepoint.rollback()
                 continue
 
             if not name:
@@ -417,6 +463,7 @@ async def execute_client_import(
             if phone and phone in existing_phones:
                 skipped += 1
                 details.append(f"Строка {i+1}: {name} — телефон уже есть")
+                await savepoint.rollback()
                 continue
 
             # Create identity (platform=manual)
@@ -441,40 +488,63 @@ async def execute_client_import(
             db.add(client)
             await db.flush()
 
-            # Create link to master
-            tags = [t.strip() for t in tags_raw.split(",") if t.strip()] if tags_raw else []
-            # Add source info
-            source = source_raw or "csv_import"
+            # Create ClientProfile if we have extra data (email, city, discount)
+            has_profile_data = email or city or discount_raw
+            if has_profile_data:
+                prefs = {}
+                if email:
+                    prefs["email"] = email
+                if discount_raw:
+                    discount_val = _parse_number(discount_raw)
+                    if discount_val is not None:
+                        prefs["discount"] = discount_val
 
-            total_spent_raw = row.get(rev_mapping.get("total_spent", ""), "")
-            total_spent = _parse_number(total_spent_raw)
-            visit_count_raw = row.get(rev_mapping.get("visit_count", ""), "")
-            visit_count = _parse_number(visit_count_raw)
+                profile = ClientProfile(
+                    client_id=client.id,
+                    city=city or None,
+                    preferences=prefs if prefs else {},
+                    source=source_raw or "csv_import",
+                )
+                db.add(profile)
 
-            link = ClientMasterLink(
-                master_id=master_id,
-                client_id=client.id,
-                tags=tags,
-                source=source,
-                visit_count=int(visit_count) if visit_count else 0,
-                total_spent=int(total_spent) if total_spent else 0,
-            )
-            db.add(link)
+            # Create link to master (skip if somehow duplicate)
+            if client.id not in existing_links:
+                tags = [t.strip() for t in tags_raw.split(",") if t.strip()] if tags_raw else []
+                source = source_raw or "csv_import"
+                total_spent_raw = row.get(rev_mapping.get("total_spent", ""), "")
+                total_spent = _parse_number(total_spent_raw)
+                visit_count_raw = row.get(rev_mapping.get("visit_count", ""), "")
+                visit_count = _parse_number(visit_count_raw)
+                last_visit = _parse_date(last_visit_raw)
+
+                link = ClientMasterLink(
+                    master_id=master_id,
+                    client_id=client.id,
+                    tags=tags,
+                    source=source,
+                    visit_count=int(visit_count) if visit_count else 0,
+                    total_spent=int(total_spent) if total_spent else 0,
+                    last_visit_date=last_visit,
+                )
+                db.add(link)
+                existing_links.add(client.id)
 
             if phone:
                 existing_phones.add(phone)
 
+            await savepoint.commit()
             imported += 1
 
         except Exception as e:
+            await savepoint.rollback()
             error_count += 1
             details.append(f"Строка {i+1}: ошибка — {str(e)[:80]}")
             logger.exception(f"Import client row {i+1} error")
 
     await db.commit()
 
-    # Cleanup session
-    _import_sessions.pop(session_id, None)
+    # Cleanup session from Redis
+    await _delete_session(session_id)
 
     return {
         "imported": imported,
@@ -489,10 +559,10 @@ async def execute_service_import(
     db: AsyncSession,
     custom_mapping: Optional[Dict[str, str]] = None,
 ) -> Dict:
-    """Actually import services from a confirmed session."""
+    """Actually import services from a confirmed session (Redis-backed)."""
     from app.modules.services.models import Service
 
-    session = _import_sessions.get(session_id)
+    session = await _get_session(session_id)
     if not session or session["type"] != "services":
         return {"imported": 0, "skipped": 0, "errors": 0, "details": ["Сессия не найдена"]}
 
@@ -515,15 +585,18 @@ async def execute_service_import(
     rev_mapping = {v: k for k, v in mapping.items()}
 
     for i, row in enumerate(rows):
+        savepoint = await db.begin_nested()
         try:
             name = row.get(rev_mapping.get("name", ""), "").strip()
             if not name:
                 skipped += 1
+                await savepoint.rollback()
                 continue
 
             if name.lower().strip() in existing_names:
                 skipped += 1
                 details.append(f"Строка {i+1}: «{name}» — уже существует")
+                await savepoint.rollback()
                 continue
 
             desc = row.get(rev_mapping.get("description", ""), "").strip()
@@ -547,15 +620,17 @@ async def execute_service_import(
             )
             db.add(service)
             existing_names.add(name.lower().strip())
+            await savepoint.commit()
             imported += 1
 
         except Exception as e:
+            await savepoint.rollback()
             error_count += 1
             details.append(f"Строка {i+1}: ошибка — {str(e)[:80]}")
             logger.exception(f"Import service row {i+1} error")
 
     await db.commit()
-    _import_sessions.pop(session_id, None)
+    await _delete_session(session_id)
 
     return {
         "imported": imported,
