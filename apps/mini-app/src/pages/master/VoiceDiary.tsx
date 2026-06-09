@@ -84,14 +84,10 @@ function VoiceDiaryContent() {
         try {
           const formData = new FormData();
           formData.append('audio', blob, 'voice.webm');
-          const sttResp = await fetch('/api/v1/ai/transcribe', {
-            method: 'POST',
-            body: formData,
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem('bm_access_token') || ''}`,
-            },
+          const sttResp = await api.post('/ai/transcribe', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
           });
-          const sttData = await sttResp.json();
+          const sttData = sttResp.data;
 
           if (sttData.transcript) {
             const diaryResp = await aiApi.voiceDiary({ transcript: sttData.transcript });

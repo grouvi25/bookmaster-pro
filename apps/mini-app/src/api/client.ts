@@ -27,6 +27,8 @@ api.interceptors.response.use(
       localStorage.removeItem('bm_user_role');
       localStorage.removeItem('bm_master_id');
       localStorage.removeItem('sa_original_token');
+      // Перезагрузка — пользователь увидит экран авторизации вместо сломанного UI
+      window.location.reload();
     }
     return Promise.reject(error);
   }

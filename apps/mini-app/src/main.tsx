@@ -12,14 +12,16 @@ focusManager.setEventListener((handleFocus) => {
   const onVisibilityChange = () => {
     handleFocus(document.visibilityState === 'visible');
   };
+  const onFocus = () => handleFocus(true);
+  const onBlur = () => handleFocus(false);
   document.addEventListener('visibilitychange', onVisibilityChange);
   // fallback на стандартные события
-  window.addEventListener('focus', () => handleFocus(true));
-  window.addEventListener('blur', () => handleFocus(false));
+  window.addEventListener('focus', onFocus);
+  window.addEventListener('blur', onBlur);
   return () => {
     document.removeEventListener('visibilitychange', onVisibilityChange);
-    window.removeEventListener('focus', () => handleFocus(true));
-    window.removeEventListener('blur', () => handleFocus(false));
+    window.removeEventListener('focus', onFocus);
+    window.removeEventListener('blur', onBlur);
   };
 });
 

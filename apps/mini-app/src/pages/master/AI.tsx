@@ -11,6 +11,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { aiApi } from '@/api/endpoints';
+import api from '@/api/client';
 import { useAuthStore } from '@/stores/auth';
 import {
   SendHorizontal, Mic, MicOff, Sparkles, FileText, BookOpen, RotateCcw,
@@ -204,14 +205,10 @@ function AIChat() {
         try {
           const formData = new FormData();
           formData.append('audio', blob, 'voice.webm');
-          const resp = await fetch('/api/v1/ai/transcribe', {
-            method: 'POST',
-            body: formData,
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem('bm_access_token') || ''}`,
-            },
+          const resp = await api.post('/ai/transcribe', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
           });
-          const data = await resp.json();
+          const data = resp.data;
           if (data.transcript) {
             setMessages((prev) => {
               const updated = [...prev];

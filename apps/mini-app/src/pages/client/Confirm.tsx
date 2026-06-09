@@ -32,6 +32,13 @@ export default function Confirm() {
     queryFn: () => subscriptionsApi.list().then((r) => r.data),
   });
 
+  // Гард: если нет мастера/услуги — редирект назад (прямой переход или перезагрузка)
+  // Расположен после всех хуков — иначе нарушение Rules of Hooks
+  if (!store.masterId || !store.serviceId || !store.selectedDate || !store.selectedTime) {
+    navigate('/client/nearby', { replace: true });
+    return null;
+  }
+
   const activeSub = clientSubs?.find((s) => s.is_active && s.used_visits < s.total_visits);
 
   const discountAmount = store.discount < 100
