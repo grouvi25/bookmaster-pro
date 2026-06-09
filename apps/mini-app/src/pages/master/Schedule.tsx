@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { bookingApi, portfolioApi, uploadsApi } from '@/api/endpoints';
+import { bookingApi, portfolioApi, uploadsApi, eventTypesApi } from '@/api/endpoints';
 import { toArray } from '@/shared/lib/normalize';
 import { fmtRub } from '@/shared/lib/format';
 import {
@@ -60,6 +60,50 @@ export default function Schedule() {
     queryKey: ['master-schedule', selectedDate],
     queryFn: () =>
       bookingApi.masterBookings({ date_from: selectedDate, date_to: selectedDate }).then((r) => r.data),
+  });
+
+  // Custom event types
+  const { data: eventTypesData } = useQuery({
+    queryKey: ['master-event-types'],
+    queryFn: () => eventTypesApi.list().then((r) => r.data),
+    staleTime: 5 * 60_000,
+  });
+  const customTypes = eventTypesData?.custom ?? [];
+
+  const createCustomType = useMutation({
+    mutationFn: (ct: { name: string; emoji: string }) => eventTypesApi.create(ct),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['master-event-types'] }),
+  });
+  const updateCustomType = useMutation({
+    mutationFn: ({ idx, ct }: { idx: number; ct: { name: string; emoji: string } }) =>
+      eventTypesApi.update(idx, ct),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['master-event-types'] }),
+  });
+  const deleteCustomType = useMutation({
+    mutationFn: (idx: number) => eventTypesApi.remove(idx),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['master-event-types'] }),
+  });
+
+  // Custom event types
+  const { data: eventTypesData } = useQuery({
+    queryKey: ['master-event-types'],
+    queryFn: () => eventTypesApi.list().then((r) => r.data),
+    staleTime: 5 * 60_000,
+  });
+  const customTypes = eventTypesData?.custom ?? [];
+
+  const createCustomType = useMutation({
+    mutationFn: (ct: { name: string; emoji: string }) => eventTypesApi.create(ct),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['master-event-types'] }),
+  });
+  const updateCustomType = useMutation({
+    mutationFn: ({ idx, ct }: { idx: number; ct: { name: string; emoji: string } }) =>
+      eventTypesApi.update(idx, ct),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['master-event-types'] }),
+  });
+  const deleteCustomType = useMutation({
+    mutationFn: (idx: number) => eventTypesApi.remove(idx),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['master-event-types'] }),
   });
 
   // Auto-open booking when navigated from Dashboard "Подробнее"
@@ -323,7 +367,7 @@ export default function Schedule() {
                       </div>
                       {eventType !== 'service' && (
                         <div className="mt-1.5">
-                          <EventTypeChip type={eventType} />
+                          <EventTypeChip type={eventType} customTypes={customTypes} />
                         </div>
                       )}
                     </div>
@@ -367,7 +411,7 @@ export default function Schedule() {
                   onClick={() => setEditingEventType(!editingEventType)}
                   className="active:scale-95 transition-transform"
                 >
-                  <EventTypeChip type={pickedEventType} size="md" />
+                  <EventTypeChip type={pickedEventType} size="md" customTypes={customTypes} />
                 </button>
               </div>
 
@@ -376,6 +420,10 @@ export default function Schedule() {
                   <EventTypePicker
                     value={pickedEventType}
                     onChange={setPickedEventType}
+                    customTypes={customTypes}
+                    onCreateCustom={(ct) => createCustomType.mutate(ct)}
+                    onUpdateCustom={(idx, ct) => updateCustomType.mutate({ idx, ct })}
+                    onDeleteCustom={(idx) => deleteCustomType.mutate(idx)}
                   />
                   {pickedEventType !== (selectedBooking.event_type || 'service') && (
                     <Button

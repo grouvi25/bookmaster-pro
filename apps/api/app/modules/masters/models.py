@@ -67,6 +67,9 @@ class Master(BaseModel):
     link_page_theme = Column(String(50), default="default")
     link_page_links = Column(JSON, default=list)
 
+    # Кастомные типы событий мастера [{name: str, emoji: str}, ...]
+    custom_event_types = Column(JSON, default=list)
+
     # Тариф
     tariff_type = Column(String(5), default="B")  # 'A'(комиссия) | 'B'(абонемент)
     current_plan = Column(String(20), default="start")

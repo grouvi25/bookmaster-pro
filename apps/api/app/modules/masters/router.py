@@ -16,6 +16,7 @@ from app.core.config import settings
 from app.core.database import get_db
 from app.modules.masters.models import Master
 from app.modules.masters.schemas import (
+    CustomEventTypeIn,
     MasterProfileOut,
     MasterProfileUpdate,
     NotificationSettingsOut,
@@ -115,6 +116,95 @@ async def search_nearby_masters(
 
     nearby.sort(key=lambda x: x["distance_km"])
     return nearby[:limit]
+
+
+
+# ── Custom Event Types CRUD ────────────────────────────────
+
+PRESET_EVENT_TYPES = [
+    {"name": "Услуга",       "emoji": "✂️",  "key": "service"},
+    {"name": "Встреча",      "emoji": "🤝", "key": "meeting"},
+    {"name": "Консультация", "emoji": "💬", "key": "consultation"},
+    {"name": "Съёмка",       "emoji": "📸", "key": "shooting"},
+    {"name": "Обучение",     "emoji": "📚", "key": "education"},
+    {"name": "Другое",       "emoji": "📌", "key": "other"},
+]
+
+
+@router.get("/me/event-types")
+async def get_event_types(
+    user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Получить пресеты + кастомные типы событий мастера."""
+    master = await MasterService(db).get_by_identity(int(user["sub"]))
+    if not master:
+        raise HTTPException(status_code=404, detail="Master not found")
+    return {
+        "presets": PRESET_EVENT_TYPES,
+        "custom": master.custom_event_types or [],
+    }
+
+
+@router.post("/me/event-types", status_code=201)
+async def create_event_type(
+    body: CustomEventTypeIn,
+    user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Создать кастомный тип события."""
+    master = await MasterService(db).get_by_identity(int(user["sub"]))
+    if not master:
+        raise HTTPException(status_code=404, detail="Master not found")
+    custom = list(master.custom_event_types or [])
+    if len(custom) >= 20:
+        raise HTTPException(status_code=400, detail="Max 20 custom types")
+    if any(c["name"] == body.name for c in custom):
+        raise HTTPException(status_code=400, detail="Type already exists")
+    custom.append({"name": body.name, "emoji": body.emoji})
+    master.custom_event_types = custom
+    await db.commit()
+    return {"custom": custom}
+
+
+@router.patch("/me/event-types/{idx}")
+async def update_event_type(
+    idx: int,
+    body: CustomEventTypeIn,
+    user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Обновить кастомный тип события по индексу."""
+    master = await MasterService(db).get_by_identity(int(user["sub"]))
+    if not master:
+        raise HTTPException(status_code=404, detail="Master not found")
+    custom = list(master.custom_event_types or [])
+    if idx < 0 or idx >= len(custom):
+        raise HTTPException(status_code=404, detail="Index out of range")
+    old_name = custom[idx]["name"]
+    custom[idx] = {"name": body.name, "emoji": body.emoji}
+    master.custom_event_types = custom
+    await db.commit()
+    return {"custom": custom, "old_name": old_name}
+
+
+@router.delete("/me/event-types/{idx}", status_code=200)
+async def delete_event_type(
+    idx: int,
+    user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Удалить кастомный тип события по индексу."""
+    master = await MasterService(db).get_by_identity(int(user["sub"]))
+    if not master:
+        raise HTTPException(status_code=404, detail="Master not found")
+    custom = list(master.custom_event_types or [])
+    if idx < 0 or idx >= len(custom):
+        raise HTTPException(status_code=404, detail="Index out of range")
+    removed = custom.pop(idx)
+    master.custom_event_types = custom
+    await db.commit()
+    return {"custom": custom, "removed": removed}
 
 
 @router.get("/{slug}", response_model=MasterProfileOut)

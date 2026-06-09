@@ -673,3 +673,30 @@ export const importApi = {
   confirm: (data: { session_id: string; column_mapping?: Record<string, string> }) =>
     api.post('/import/confirm', data),
 };
+
+
+// ── Custom Event Types ────────────────────────────────────
+export interface CustomEventType {
+  name: string;
+  emoji: string;
+}
+export interface PresetEventType extends CustomEventType {
+  key: string;
+}
+export const eventTypesApi = {
+  list: () =>
+    api.get<{ presets: PresetEventType[]; custom: CustomEventType[] }>(
+      '/masters/me/event-types',
+    ),
+  create: (data: CustomEventType) =>
+    api.post<{ custom: CustomEventType[] }>('/masters/me/event-types', data),
+  update: (idx: number, data: CustomEventType) =>
+    api.patch<{ custom: CustomEventType[]; old_name: string }>(
+      `/masters/me/event-types/${idx}`,
+      data,
+    ),
+  remove: (idx: number) =>
+    api.delete<{ custom: CustomEventType[]; removed: CustomEventType }>(
+      `/masters/me/event-types/${idx}`,
+    ),
+};

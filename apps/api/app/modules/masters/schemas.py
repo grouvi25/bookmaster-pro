@@ -28,6 +28,7 @@ class MasterProfileOut(BaseModel):
     link_page_enabled: bool = True
     link_page_theme: str = "default"
     link_page_links: list = []
+    custom_event_types: list = []
     current_plan: str = "start"
     is_verified: bool = False
     rating_avg: float = 0.0
@@ -151,3 +152,25 @@ class ScheduleTemplateOut(BaseModel):
     is_active: bool = True
 
     model_config = {"from_attributes": True}
+
+
+# ── Custom Event Types ─────────────────────────────────────
+class CustomEventTypeIn(BaseModel):
+    name: str  # max 30 chars
+    emoji: str  # single emoji char
+
+    @field_validator("name", mode="before")
+    @classmethod
+    def _name_strip(cls, v: str) -> str:
+        v = str(v).strip()[:30]
+        if not v:
+            raise ValueError("name is required")
+        return v
+
+    @field_validator("emoji", mode="before")
+    @classmethod
+    def _emoji_strip(cls, v: str) -> str:
+        v = str(v).strip()
+        if not v:
+            return "🏷️"
+        return v[:4]  # emoji can be multi-codepoint
