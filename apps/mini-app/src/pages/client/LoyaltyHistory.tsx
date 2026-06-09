@@ -96,7 +96,7 @@ export default function LoyaltyHistory() {
 
           {/* Streak */}
           {balance.streak_threshold && (
-            <Card className="mb-4 !bg-[#FF9500]/10 border border-[#FF9500]/20">
+            <Card className="mb-4 !bg-accent-orange/10 border border-accent-orange/20">
               <div className="flex items-center gap-3">
                 <span className="text-[24px]">{'🔥'}</span>
                 <div className="flex-1">
@@ -110,9 +110,9 @@ export default function LoyaltyHistory() {
                   </div>
                 </div>
               </div>
-              <div className="mt-2 w-full bg-[#FF9500]/20 rounded-full h-1.5">
+              <div className="mt-2 w-full bg-accent-orange/20 rounded-full h-1.5">
                 <div
-                  className="bg-[#FF9500] h-1.5 rounded-full transition-all"
+                  className="bg-accent-orange h-1.5 rounded-full transition-all"
                   style={{ width: `${Math.min(((balance.streak_count || 0) / balance.streak_threshold) * 100, 100)}%` }}
                 />
               </div>

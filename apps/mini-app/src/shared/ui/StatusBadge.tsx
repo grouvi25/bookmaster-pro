@@ -4,19 +4,19 @@ type BookingStatus = 'pending' | 'confirmed' | 'paid' | 'completed' | 'cancelled
 type Variant = 'success' | 'warning' | 'danger' | 'info' | 'neutral';
 
 const BOOKING_STATUS_STYLES: Record<BookingStatus, string> = {
-  pending:   'bg-[#FF9500] text-[#7A4500]',
-  confirmed: 'bg-[#007AFF] text-[#003A80]',
-  paid:      'bg-[#34C759] text-[#1A6B2E]',
-  completed: 'bg-[#8E8E93] text-[#3A3A3C]',
-  cancelled: 'bg-[#FF3B30] text-[#7A1D1A]',
-  no_show:   'bg-[#FF3B30] text-[#7A1D1A]',
+  pending:   'bg-status-warning text-status-warning-dark',
+  confirmed: 'bg-status-info text-status-info-dark',
+  paid:      'bg-status-success text-status-success-dark',
+  completed: 'bg-status-neutral text-status-neutral-dark',
+  cancelled: 'bg-status-danger text-status-danger-dark',
+  no_show:   'bg-status-danger text-status-danger-dark',
 };
 
 const VARIANT_STYLES: Record<Variant, string> = {
-  success: 'bg-[#34C759]/15 text-[#34C759]',
-  warning: 'bg-[#FF9500]/15 text-[#FF9500]',
-  danger:  'bg-[#FF3B30]/15 text-[#FF3B30]',
-  info:    'bg-[#007AFF]/15 text-[#007AFF]',
+  success: 'bg-status-success/15 text-status-success',
+  warning: 'bg-status-warning/15 text-status-warning',
+  danger:  'bg-status-danger/15 text-status-danger',
+  info:    'bg-status-info/15 text-status-info',
   neutral: 'bg-tg-secondary text-tg-hint',
 };
 

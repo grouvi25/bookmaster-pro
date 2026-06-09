@@ -84,7 +84,7 @@ export default function StatusBar({ currentStatus, loading, onAction }: Props) {
           <button
             disabled={loading}
             onClick={handleConfirm}
-            className="flex-1 py-2.5 rounded-btn bg-[#FF3B30] text-white text-sm font-semibold active:scale-95 transition-all disabled:opacity-40"
+            className="flex-1 py-2.5 rounded-btn bg-status-danger text-white text-sm font-semibold active:scale-95 transition-all disabled:opacity-40"
           >
             {loading ? '...' : 'Да, ' + confirmAction.label.toLowerCase()}
           </button>
@@ -106,7 +106,7 @@ export default function StatusBar({ currentStatus, loading, onAction }: Props) {
             'transition-all duration-150 active:scale-95',
             'disabled:opacity-40',
             t.destructive
-              ? 'bg-[#FF3B30]/10 text-[#FF3B30]'
+              ? 'bg-status-danger/10 text-status-danger'
               : 'bg-brand-500 text-white shadow-button',
           )}
         >

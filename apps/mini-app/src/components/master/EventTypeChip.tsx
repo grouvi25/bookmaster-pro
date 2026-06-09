@@ -12,12 +12,12 @@ const EVENT_TYPE_CONFIG: Record<
   EventType,
   { label: string; emoji: string; bg: string; text: string }
 > = {
-  service:      { label: 'Услуга',        emoji: '✂️', bg: 'bg-[#007AFF]/12', text: 'text-[#007AFF]' },
-  meeting:      { label: 'Встреча',       emoji: '🤝', bg: 'bg-[#FF9500]/12', text: 'text-[#FF9500]' },
-  consultation: { label: 'Консультация',  emoji: '💬', bg: 'bg-[#AF52DE]/12', text: 'text-[#AF52DE]' },
-  shooting:     { label: 'Съёмка',        emoji: '📸', bg: 'bg-[#FF2D55]/12', text: 'text-[#FF2D55]' },
-  education:    { label: 'Обучение',      emoji: '📚', bg: 'bg-[#5AC8FA]/12', text: 'text-[#5AC8FA]' },
-  other:        { label: 'Другое',        emoji: '📌', bg: 'bg-[#8E8E93]/12', text: 'text-[#8E8E93]' },
+  service:      { label: 'Услуга',        emoji: '✂️', bg: 'bg-status-info/12', text: 'text-status-info' },
+  meeting:      { label: 'Встреча',       emoji: '🤝', bg: 'bg-accent-orange/12', text: 'text-accent-orange' },
+  consultation: { label: 'Консультация',  emoji: '💬', bg: 'bg-accent-purple/12', text: 'text-accent-purple' },
+  shooting:     { label: 'Съёмка',        emoji: '📸', bg: 'bg-accent-pink/12', text: 'text-accent-pink' },
+  education:    { label: 'Обучение',      emoji: '📚', bg: 'bg-accent-teal/12', text: 'text-accent-teal' },
+  other:        { label: 'Другое',        emoji: '📌', bg: 'bg-accent-gray/12', text: 'text-accent-gray' },
 };
 
 interface Props {

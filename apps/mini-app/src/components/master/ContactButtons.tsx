@@ -69,7 +69,7 @@ export default function ContactButtons({
           className={clsx(
             'flex-1 flex items-center justify-center gap-2',
             'py-2.5 rounded-btn text-xs font-semibold',
-            'bg-[#34C759]/12 text-[#34C759]',
+            'bg-accent-emerald/12 text-accent-emerald',
             'active:scale-95 transition-all',
           )}
         >
@@ -85,7 +85,7 @@ export default function ContactButtons({
           className={clsx(
             'flex-1 flex items-center justify-center gap-2',
             'py-2.5 rounded-btn text-xs font-semibold',
-            'bg-[#007AFF]/12 text-[#007AFF]',
+            'bg-status-info/12 text-status-info',
             'active:scale-95 transition-all',
           )}
         >
