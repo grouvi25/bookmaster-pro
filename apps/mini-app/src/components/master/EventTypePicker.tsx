@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import clsx from 'clsx';
-import { EVENT_TYPE_CONFIG, getEventTypeConfig } from './EventTypeChip';
+import { EVENT_TYPE_CONFIG } from './EventTypeChip';
 import { Check, X, Plus, Pencil, Trash2 } from 'lucide-react';
 
 const PRESET_KEYS = ['service', 'meeting', 'consultation', 'shooting', 'education', 'other'];

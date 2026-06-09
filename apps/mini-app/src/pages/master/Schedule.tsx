@@ -84,28 +84,6 @@ export default function Schedule() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['master-event-types'] }),
   });
 
-  // Custom event types
-  const { data: eventTypesData } = useQuery({
-    queryKey: ['master-event-types'],
-    queryFn: () => eventTypesApi.list().then((r) => r.data),
-    staleTime: 5 * 60_000,
-  });
-  const customTypes = eventTypesData?.custom ?? [];
-
-  const createCustomType = useMutation({
-    mutationFn: (ct: { name: string; emoji: string }) => eventTypesApi.create(ct),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['master-event-types'] }),
-  });
-  const updateCustomType = useMutation({
-    mutationFn: ({ idx, ct }: { idx: number; ct: { name: string; emoji: string } }) =>
-      eventTypesApi.update(idx, ct),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['master-event-types'] }),
-  });
-  const deleteCustomType = useMutation({
-    mutationFn: (idx: number) => eventTypesApi.remove(idx),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['master-event-types'] }),
-  });
-
   // Auto-open booking when navigated from Dashboard "Подробнее"
   useEffect(() => {
     if (pendingOpenRef.current && data) {
