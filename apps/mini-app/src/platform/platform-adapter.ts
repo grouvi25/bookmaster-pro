@@ -122,6 +122,15 @@ class PlatformAdapterClass {
         this._platform = 'max';
         return 'max';
       }
+
+      // Fallback: Telegram Desktop может НЕ инжектить window.Telegram.WebApp,
+      // а передавать данные только через URL hash (#tgWebAppData=...).
+      // CDN-скрипт мог не загрузиться (CSP, сеть) → мост не создан, но данные есть.
+      const hashAndSearch = (window.location.hash || '') + (window.location.search || '');
+      if (hashAndSearch.includes('tgWebAppData')) {
+        this._platform = 'telegram';
+        return 'telegram';
+      }
     }
     this._platform = 'unknown';
     return 'unknown';

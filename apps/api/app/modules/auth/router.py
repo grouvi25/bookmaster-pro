@@ -6,7 +6,7 @@ _auth_logger = logging.getLogger("auth.identify")
 Auth router — /api/v1/auth
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from typing import Optional
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -463,3 +463,4 @@ async def auth_me(user: dict = Depends(get_current_user)):
         "identity_id": user.get("identity_id"),
         "platform": user.get("platform"),
     }
+
