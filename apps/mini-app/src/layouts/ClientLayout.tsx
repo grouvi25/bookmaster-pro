@@ -1,5 +1,5 @@
 import { Outlet } from 'react-router-dom';
-import ClientTabBar from './ClientTabBar';
+import { ClientTabBar } from '@/components/common/TabBar';
 
 export default function ClientLayout() {
   return (

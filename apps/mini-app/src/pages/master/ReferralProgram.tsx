@@ -26,7 +26,7 @@ interface ReferralStats {
 
 export default function ReferralProgram() {
 
-  const { data: stats, isLoading } = useQuery<ReferralStats>({
+  const { data: stats, isLoading, isError } = useQuery<ReferralStats>({
     queryKey: ['referral-stats'],
     queryFn: () => loyaltyApi.getReferralStats().then((r: { data: ReferralStats }) => r.data),
   });
@@ -42,6 +42,15 @@ export default function ReferralProgram() {
       <div className="px-screen-x py-section-y">
         <PageHeader title="Реферальная программа" left={<HeaderBackButton to="/master/tools" />} />
         <ListSkeleton count={4} />
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="px-screen-x py-section-y">
+        <PageHeader title="Реферальная программа" left={<HeaderBackButton to="/master/tools" />} />
+        <EmptyState emoji="⚠️" title="Не удалось загрузить" description="Проверьте подключение и попробуйте снова" />
       </div>
     );
   }

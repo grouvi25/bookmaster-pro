@@ -78,8 +78,8 @@ export default function Schedule() {
   // Sync master note + event type when booking changes
   useEffect(() => {
     if (selectedBooking) {
-      setMasterNote((selectedBooking as any).master_comment || '');
-      setPickedEventType((selectedBooking as any).event_type || 'service');
+      setMasterNote(selectedBooking.master_comment || '');
+      setPickedEventType(selectedBooking.event_type || 'service');
       setEditingEventType(false);
     }
   }, [selectedBooking]);
@@ -303,7 +303,7 @@ export default function Schedule() {
         <div className="flex flex-col gap-2.5">
           {bookings.map((b) => {
             const canAct = ['pending', 'confirmed', 'paid'].includes(b.status);
-            const eventType = (b as any).event_type || 'service';
+            const eventType = b.event_type || 'service';
             return (
               <Card
                 key={b.id}
@@ -377,7 +377,7 @@ export default function Schedule() {
                     value={pickedEventType}
                     onChange={setPickedEventType}
                   />
-                  {pickedEventType !== ((selectedBooking as any).event_type || 'service') && (
+                  {pickedEventType !== (selectedBooking.event_type || 'service') && (
                     <Button
                       size="sm"
                       fullWidth
@@ -434,8 +434,8 @@ export default function Schedule() {
             {/* Contact buttons */}
             <ContactButtons
               phone={selectedBooking.client_phone}
-              clientPlatform={(selectedBooking as any).client_platform}
-              clientPlatformId={(selectedBooking as any).client_platform_id}
+              clientPlatform={selectedBooking.client_platform}
+              clientPlatformId={selectedBooking.client_platform_id}
               className="mb-4"
             />
 
@@ -449,7 +449,7 @@ export default function Schedule() {
                 rows={2}
                 className="w-full px-3 py-2.5 rounded-card bg-tg-secondary text-sm text-tg-text resize-none outline-none placeholder:text-tg-hint/50"
               />
-              {masterNote !== ((selectedBooking as any).master_comment || '') && (
+              {masterNote !== (selectedBooking.master_comment || '') && (
                 <Button
                   size="sm"
                   variant="secondary"
