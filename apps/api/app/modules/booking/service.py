@@ -122,13 +122,9 @@ class BookingService:
                     "Запись невозможна: слишком много неявок. "
                     "Обратитесь к мастеру для разблокировки."
                 )
-            # Если AI-скоринг требует предоплату — ставим флаг
-            # (фронтенд покажет требование предоплаты)
-            _noshow_require_prepay = noshow_result.get("require_prepay", False)
-            _noshow_risk_score = noshow_result.get("risk_score", 0)
-        else:
-            _noshow_require_prepay = False
-            _noshow_risk_score = 0
+            # AI-скоринг: require_prepay / risk_score проверяется
+            # фронтендом через GET /booking/noshow-risk до создания записи.
+            # Blacklist уже обработан выше (raise ValueError).
 
         # Получаем услугу
         result = await self.db.execute(

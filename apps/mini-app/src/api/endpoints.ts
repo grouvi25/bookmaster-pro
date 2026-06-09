@@ -252,6 +252,10 @@ export const bookingApi = {
     api.patch(`/booking/${id}`, { status: 'confirmed' }),
   noShow: (id: number) =>
     api.patch(`/booking/${id}`, { status: 'no_show' }),
+  noshowRisk: (masterId: number) =>
+    api.get<{ allowed: boolean; risk_score: number; require_prepay: boolean; blacklisted: boolean }>(
+      '/booking/noshow-risk', { params: { master_id: masterId } },
+    ),
   cancelByMaster: (id: number, reason?: string) =>
     api.patch(`/booking/${id}`, { status: 'cancelled_by_master', cancel_reason: reason }),
   updateStatus: (id: number, data: { status: string; cancel_reason?: string; master_comment?: string; price_final?: number; event_type?: string }) =>

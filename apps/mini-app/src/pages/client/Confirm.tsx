@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { bookingApi, paymentsApi, subscriptionsApi } from '@/api/endpoints';
@@ -9,7 +9,7 @@ import Card from '@/shared/ui/Card';
 import { toast } from '@/shared/ui/Toast';
 import { format, parseISO } from 'date-fns';
 import { ru } from 'date-fns/locale';
-import { User, Scissors, CalendarDays, Clock, CreditCard, Wallet, Banknote, Coins, Ticket } from 'lucide-react';
+import { User, Scissors, CalendarDays, Clock, CreditCard, Wallet, Banknote, Coins, Ticket, ShieldAlert } from 'lucide-react';
 
 interface ClientSubscription {
   id: number;
@@ -32,8 +32,24 @@ export default function Confirm() {
     queryFn: () => subscriptionsApi.list().then((r) => r.data),
   });
 
-  // Гард: если нет мастера/услуги — редирект назад (прямой переход или перезагрузка)
-  // Расположен после всех хуков — иначе нарушение Rules of Hooks
+  // NoShow risk check — AI scoring level 4
+  const { data: noshowRisk } = useQuery({
+    queryKey: ['noshow-risk', store.masterId],
+    queryFn: () => bookingApi.noshowRisk(store.masterId!).then((r) => r.data),
+    enabled: !!store.masterId,
+    staleTime: 60_000,
+  });
+
+  const requirePrepay = noshowRisk?.require_prepay === true;
+
+  // Auto-select payment when prepay required and current selection is 'none'
+  useEffect(() => {
+    if (requirePrepay && paymentType === 'none') {
+      setPaymentType('full');
+    }
+  }, [requirePrepay, paymentType]);
+
+  // Guard: redirect if no master/service (after all hooks — Rules of Hooks)
   if (!store.masterId || !store.serviceId || !store.selectedDate || !store.selectedTime) {
     navigate('/client/nearby', { replace: true });
     return null;
@@ -68,6 +84,12 @@ export default function Confirm() {
   };
 
   const handleConfirm = async () => {
+    // Server-side guard: block "none" if prepay required
+    if (requirePrepay && paymentType === 'none') {
+      toast.error('Необходимо выбрать способ оплаты');
+      return;
+    }
+
     setLoading(true);
     try {
       const bookingData = {
@@ -151,7 +173,7 @@ export default function Confirm() {
       type: 'none',
       label: 'Оплата на месте',
       Icon: Wallet,
-      show: true,
+      show: !requirePrepay,
     },
   ];
 
@@ -160,6 +182,20 @@ export default function Confirm() {
       <BackButton to="/book/promo" />
       <h1 className="text-2xl font-bold tracking-tight mb-1">Подтверждение</h1>
       <p className="text-tg-hint text-sm mb-5">Шаг 5 из 5</p>
+
+      {requirePrepay && (
+        <Card className="mb-4 border-status-warning/30 bg-status-warning/5">
+          <div className="flex items-start gap-3 text-sm">
+            <ShieldAlert className="w-5 h-5 text-status-warning flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="font-medium text-tg-text">Требуется предоплата</p>
+              <p className="text-tg-hint mt-0.5">
+                Для подтверждения записи необходимо выбрать один из способов оплаты
+              </p>
+            </div>
+          </div>
+        </Card>
+      )}
 
       <Card className="mb-4">
         <div className="flex flex-col gap-3 text-sm">
