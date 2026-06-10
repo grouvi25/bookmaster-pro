@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { npsApi } from '@/api/endpoints';
+import { useAuthStore } from '@/stores/auth';
 import Button from '@/shared/ui/Button';
 import { X } from 'lucide-react';
 
@@ -9,11 +10,14 @@ export default function NpsPopup() {
   const [score, setScore] = useState<number | null>(null);
   const [comment, setComment] = useState('');
   const queryClient = useQueryClient();
+  const token = useAuthStore((s) => s.token);
 
+  // Не делаем запрос если нет токена — иначе 401 → reload → бесконечный цикл
   const { data } = useQuery({
     queryKey: ['nps-current'],
     queryFn: () => npsApi.current().then((r) => r.data),
     retry: false,
+    enabled: !!token,
   });
 
   useEffect(() => {
