@@ -8,6 +8,10 @@
  * Теперь: определяем платформу по окружению ДО загрузки SDK, грузим только
  * один скрипт асинхронно и с таймаутом, чтобы зависший CDN не блокировал
  * запуск навсегда.
+ *
+ * ВАЖНО: index.html НЕ должен содержать статических <script> для SDK —
+ * иначе они создадут window.Telegram.WebApp до вызова detectPlatformEarly()
+ * и сломают определение MAX-платформы.
  */
 
 const TG_SDK = 'https://telegram.org/js/telegram-web-app.js';
@@ -19,14 +23,27 @@ export type DetectedPlatform = 'telegram' | 'max' | 'unknown';
 /**
  * Эвристическое определение платформы ДО загрузки SDK.
  * Telegram кладёт tgWebAppData в hash; MAX — WebAppData.
+ * Нативные клиенты могут инжектить мосты до старта React.
  */
 function detectPlatformEarly(): DetectedPlatform {
   if (typeof window === 'undefined') return 'unknown';
 
   const w = window as unknown as Record<string, unknown>;
 
-  // Если мост уже доступен (некоторые клиенты инжектят его сами)
-  if (w.Telegram && (w.Telegram as { WebApp?: unknown }).WebApp) return 'telegram';
+  // MAX нативный мост: window.WebApp с initData/initDataUnsafe
+  // Проверяем ДО Telegram, потому что если TG SDK был случайно загружен,
+  // window.Telegram.WebApp будет пустышкой, а window.WebApp — настоящим MAX.
+  const maxApp = w.WebApp as { initData?: string; initDataUnsafe?: unknown; version?: string } | undefined;
+  if (maxApp && (maxApp.initData || maxApp.initDataUnsafe || maxApp.version)) {
+    return 'max';
+  }
+
+  // Telegram нативный мост: window.Telegram.WebApp с initData
+  if (w.Telegram && (w.Telegram as { WebApp?: { initData?: string } }).WebApp) {
+    const tgWebApp = (w.Telegram as { WebApp: { initData?: string } }).WebApp;
+    // Только если initData не пустая — если пустая, мост может быть от CDN-скрипта
+    if (tgWebApp.initData) return 'telegram';
+  }
 
   const hash = window.location.hash || '';
   const search = window.location.search || '';
