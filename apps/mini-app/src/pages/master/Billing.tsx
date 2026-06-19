@@ -11,7 +11,7 @@ import PageHeader from '@/shared/ui/PageHeader';
 import type { LucideIcon } from 'lucide-react';
 import clsx from 'clsx';
 import { useFeatureFlags } from '@/hooks/useFeatureFlag';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 
 interface Plan {
   key: string;
@@ -574,6 +574,16 @@ export default function Billing() {
 
             {/* Footer buttons */}
             <div className="px-screen-x pb-6 pt-3 border-t border-tg-secondary flex flex-col gap-2.5">
+              <p className="text-[11px] text-tg-hint text-center">
+                Оплачивая, вы соглашаетесь с{' '}
+                <Link to="/legal/terms" className="text-tg-link underline">
+                  условиями сервиса
+                </Link>{' '}
+                и{' '}
+                <Link to="/legal/payment" className="text-tg-link underline">
+                  условиями оплаты и возврата
+                </Link>
+              </p>
               <Button
                 onClick={() => {
                   handleSubscribe(confirmPlan);
