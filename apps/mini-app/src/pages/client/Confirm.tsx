@@ -9,6 +9,7 @@ import Card from '@/shared/ui/Card';
 import { toast } from '@/shared/ui/Toast';
 import { format, parseISO } from 'date-fns';
 import { ru } from 'date-fns/locale';
+import { Link } from 'react-router-dom';
 import { User, Scissors, CalendarDays, Clock, CreditCard, Wallet, Banknote, Coins, Ticket, ShieldAlert } from 'lucide-react';
 
 interface ClientSubscription {
@@ -275,6 +276,17 @@ export default function Confirm() {
           </div>
         </div>
       )}
+
+      <p className="text-[11px] text-tg-hint text-center mb-3">
+        Оплачивая, вы соглашаетесь с{' '}
+        <Link to="/legal/terms" className="text-tg-link underline">
+          условиями сервиса
+        </Link>{' '}
+        и{' '}
+        <Link to="/legal/payment" className="text-tg-link underline">
+          условиями оплаты и возврата
+        </Link>
+      </p>
 
       <Button
         onClick={handleConfirm}
