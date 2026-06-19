@@ -70,6 +70,7 @@ const EmbedPage = lazy(() => import('@/pages/EmbedPage'));
 const ModeratorPanel = lazy(() => import('@/pages/moderator/ModeratorPanel'));
 const SuperadminPanel = lazy(() => import('@/pages/superadmin/SuperadminPanel'));
 const Register = lazy(() => import('@/pages/Register'));
+const LegalPage = lazy(() => import('@/pages/legal/LegalPage'));
 
 // NpsPopup и SuperadminReturnButton — мелкие, грузим eager
 import NpsPopup from '@/components/NpsPopup';
@@ -339,6 +340,9 @@ function AppRouter() {
           <Route path="/master/work-schedule" element={<WorkSchedule />} />
           <Route path="/master/messages" element={<Messages />} />
         </Route>
+
+        {/* Юридические документы (публичные, без авторизации) */}
+        <Route path="/legal/:docType" element={<LegalPage />} />
 
         {/* Публичная страница-линк (TapLink) */}
         <Route path="/p/:slug" element={<LinkPage />} />
