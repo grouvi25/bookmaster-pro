@@ -58,11 +58,27 @@ function Header() {
 }
 
 function Footer() {
+  const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://app.bookmaster.pro';
+
   return (
     <footer className="bg-gray-50 border-t border-gray-100 mt-16">
       <div className="max-w-6xl mx-auto px-4 py-8">
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
           <span className="font-semibold text-gray-700">BookMaster Pro</span>
+          <nav className="flex items-center gap-4 text-sm text-gray-400">
+            <a
+              href={`${APP_URL}/legal/terms`}
+              className="hover:text-gray-600 transition-colors"
+            >
+              Условия сервиса
+            </a>
+            <a
+              href={`${APP_URL}/legal/payment`}
+              className="hover:text-gray-600 transition-colors"
+            >
+              Оплата и возврат
+            </a>
+          </nav>
           <p className="text-sm text-gray-400">
             &copy; {new Date().getFullYear()} BookMaster Pro. Все права
             защищены.
