@@ -44,6 +44,11 @@ ALLOWED_SETTINGS_KEYS = {
     "platform_fee_percent",
     "maintenance_mode",           # 'true' | 'false'
     "maintenance_message",
+    # Юридические документы (Робокасса и т.д.)
+    "legal_terms_of_service",     # условия оказания услуг
+    "legal_payment_conditions",   # условия оплаты и возврата
+    "legal_entity_name",          # наименование юр. лица
+    "legal_entity_inn",           # ИНН / ОГРНИП
 }
 
 
@@ -1082,6 +1087,11 @@ class SuperadminService:
             "support_telegram": custom.get("support_telegram", ""),
             "maintenance_mode": custom.get("maintenance_mode", "false"),
             "maintenance_message": custom.get("maintenance_message", ""),
+            # Юридические документы
+            "legal_terms_of_service": custom.get("legal_terms_of_service", ""),
+            "legal_payment_conditions": custom.get("legal_payment_conditions", ""),
+            "legal_entity_name": custom.get("legal_entity_name", ""),
+            "legal_entity_inn": custom.get("legal_entity_inn", ""),
             "environment": getattr(settings, "ENVIRONMENT", "production"),
             "debug": getattr(settings, "DEBUG", False),
             "allowed_keys": sorted(ALLOWED_SETTINGS_KEYS),

@@ -18,6 +18,11 @@ interface SettingsData {
   support_telegram?: string;
   maintenance_mode?: string;
   maintenance_message?: string;
+  // Юридические документы
+  legal_terms_of_service?: string;
+  legal_payment_conditions?: string;
+  legal_entity_name?: string;
+  legal_entity_inn?: string;
   environment?: string;
   debug?: boolean;
   allowed_keys?: string[];
@@ -172,6 +177,57 @@ export default function SettingsTab() {
           placeholder="Сообщение для пользователей..."
           className="input-field !h-auto !py-2"
         />
+      </Card>
+
+      {/* Юридические документы (Робокасса) */}
+      <Card>
+        <h3 className="text-sm font-semibold mb-2">📄 Юридические документы</h3>
+        <p className="text-[11px] text-tg-hint mb-3">
+          Требования Робокассы: условия сервиса, оплата/возврат, реквизиты.
+          Доступны по ссылке /legal/terms и /legal/payment.
+        </p>
+        <div className="flex flex-col gap-3">
+          <div>
+            <label className="text-[11px] text-tg-hint">Наименование юр. лица</label>
+            <input
+              type="text"
+              value={getValue('legal_entity_name')}
+              onChange={(e) => setField('legal_entity_name', e.target.value)}
+              className="input-field !h-auto !py-2 mt-1"
+              placeholder="ИП Иванов Иван Иванович"
+            />
+          </div>
+          <div>
+            <label className="text-[11px] text-tg-hint">ИНН / ОГРНИП</label>
+            <input
+              type="text"
+              value={getValue('legal_entity_inn')}
+              onChange={(e) => setField('legal_entity_inn', e.target.value)}
+              className="input-field !h-auto !py-2 mt-1"
+              placeholder="123456789012"
+            />
+          </div>
+          <div>
+            <label className="text-[11px] text-tg-hint">Условия оказания услуг</label>
+            <textarea
+              value={getValue('legal_terms_of_service')}
+              onChange={(e) => setField('legal_terms_of_service', e.target.value)}
+              className="input-field !h-auto !py-2 mt-1 min-h-[120px] resize-y"
+              placeholder="Текст условий оказания услуг..."
+              rows={5}
+            />
+          </div>
+          <div>
+            <label className="text-[11px] text-tg-hint">Условия оплаты и возврата</label>
+            <textarea
+              value={getValue('legal_payment_conditions')}
+              onChange={(e) => setField('legal_payment_conditions', e.target.value)}
+              className="input-field !h-auto !py-2 mt-1 min-h-[120px] resize-y"
+              placeholder="Текст условий оплаты и возврата..."
+              rows={5}
+            />
+          </div>
+        </div>
       </Card>
 
       {/* Системная инфа */}

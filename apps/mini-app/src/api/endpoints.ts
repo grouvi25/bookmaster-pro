@@ -700,3 +700,12 @@ export const eventTypesApi = {
       `/masters/me/event-types/${idx}`,
     ),
 };
+
+
+// ── Legal Documents (Робокасса compliance) ────────────────
+export const legalApi = {
+  getDocument: (docType: string) =>
+    api.get(`/legal/${docType}`),
+  listDocuments: () =>
+    api.get('/legal/'),
+};
